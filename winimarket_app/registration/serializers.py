@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from .models import CustomUser
+from .models import CustomUser, Profile, SellerProfile
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
@@ -68,3 +68,43 @@ class RegisterSerializer(serializers.ModelSerializer):
         user.save()
 
         return user
+    
+class ProfileSerializer(serializers.ModelSerializer):
+    profile_picture = serializers.ImageField(required=False, allow_null=True)
+    class Meta:
+        model = Profile
+        fields = ('id', 'user', 'role', 'full_name', 'profile_picture', 'created_at')
+        read_only_fields = ('id', 'user', 'created_at')
+
+    def validate_profile_picture(self, value):
+        if value:
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("Store logo must be less than 2MB")
+            if not value.content_type.startwith('image/'):
+                raise serializers.ValidationError("Uploaded file is not an image.")        
+        return value
+    
+    def create(self, validated_data):
+        user = self.context['request'].user
+        validated_data['user'] = user
+        return super().create(validated_data)
+    
+class SellerProfileSerializer(serializers.ModelSerializer):
+    store_logo = serializers.ImageField(required=False, allow_null=True)
+    class Meta:
+        model = SellerProfile
+        fields = ('id', 'profile', 'store_name','store_logo','store_description', 'business_address', 'momo_details', 'social_links', 'verification_status', 'created_at')
+        read_only_fields = ('id', 'profile', 'created_at')
+
+    def validate_store_logo(self, value):
+        if value:
+            if value.size > 2 * 1024 * 1024:
+                raise serializers.ValidationError("Store logo must be less than 2MB")
+            if not value.content_type.startwith('image/'):
+                raise serializers.ValidationError("Uploaded file is not an image.")        
+        return value
+    
+    def create(self, validated_data):
+        profile = self.context['request'].user.profile
+        validated_data['profile'] = profile
+        return super().create(validated_data)

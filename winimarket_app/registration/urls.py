@@ -22,6 +22,12 @@ urlpatterns = [
     #LOGIN VIEWS
     path('login/', views.login_view, name='login'),
 
+    #PROFILE API
+    path('api/profile/', views.profile_view),
+
+    #SELLER PROFILE API
+    path('api/seller-profile/', views.seller_profile_view),
+
     #REGISTER VIEWS
     path('register/', views.register_view, name='register'),
 ]

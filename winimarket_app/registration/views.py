@@ -14,7 +14,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import CustomUser
-from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer
+from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer
 
 #TEMPLATE FOR CONSUMING THE ABOVE APIs
 @login_required
@@ -109,3 +109,49 @@ def logout(request):
     response.delete_cookie('access_token')
 
     return response
+
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def profile_view(request):
+    user = request.user
+    if request.method == 'GET':
+        serializer = ProfileSerializer(user.profile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        serializer = ProfileSerializer(data=request.data, context = {'request': request})
+        if serializer.is_valid():
+            profile = serializer.save(user=user)
+            return Response(ProfileSerializer(profile).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'PUT':
+        serializer = ProfileSerializer(user.profile, data=request.data, context={'request': request}, partial=True)
+        if serializer.is_valid():
+            profile = serializer.save()
+            return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def seller_profile_view(request):
+    user = request.user
+    if request.method == 'GET':
+        serializer = SellerProfileSerializer(user.profile.sellerprofile)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    elif request.method == 'POST':
+        serializer = SellerProfileSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            profile = serializer.save(profile=user.profile)
+            return Response(SellerProfileSerializer(profile).data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    elif request.method == 'PUT':
+        serializer = SellerProfileSerializer(user.profile.sellerprofile, data=request.data, context={'request': request}, partial=True)
+        if serializer.is_valid():
+            profile = serializer.save()
+            return Response(SellerProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

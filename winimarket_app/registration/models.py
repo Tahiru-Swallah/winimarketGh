@@ -55,3 +55,34 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return self.email or str(self.phonenumber)
+    
+class Profile(models.Model):
+    ROLE_CHOICES = (
+        ('seller', 'Seller'),
+        ('buyer', 'Buyer'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='buyer')
+    full_name = models.CharField(max_length=255, blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.email} - {self.role}"
+
+class SellerProfile(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='seller_profile')
+    store_name = models.CharField(max_length=255, unique=True)
+    store_description = models.TextField(blank=True, null=True)
+    store_logo = models.ImageField(upload_to='store_logos/', blank=True, null=True)
+    business_address = models.CharField(max_length=255, blank=True, null=True)
+    momo_details = models.CharField(max_length=255, blank=True, null=True)
+    social_links = models.JSONField(default=dict, blank=True)
+    verification_status = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.store_name} - {self.profile.user.email}"
