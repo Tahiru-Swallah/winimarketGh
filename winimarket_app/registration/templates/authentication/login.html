@@ -20,11 +20,32 @@
             return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         }
 
+        function IsEmail(value){
+            return /\S+@\S+\.\S+/.test(value);
+        }
+
+        function formatPhoneNumber(phone){
+            let cleaned = phone.replace(/\D/g, '');
+            if(cleaned.startsWith('0')){
+                cleaned = cleaned.substring(1);
+            }
+
+            return '+233' + cleaned;
+        }
+
         document.getElementById("loginForm").addEventListener('submit', async function(e){
             e.preventDefault();
 
-            const email_or_phonenumber = document.getElementById("emailOrPhone").value;
+            let email_or_phonenumber = document.getElementById("emailOrPhone").value;
             const password = document.getElementById("password").value;
+
+            if (IsEmail(email_or_phonenumber)) {
+                // If it's an email, no formatting needed
+                email_or_phonenumber = email_or_phonenumber.trim();
+            } else {
+                // If it's a phone number, format it
+                email_or_phonenumber = formatPhoneNumber(email_or_phonenumber);
+            }
 
             const params = new URLSearchParams(window.location.search);
             const next = params.get('next') || '/';
@@ -49,7 +70,7 @@
 
                     alert('Login successful');
 
-                    window.location.href = data.next || '/';
+                    window.location.href = data.next && data.next !== '/' ? data.next : '/account/';
 
                 } else {
                     alert(data.detail || 'Login failed. Please try again.');
