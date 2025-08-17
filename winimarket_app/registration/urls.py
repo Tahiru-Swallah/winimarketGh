@@ -8,7 +8,7 @@ app_name = 'registration'
 urlpatterns = [
     #HOME PAGE
     path('', views.home, name='home'),
-    
+
     #LOGIN APIs URLs
     path('api/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
@@ -18,4 +18,10 @@ urlpatterns = [
 
     #LOGOUT API
     path('api/logout/', logout, name='logout'),
+
+    #LOGIN VIEWS
+    path('login/', views.login_view, name='login'),
+
+    #REGISTER VIEWS
+    path('register/', views.register_view, name='register'),
 ]

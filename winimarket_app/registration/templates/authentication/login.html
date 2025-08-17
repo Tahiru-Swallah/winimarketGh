@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Document</title>
+</head>
+<body>
+    <form id="loginForm">
+        <input type="text" id="emailOrPhone" name="email_or_phonenumber" placeholder="Email or Phone" required><br>
+        <input type="password" id="password" name="password" placeholder="Password" required><br>
+        <button type="submit">Login</button> 
+
+        <a href="{% url 'registration:register'%}">Sign Up</a>
+    </form>
+
+    <script>
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        document.getElementById("loginForm").addEventListener('submit', async function(e){
+            e.preventDefault();
+
+            const email_or_phonenumber = document.getElementById("emailOrPhone").value;
+            const password = document.getElementById("password").value;
+
+            const params = new URLSearchParams(window.location.search);
+            const next = params.get('next') || '/';
+
+            try{
+                const response = await fetch(`/account/api/login/?next=${encodeURIComponent(next)}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({email_or_phonenumber, password})
+                });
+
+                const data = await response.json();
+                console.log(data.next);
+
+                if (response.ok && data.access_token) {
+                    localStorage.setItem('access_token', data.access_token);
+                    localStorage.setItem('refresh_token', data.refresh_token);
+
+                    alert('Login successful');
+
+                    window.location.href = data.next || '/';
+
+                } else {
+                    alert(data.detail || 'Login failed. Please try again.');
+                }
+
+            } catch (error){
+                alert("An error occurred during login. Please try again.");
+                console.error("Login error:", error);
+            }
+        })
+    </script>
+</body>
+</html>

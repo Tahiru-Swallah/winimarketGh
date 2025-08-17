@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Document</title>
+</head>
+<body>
+    <form class="login-signup" id='registerForm'>
+        <input type="email" id="email" name="email" placeholder="email"><br>
+        <input type="text" id="phonenumber" name="phonenumber" placeholder="phonenumber"><br>
+        <input type="password" id="password" name="password" placeholder="password"><br>
+
+        <button type="submit">Register</button> 
+
+        <a href="{% url 'registration:login'%}">Login</a>
+    </form>
+</body>
+</html>

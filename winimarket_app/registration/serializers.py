@@ -1,7 +1,6 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from dj_rest_auth.registration.serializers import SocialLoginSerializer
 from .models import CustomUser
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -37,8 +36,6 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
             "access_token": str(data.access_token),
             "user": {
                 "id": str(user.id),
-                "first_name": user.first_name,
-                "last_name": user.last_name,
                 "email": user.email,
                 "phonenumber": str(user.phonenumber),
             },

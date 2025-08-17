@@ -21,6 +21,12 @@ from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer
 def home(request):
     return render(request, 'home.html')
 
+def login_view(request):
+    return render(request, 'authentication/login.html')
+
+def register_view(request):
+    return render(request, 'authentication/register.html')
+
 # API CODES FOR REGISTRATION AND LOGIN
 class CustomTokenObtainPairView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer

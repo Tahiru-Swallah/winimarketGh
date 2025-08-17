@@ -31,6 +31,8 @@ ALLOWED_HOSTS = []
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition
 
+LOGIN_URL = 'registration:login'
+
 INSTALLED_APPS = [
     'jazzmin',
     'registration.apps.RegistrationConfig',
@@ -53,7 +55,7 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    #'registration.middleware.jwt.JWTAuthenticationMiddleware',
+    'registration.middleware.jwt.JWTAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
