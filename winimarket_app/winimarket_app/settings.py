@@ -36,6 +36,7 @@ LOGIN_URL = 'registration:login'
 INSTALLED_APPS = [
     'jazzmin',
     'registration.apps.RegistrationConfig',
+    'products.apps.ProductsConfig',
     'rest_framework',
     'phonenumber_field',
     'django.contrib.admin',

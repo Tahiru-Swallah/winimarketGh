@@ -13,22 +13,39 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import CustomUser
+from .models import CustomUser, Profile, SellerProfile
 from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer
 
-#TEMPLATE FOR CONSUMING THE ABOVE APIs
+# -----------------------------
+# Template Views
+# -----------------------------
+
 @login_required
 def home(request):
+    # Render the home page for logged-in users
     return render(request, 'home.html')
 
 def login_view(request):
+    # Render the login page
     return render(request, 'authentication/login.html')
 
 def register_view(request):
+    # Render the registration page
     return render(request, 'authentication/register.html')
 
-# API CODES FOR REGISTRATION AND LOGIN
+@login_required
+def profile_template(request):
+    # Render the profile onboarding page for logged-in users
+    return render(request, 'authentication/profile.html')
+
+# -----------------------------
+# API Views for Authentication
+# -----------------------------
+
 class CustomTokenObtainPairView(TokenObtainPairView):
+    """
+    Custom JWT login view using email or phone number.
+    """
     serializer_class = CustomTokenObtainPairSerializer
 
     def post(self, request, *args, **kwargs):
@@ -56,12 +73,15 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         )
 
         return response
-    
+
 @api_view(['POST'])
 @authentication_classes([])
 @permission_classes([AllowAny])
 @csrf_exempt   
 def registration(request):
+    """
+    User registration endpoint.
+    """
     next_url = request.GET.get('next', '/')
     serializer = RegisterSerializer(data=request.data)
 
@@ -96,6 +116,9 @@ def registration(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def logout(request):
+    """
+    Logout endpoint: Blacklists refresh token and deletes access token cookie.
+    """
     refresh_token = request.data.get('refresh_token')
 
     if refresh_token:
@@ -110,10 +133,19 @@ def logout(request):
 
     return response
 
+# -----------------------------
+# Profile API Views
+# -----------------------------
+
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def profile_view(request):
+    """
+    GET: Retrieve user profile.
+    POST: Create user profile (rarely needed, profile is auto-created).
+    PUT: Update user profile.
+    """
     user = request.user
     if request.method == 'GET':
         serializer = ProfileSerializer(user.profile)
@@ -132,17 +164,37 @@ def profile_view(request):
             profile = serializer.save()
             return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-    
+
+# -----------------------------
+# Seller Profile API Views
+# -----------------------------
+
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def seller_profile_view(request):
+    """
+    GET: Retrieve seller profile.
+    POST: Create seller profile (only if not already exists and user is a seller).
+    PUT: Update seller profile.
+    """
     user = request.user
     if request.method == 'GET':
-        serializer = SellerProfileSerializer(user.profile.sellerprofile)
+        try:
+            serializer = SellerProfileSerializer(user.profile.seller_profile)
+        except SellerProfile.DoesNotExist:
+            return Response({'detail': 'Seller profile not found.'}, status=status.HTTP_404_NOT_FOUND)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
+        try:
+            profile = request.user.profile
+        except Profile.DoesNotExist:
+            return Response({'detail': 'Profile not found.'}, status=status.HTTP_400_BAD_REQUEST)
+        # Prevent duplicate seller profiles
+        if hasattr(profile, 'seller_profile'):
+            return Response({'detail': 'Seller profile already exists.'}, status=status.HTTP_400_BAD_REQUEST)
+        
         serializer = SellerProfileSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             profile = serializer.save(profile=user.profile)
@@ -150,7 +202,11 @@ def seller_profile_view(request):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     elif request.method == 'PUT':
-        serializer = SellerProfileSerializer(user.profile.sellerprofile, data=request.data, context={'request': request}, partial=True)
+        try:
+            seller_profile = user.profile.seller_profile
+        except SellerProfile.DoesNotExist:
+            return Response({'detail': 'Seller profile not found.'}, status=status.HTTP_404_NOT_FOUND)
+        serializer = SellerProfileSerializer(seller_profile, data=request.data, context={'request': request}, partial=True)
         if serializer.is_valid():
             profile = serializer.save()
             return Response(SellerProfileSerializer(profile).data, status=status.HTTP_200_OK)

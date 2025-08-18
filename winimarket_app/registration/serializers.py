@@ -2,6 +2,7 @@ from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Profile, SellerProfile
+from django.utils import timezone
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
@@ -29,6 +30,9 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         if not user.is_active:
             raise serializers.ValidationError('User is inactive')
         
+        user.last_login = timezone.now()
+        user.save(update_fields=['last_login'])
+
         data = super().get_token(user)
 
         return {
@@ -80,7 +84,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         if value:
             if value.size > 2 * 1024 * 1024:
                 raise serializers.ValidationError("Store logo must be less than 2MB")
-            if not value.content_type.startwith('image/'):
+            if not value.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
         return value
     
@@ -100,7 +104,7 @@ class SellerProfileSerializer(serializers.ModelSerializer):
         if value:
             if value.size > 2 * 1024 * 1024:
                 raise serializers.ValidationError("Store logo must be less than 2MB")
-            if not value.content_type.startwith('image/'):
+            if not value.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
         return value
     

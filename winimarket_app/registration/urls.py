@@ -30,4 +30,7 @@ urlpatterns = [
 
     #REGISTER VIEWS
     path('register/', views.register_view, name='register'),
+
+    #PROFILE VIEWS
+    path('profile/', views.profile_template, name='profile'),
 ]
