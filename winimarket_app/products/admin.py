@@ -16,7 +16,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'seller', 'category', 'min_price', 'max_price', 'quantity', 'is_active', 'created_at')
+    list_display = ('name', 'seller', 'category', 'condition','min_price', 'max_price', 'quantity', 'is_active', 'created_at')
     search_fields = ('name', 'seller__store_name', 'category__name')
     list_filter = ('is_active', 'category', 'created_at')
     inlines = [ProductImageInline]

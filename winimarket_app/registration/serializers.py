@@ -94,6 +94,7 @@ class ProfileSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
     
 class SellerProfileSerializer(serializers.ModelSerializer):
+    profile = ProfileSerializer(read_only=True)
     store_logo = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = SellerProfile

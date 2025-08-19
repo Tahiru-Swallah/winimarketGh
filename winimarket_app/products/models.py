@@ -36,6 +36,11 @@ class Product(models.Model):
     max_price = models.DecimalField(max_digits=10, decimal_places=2)        # Maximum price (for price range)
     quantity = models.PositiveIntegerField(default=1)                       # Stock quantity
     category = models.ForeignKey(Category, related_name='products', on_delete=models.SET_NULL, null=True)  # Product category
+    condition = models.CharField(max_length=50, choices=[
+        ('new', 'New'),
+        ('used', 'Used'),
+        ('refurbished', 'Refurbished')
+    ], default='new')                                                       # Product condition
     is_active = models.BooleanField(default=True)                           # Is the product available for sale?
     created_at = models.DateTimeField(auto_now_add=True)                    # Timestamp when product was created
     updated_at = models.DateTimeField(auto_now=True)                        # Timestamp when product was last updated

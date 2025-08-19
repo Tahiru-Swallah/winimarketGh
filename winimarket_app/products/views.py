@@ -55,6 +55,14 @@ def product_list_create(request):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
+        if not hasattr(request.user, "profile") or not request.user.profile.role == "seller":
+            return Response(
+                {
+                    "error": "Only sellers can create products."
+                },
+                status=status.HTTP_403_FORBIDDEN    
+            )
+        
         category_id = request.data.get('category_id')
         try:
             category = Category.objects.get(id=category_id)

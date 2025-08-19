@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>Document</title>
+</head>
+<body>
+    <div id="productFormWrapper" style="display:none;">
+        <form id="productForm" enctype="multipart/form-data">
+            <input type="text" name="name" placeholder="Product Name" required /><br>
+            <textarea name="description" placeholder="Product Description"></textarea><br>
+            <input type="number" name="min_price" placeholder="Min Price" required /><br>
+            <input type="number" name="max_price" placeholder="Max Price" required /><br>
+            <input type="number" name="quantity" placeholder="Quantity" required /><br>
+            <!-- Dropdown for product condition -->
+            <select name="condition" required>
+                <option value="">Select Condition</option>
+                <option value="new">New</option>
+                <option value="used">Used</option>
+                <option value="refurbished">Refurbished</option>    
+            </select><br>
+            <!-- Dropdown for category -->
+            <select name="category_id" id="categorySelect" required><br>
+                <option value="">Select Category</option>
+            </select><br>
+
+            <label for="">
+                <input type="radio" name="is_active" value="true" checked /> Is the Product Active/Available?
+            </label><br>
+
+            <input type="file" name="images" multiple /> <br><!-- allow multiple images -->
+            <small>You can upload up to 5 images</small> <br><br>
+            <button type="submit">List Product</button>
+
+            <div id="message"></div>
+        </form>
+    </div> <br> <br>
+
+    <div id="product-list"></div>
+
+    <script>
+        async function checkUser(){
+            try{
+
+                let response = await fetch('/account/api/profile/')
+
+                if (!response.ok) throw new Error('Failed to fetch user')
+
+                let user = await response.json();
+                
+                if (user.role === 'seller'){
+                    document.getElementById('productFormWrapper').style.display = 'block'
+                } else{
+                    document.getElementById('productFormWrapper').style.display = 'none'
+                }
+
+            } catch(error){
+                console.error("Error checking user:", error)
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', checkUser)
+
+        async function loadCatefories(){
+            try{
+                const response = await fetch('/products/api/categories/')
+
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const categories = await response.json();
+                const categorySelect = document.getElementById('categorySelect');
+
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category.id;
+                    option.textContent = category.name;
+                    categorySelect.appendChild(option);
+                });
+
+            } catch(error){
+                console.error("Error loading categories:", error);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadCatefories);
+
+        const imageInput = document.querySelector('input[name="images"]');
+        imageInput.addEventListener('change', function() {
+            if (imageInput.files.length > 5) {
+                alert("You can only upload a maximum of 5 images.");
+                imageInput.value = ''; // Clear the input
+            }
+        })
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        document.getElementById('productForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = 'Submitting...'; 
+
+            try{
+
+                const response = await fetch('/products/api/products/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+
+                    if(response.status === 403 && errorData.error){
+                        messageDiv.textContent = "⚠️ " + errorData.error;
+
+                    } else{
+                        messageDiv.textContent = "❌ failed to list product:" + JSON.stringify(errorData);
+                    } 
+                    return;
+                }
+
+                const data = await response.json();
+                console.log(data)
+                messageDiv.textContent = "✅ Product listed successfully!";
+
+                e.target.reset(); // Reset the form after successful submission
+
+            } catch (error) {
+                console.error("Error submitting form:", error);
+                alert("There was an error submitting the form. Please try again.");
+            }
+        })
+
+        async function loadProducts() {
+            try {
+                const response = await fetch('/products/api/products/');
+                if (!response.ok) throw new Error('Network response was not ok');
+
+                const products = await response.json();
+                console.log(products); // Log the products to the console for debugging
+                const productList = document.getElementById('product-list');
+                productList.innerHTML = ''; // Clear previous products
+
+                products.forEach(product => {
+                    let firstImage = product.images && product.images.length > 0 ? product.images[0].image : 'No image available';
+
+                    const productDiv = document.createElement('div');
+                    productDiv.innerHTML = `
+                        <img src="${firstImage}" alt="${product.name}" style="width: 100px; height: 100px;"><br>
+                        <h3>${product.name}</h3>
+                        <p>Price: ₡${product.min_price} - ₡${product.max_price}</p>
+                    `;
+                    productList.appendChild(productDiv);
+                });
+
+            } catch (error) {
+                console.error("Error loading products:", error);
+            }
+        } 
+
+        document.addEventListener('DOMContentLoaded', loadProducts);
+    </script>
+</body>
+</html>

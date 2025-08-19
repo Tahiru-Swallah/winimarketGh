@@ -1,5 +1,8 @@
 from rest_framework import serializers
 from .models import Product, ProductImage, WishList, Category
+from django.utils.text import slugify
+from uuid import uuid4
+from registration.serializers import SellerProfileSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False, allow_null=True)  # Allow image to be optional
@@ -67,24 +70,29 @@ class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, required=False, allow_empty=True)
     category = CategorySerializer(read_only=True)
     category_id = serializers.UUIDField(write_only=True, required=False)
-
+    seller = SellerProfileSerializer(read_only=True)
 
     # Expose model properties as read-only fields
-    price_range = serializers.CharField(source='price_range', read_only=True)
-    is_available = serializers.BooleanField(source='is_available', read_only=True)
-    is_seller = serializers.BooleanField(source='is_seller', read_only=True)
-    image_count = serializers.IntegerField(source='image_count', read_only=True)
+    price_range = serializers.CharField(read_only=True)
+    is_available = serializers.BooleanField( read_only=True)
+    is_seller = serializers.BooleanField(read_only=True)
+    image_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Product
         fields = [
             'id', 'seller', 'name', 'slug', 'description',
-            'min_price', 'max_price', 'quantity', 'category', 'category_id',
+            'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
             'price_range', 'is_available', 'is_seller', 'image_count'
         ]
 
-        read_only_fields = ['id', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+
+    def validate_images(self, value):
+        if len(value) > 5:
+            raise serializers.ValidationError("A product can have a maximum of 5 images.")
+        return value
     
     def create(self, validated_data):
         images = self.context['request'].FILES.getlist('images')
@@ -95,6 +103,9 @@ class ProductSerializer(serializers.ModelSerializer):
 
         if category:
             validated_data['category'] = category
+
+        validated_data['seller'] = self.context['request'].user.profile.seller_profile  # Automatically set the seller to the current user
+        validated_data['slug'] = slugify(validated_data['name']) + "-" + str(uuid4())[:8] # Automatically generate slug from name
 
         product = super().create(validated_data)
 
