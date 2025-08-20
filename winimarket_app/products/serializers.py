@@ -2,7 +2,7 @@ from rest_framework import serializers
 from .models import Product, ProductImage, WishList, Category
 from django.utils.text import slugify
 from uuid import uuid4
-from registration.serializers import SellerProfileSerializer
+from registration.serializers import SellerProfileSerializer, ProfileSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
     image = serializers.ImageField(required=False, allow_null=True)  # Allow image to be optional
@@ -132,7 +132,7 @@ class ProductSerializer(serializers.ModelSerializer):
     
 class WishListSerializer(serializers.ModelSerializer):
     products = ProductSerializer(read_only=True)
-
+    buyer = ProfileSerializer(read_only=True)
     class Meta:
         model = WishList
         fields = ['id', 'buyer', 'products', 'added_at']
@@ -145,7 +145,9 @@ class WishListSerializer(serializers.ModelSerializer):
         if not product or not buyer:
             raise serializers.ValidationError("Product and buyer must be provided.")
         
-        validated_data['products'] = product
-        validated_data['buyer'] = buyer
-
-        return super().create(validated_data)
+        wishlist_item, created = WishList.objects.get_or_create(products=product, buyer=buyer)
+        
+        if not created:
+            return wishlist_item
+        
+        return wishlist_item

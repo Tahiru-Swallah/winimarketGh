@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <div id="cart-section">
+        <h2>Your Cart</h2>
+        <div id="cart-items"></div>
+        <div id="cart-total"></div>
+        <button id="checkout-button">Checkout</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            const cartItemsContainer = document.getElementById('cart-items'); 
+            const cartTotalContainer = document.getElementById('cart-total');
+            const checkoutButton = document.getElementById('checkout-button');
+
+            async function fetchCartItem() {
+                try {
+                    const response = await fetch('/cart/api/view/');
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+
+                    const cartData = await response.json();
+
+                    cartItemsContainer.innerHTML = '';
+                    let total = 0;
+
+                    cartData.items.forEach(item => {
+                        total += parseFloat(item.choice_price) * item.quantity;
+
+                        const itemDiv = document.createElement('div');
+                        itemDiv.innerHTML = `
+                            <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                                <img src="${item.product.images[0]?.image}" 
+                                    alt="${item.product.name}" 
+                                    style="width: 50px; height: 50px; object-fit: cover; border-radius: 5px;">
+                                <div>
+                                    <strong>${item.product.name}</strong><br>
+                                    $${item.choice_price} x ${item.quantity}
+
+                                    <button class="decrease" data-id="${item.id}" style="margin-left: 10px;">-</button>
+                                    <span class="quantity" style="margin-left: 5px;">${item.quantity}</span>
+                                    <button class="increase" data-id="${item.id}" style="margin-left: 5px;">+</button>
+                                </div>
+                            </div>
+                        `;
+                        cartItemsContainer.appendChild(itemDiv);
+                    });
+
+                    cartTotalContainer.textContent = `Total: $${total.toFixed(2)}`;
+
+                    attachQuantityListeners(); // reattach after rendering
+
+                } catch (error) {
+                    console.error('Error fetching cart data:', error);
+                    cartItemsContainer.textContent = 'Failed to load cart items.';
+                }
+            }
+
+            async function updateCartItem(itemId, newQuantity) {
+                try {
+                    const response = await fetch(`/cart/api/update/${itemId}/`, {
+                        method: 'PATCH',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                        body: JSON.stringify({ quantity: newQuantity })
+                    });
+
+                    if(response.status === 204){
+                        alert('Item removed from cart')
+                        await fetchCartItem();
+                        return;
+                    }
+
+                    if (response.status === 404){
+                        alert('Item no longer exist in cart')
+                        await fetchCartItem()
+                        return;
+                    }
+
+                    if (!response.ok) {
+                        throw new Error('Failed to update cart item');
+                    }
+
+                    const updatedItem = await response.json();
+
+                    await fetchCartItem();
+
+                } catch (error) {
+                    console.error('Error updating cart item:', error);
+                }
+            }
+
+            function attachQuantityListeners() {
+                const decreaseButtons = document.querySelectorAll('.decrease');
+                const increaseButtons = document.querySelectorAll('.increase');
+
+                increaseButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const itemId = button.dataset.id;
+                        const qtyElem = button.parentElement.querySelector('.quantity');
+                        const newQuantity = parseInt(qtyElem.textContent) + 1;
+                        updateCartItem(itemId, newQuantity);
+                    });
+                });
+
+                decreaseButtons.forEach(button => {
+                    button.addEventListener('click', () => {
+                        const itemId = button.dataset.id;
+                        const qtyElem = button.parentElement.querySelector('.quantity');
+                        const newQuantity = parseInt(qtyElem.textContent) - 1;
+                        updateCartItem(itemId, newQuantity);
+                    });
+                });
+            }
+
+            fetchCartItem();
+        });
+
+    </script>
+</body>
+</html>

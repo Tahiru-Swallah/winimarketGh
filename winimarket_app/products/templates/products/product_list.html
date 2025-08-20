@@ -128,7 +128,6 @@
                 }
 
                 const data = await response.json();
-                console.log(data)
                 messageDiv.textContent = "✅ Product listed successfully!";
 
                 e.target.reset(); // Reset the form after successful submission
@@ -145,7 +144,7 @@
                 if (!response.ok) throw new Error('Network response was not ok');
 
                 const products = await response.json();
-                console.log(products); // Log the products to the console for debugging
+        
                 const productList = document.getElementById('product-list');
                 productList.innerHTML = ''; // Clear previous products
 
@@ -157,6 +156,8 @@
                         <img src="${firstImage}" alt="${product.name}" style="width: 100px; height: 100px;"><br>
                         <h3>${product.name}</h3>
                         <p>Price: ₡${product.min_price} - ₡${product.max_price}</p>
+                        <button onclick="addToWishList('${product.id}')">Add to Wishlist</button>
+                        <button onclick="addToCart('${product.id}', '${product.min_price}')">Add to Cart</button>
                     `;
                     productList.appendChild(productDiv);
                 });
@@ -167,6 +168,63 @@
         } 
 
         document.addEventListener('DOMContentLoaded', loadProducts);
+
+        async function addToWishList(productId) {
+            try{
+                const response = await fetch(`/products/api/wishlist/${productId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Error adding to wishlist:", errorData);
+                    alert("Failed to add to wishlist: " + errorData.error);
+                    return;
+                }
+
+                const data = await response.json();
+                
+                alert("Product added to wishlist successfully!");
+
+            } catch(error) {
+                console.error("Error adding to wishlist:", error);
+            }
+        }
+
+        async function addToCart(productId, choice_price, quantity=1){
+            try{
+                const response = await fetch('/cart/api/add/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        product_id: productId,
+                        choice_price: choice_price,
+                        quantity: quantity
+                    })
+                })
+
+                const data = await response.json();
+                console.log("Response from add to cart:", data);
+                
+                if (!response.ok) {
+                    console.error("Error adding to cart:", data);
+                    alert("Failed to add to cart: " + data.error);
+                    return;
+                } else {
+                    alert("Product added to cart successfully!");
+                }
+
+            } catch(error) {
+                console.error("Error adding to cart:", error);
+                alert("There was an error adding the product to the cart. Please try again.");
+            }
+        }
     </script>
 </body>
 </html>

@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'jazzmin',
     'registration.apps.RegistrationConfig',
     'products.apps.ProductsConfig',
+    'cart.apps.CartConfig',
+    'order.apps.OrderConfig',
     'rest_framework',
     'phonenumber_field',
     'django.contrib.admin',
