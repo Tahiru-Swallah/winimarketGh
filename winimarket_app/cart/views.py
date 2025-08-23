@@ -29,7 +29,7 @@ def view_cart(request):
         cart= Cart.objects.get(buyer=request.user.profile)
     except Cart.DoesNotExist:
         return Response({"item": [], 'total': 0}, status=status.HTTP_404_NOT_FOUND)
-    
+
     cart_items = CartItem.objects.filter(cart=cart)
     serializer = CartItemSerializer(cart_items, many=True, context={'request': request})
 

@@ -9,7 +9,7 @@ class Cart(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"Cart {self.id} for {self.buyer.full_name}"
+        return f"Cart {self.id} for {self.buyer.user.email}"
     
     @property
     def total_items(self):

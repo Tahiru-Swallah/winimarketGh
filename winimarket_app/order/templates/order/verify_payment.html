@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Verifying Payment...</title>
+</head>
+<body>
+    <div id="payment-status">Verifying your payment, please wait...</div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const reference = urlParams.get('reference');
+        const pathParts = window.location.pathname.split('/');
+        const uuidMatch = reference.match(/order-([a-f0-9\-]{36})-/);
+        const orderId = uuidMatch ? uuidMatch[1] : null;
+
+        console.log("Order ID:", orderId);
+        console.log("Reference:", reference);
+
+        verifyPayment(orderId, reference);
+
+        async function verifyPayment(orderId, reference) {
+            try {
+                const response = await fetch(`/order/verify-payment/${orderId}/?reference=${reference}`, {
+                    method: 'GET',
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest"
+                    }
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    document.getElementById('payment-status').innerText = data.message;
+                    setTimeout(() => {
+                        window.location.href = '/order/payment-success/';
+                    }, 2000);
+                } else {
+                    document.getElementById('payment-status').innerText = data.error;
+                }
+            } catch (error) {
+                console.error('Error verifying payment:', error);
+            }
+        }
+    </script>
+</body>
+</html>

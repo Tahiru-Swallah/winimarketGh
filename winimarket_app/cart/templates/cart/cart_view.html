@@ -10,7 +10,7 @@
         <h2>Your Cart</h2>
         <div id="cart-items"></div>
         <div id="cart-total"></div>
-        <button id="checkout-button">Checkout</button>
+        <button id="checkout-button"><a href="{% url 'order:order_create'%}">Check Out</a></button>
     </div>
 
     <script>
@@ -27,6 +27,7 @@
                     }
 
                     const cartData = await response.json();
+                    console.log(cartData)
 
                     cartItemsContainer.innerHTML = '';
                     let total = 0;

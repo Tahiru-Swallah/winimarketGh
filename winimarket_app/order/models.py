@@ -1,6 +1,7 @@
 from django.db import models
 from registration.models import Profile
 from uuid import uuid4
+from django.utils import timezone
 
 class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -17,6 +18,15 @@ class Order(models.Model):
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled')
     ], default='pending')
+    total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    cancelled_at = models.DateTimeField(null=True, blank=True)
+    payment_reference = models.CharField(max_length=250, null=True, blank=True)
+    paid_at = models.DateTimeField(null=True, blank=True)
+
+    def cancel_at(self):
+        self.status = 'cancelled'
+        self.cancelled_at = timezone.now()
+        self.save()
 
     class Meta:
         ordering = ['-created_at']

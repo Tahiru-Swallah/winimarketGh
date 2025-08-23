@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -50,7 +51,22 @@ INSTALLED_APPS = [
 
     #Third party 
     'rest_framework_simplejwt.token_blacklist',
+    'django_q',
 ]
+
+Q_CLUSTER = {
+    "name": "DjangoQ",
+    "workers": 4,
+    "recycle": 500,
+    "timeout": 60,
+    "retry": 120,
+    "queue_limit": 50,
+    "bulk": 10,
+    "orm": "default",
+}
+
+PAYSTACK_TESTED_PUBLIC_API_KEY = config('PAYSTACK_TESTED_PUBLIC_API_KEY')
+PAYSTACK_TESTED_SECRET_API_KEY = config('PAYSTACK_TESTED_SECRET_API_KEY')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
