@@ -22,6 +22,12 @@ urlpatterns = [
     #LOGIN VIEWS
     path('login/', views.login_view, name='login'),
 
+    # CHANGE PASSWORD API
+    path('api/change-password/', views.ChangePasswordView.as_view()),
+
+    #CHANGE PASSWORD VIEW
+    path('change-password/', views.change_password_view, name='change_password'),
+
     #PROFILE API
     path('api/profile/', views.profile_view),
 

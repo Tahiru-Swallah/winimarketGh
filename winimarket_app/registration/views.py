@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.utils.decorators import method_decorator
 
 # REST FRAMEWORK LIBRARIES
 from rest_framework.views import APIView
@@ -32,6 +33,11 @@ def login_view(request):
 def register_view(request):
     # Render the registration page
     return render(request, 'authentication/register.html')
+
+@login_required
+def change_password_view(request):
+    # Render the change password page for logged-in users
+    return render(request, 'authentication/change_password.html')
 
 @login_required
 def profile_template(request):
@@ -132,6 +138,25 @@ def logout(request):
     response.delete_cookie('access_token')
 
     return response
+
+@method_decorator(csrf_exempt, name='dispatch')
+class ChangePasswordView(APIView):
+    """
+    An endpoint for changing password.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        user = request.user
+        current_password = request.data.get('current_password')
+        new_password = request.data.get('new_password')
+
+        if not user.check_password(current_password):
+            return Response({'detail': 'Current password is incorrect.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        user.set_password(new_password)
+        user.save()
+        return Response({'detail': 'Password updated successfully.'}, status=status.HTTP_200_OK)
 
 # -----------------------------
 # Profile API Views
