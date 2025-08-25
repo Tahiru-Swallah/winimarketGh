@@ -8,6 +8,7 @@
 </head>
 <body>
     <form action="" id="orderForm">
+        <input type="hidden" name="product_id" id="product_id">
         <input type="text" id="address" placeholder="Address" required> <br> <br>  
         <input type="text" id="postal_code" placeholder="Postal Code" required> <br> <br>
         <input type="text" id="city" placeholder="City"> <br> <br>
@@ -33,13 +34,23 @@
             return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
         }
 
-        
+        document.addEventListener('DOMContentLoaded', () => {
+            const selectedProduct = sessionStorage.getItem('selectedProduct');
+            if (selectedProduct) {
+                document.getElementById('product_id').value = selectedProduct;
+                sessionStorage.removeItem('selectedProduct'); // Clear after use
+            }
+        });
+
         document.getElementById('orderForm').addEventListener('submit', async function(e){
             e.preventDefault()
 
+            const productId = document.getElementById('product_id').value
             const address = document.getElementById('address').value
             const postalCode = document.getElementById('postal_code').value
             const city = document.getElementById('city').value
+
+            const orderData = {product_id: productId, address: address, postal_code: postalCode, city: city}
 
             try{
                 const response = await fetch('/order/api/order/', {
@@ -48,11 +59,7 @@
                         'Content-Type': 'application/json',
                         'X-CSRFToken': getCSRFToken()
                     },
-                    body: JSON.stringify({
-                        address: address,
-                        postal_code: postalCode,
-                        city: city
-                    })
+                    body: JSON.stringify({address: address, postal_code: postalCode, city: city})
                 })
 
                 const data = await response.json()
@@ -71,11 +78,37 @@
                     `
                 }
 
+                await directPurchase(orderData)
+
                 e.target.reset()
             } catch(error){
                 console.error('Something went wrong: ' + error)
             }
         })
+
+        async function directPurchase(data){
+            try{
+
+                const response = await fetch('/order/direct/purchase/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify(data)
+                })
+    
+                if(!response.ok){
+                    throw new Error('Failed to place order')
+                }
+
+                const data = await response.json()
+                console.log("Direct purchase data:", data)
+
+            } catch(error){
+                console.error('Something went wrong: ' + error)
+            }
+        }
 
         document.addEventListener('DOMContentLoaded', async function () {
             const orderList = document.getElementById('order-list')
@@ -147,7 +180,7 @@
             try {
                 console.log("Initializing payment for:", orderId, "with method:", paymentMethod); // Debug log
 
-                const response = await fetch(`/order/initialize-payment/${orderId}/`, {
+                const response = await fetch(`/payment/initialize-payment/${orderId}/`, {
                     method: 'POST',
                     headers: {
                         "X-CSRFToken": getCSRFToken(),

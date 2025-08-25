@@ -11,11 +11,7 @@ urlpatterns = [
 
     #CANCEL ORDER
     path('cancel/order/<uuid:order_id>/', views.cancel_order, name='cancel_order'),
-
-    #PAYMENT VERIFICATION
-    path('initialize-payment/<uuid:order_id>/', views.initialize_payment, name='initialize_payment'),
-    path('verify-payment/<uuid:order_id>/', views.verify_payment, name='verify_payment'),
-    path('paystack-webhook/', views.paystack_webhook, name='paystack_webhook'),
+    path('direct/purchase/', views.direct_purchase, name='direct_purchase'),
 
     #TEMPLATE VIEWS FOR ORDER
     path('', views.order_template_view, name='order_create'),

@@ -21,7 +21,7 @@
 
         async function verifyPayment(orderId, reference) {
             try {
-                const response = await fetch(`/order/verify-payment/${orderId}/?reference=${reference}`, {
+                const response = await fetch(`/payment/verify-payment/${orderId}/?reference=${reference}`, {
                     method: 'GET',
                     headers: {
                         "X-Requested-With": "XMLHttpRequest"

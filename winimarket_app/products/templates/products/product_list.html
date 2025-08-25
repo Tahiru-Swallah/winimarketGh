@@ -158,6 +158,7 @@
                         <p>Price: ₡${product.min_price} - ₡${product.max_price}</p>
                         <button onclick="addToWishList('${product.id}')">Add to Wishlist</button>
                         <button onclick="addToCart('${product.id}', '${product.min_price}')">Add to Cart</button>
+                        <button class="buy-now" data-product-id="${product.id}" onclick='goToOrderPage(this)'>Buy Now</button>
                     `;
                     productList.appendChild(productDiv);
                 });
@@ -166,6 +167,12 @@
                 console.error("Error loading products:", error);
             }
         } 
+
+        function goToOrderPage(button){
+            const productId = button.getAttribute('data-product-id');
+            sessionStorage.setItem('selectedProduct', productId);
+            window.location.href = '/order/';
+        }
 
         document.addEventListener('DOMContentLoaded', loadProducts);
 

@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'products.apps.ProductsConfig',
     'cart.apps.CartConfig',
     'order.apps.OrderConfig',
+    'payment.apps.PaymentConfig',
     'rest_framework',
     'phonenumber_field',
     'django.contrib.admin',
