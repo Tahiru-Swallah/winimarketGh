@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-oa_bed5^che@uld&l)npkb0m-pb*urzc$j2v==u$6%eo@wek-b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.137.199']
 
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition
@@ -75,8 +75,8 @@ MIDDLEWARE = [
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'registration.middleware.jwt.JWTAuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    'registration.middleware.jwt.JWTAuthenticationMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 

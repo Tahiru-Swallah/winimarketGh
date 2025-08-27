@@ -1,86 +1,88 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>Document</title>
+    <title>Kasuwaa - Login/SignUp</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static './css/auth/login.css' %}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-    <form id="loginForm">
-        <input type="text" id="emailOrPhone" name="email_or_phonenumber" placeholder="Email or Phone" required><br>
-        <input type="password" id="password" name="password" placeholder="Password" required><br>
-        <button type="submit">Login</button> 
+    <header>
+        <!-- <div class="logo">
+            <i class='bxr  bxs-shopping-bag-alt'  ></i> 
+        </div> -->
+        <div class="head-title">
+            Kasuwaa
+        </div>
 
-        <a href="{% url 'registration:register'%}">Sign Up</a>
-    </form>
+        <div class="login-message desktop"></div>
+    </header>
 
-    <script>
-        function getCSRFToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        }
+    <div class="login-message-mobile">
+        <div class="message">
+            <span>Login Successful</span>
+        </div>
+    </div>
 
-        function IsEmail(value){
-            return /\S+@\S+\.\S+/.test(value);
-        }
+    <main class="auth-container">
+        <section class="form-card">
 
-        function formatPhoneNumber(phone){
-            let cleaned = phone.replace(/\D/g, '');
-            if(cleaned.startsWith('0')){
-                cleaned = cleaned.substring(1);
-            }
+            <!-- LOGIN FORM  -->
+            <form action="" id="loginForm" class="form-content active">
+                <h2 class="form-title">Welcome Back</h2>
+                <p class="form-subtitle">Login in to your account</p>
 
-            return '+233' + cleaned;
-        }
+                <div id="g_id_signin"></div>
+                <div class="divider">Or</div>
 
-        document.getElementById("loginForm").addEventListener('submit', async function(e){
-            e.preventDefault();
+                <div class="error"></div>
 
-            let email_or_phonenumber = document.getElementById("emailOrPhone").value;
-            const password = document.getElementById("password").value;
+                <input type="text" id="emailOrPhone" name="email_or_phonenumber" class="input-field" placeholder="Email or Phone" required>
+                <input type="password" id="password" name="password" class="input-field" placeholder="Password" required>
+                <a href="#" class="forgot-password">Forgot Password</a>
+                <button type="submit" class="submit-btn">Login</button>
 
-            if (IsEmail(email_or_phonenumber)) {
-                // If it's an email, no formatting needed
-                email_or_phonenumber = email_or_phonenumber.trim();
-            } else {
-                // If it's a phone number, format it
-                email_or_phonenumber = formatPhoneNumber(email_or_phonenumber);
-            }
+                <div class="signup">
+                    <span>Don't have an account? <a href="#" class="toggle-link" data-target="registerForm">Sign Up</a></span>
+                </div>
 
-            const params = new URLSearchParams(window.location.search);
-            const next = params.get('next') || '/';
+                <div class="terms">
+                    <span>By Continuing, you agree to Kasuwaa's <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
+                </div>
 
-            try{
-                const response = await fetch(`/account/api/login/?next=${encodeURIComponent(next)}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({email_or_phonenumber, password})
-                });
+            </form>
 
-                const data = await response.json();
-                console.log(data.next);
+            <!-- SIGN UP FORM -->
+             <form action="" id="registerForm" class="form-content">
+                <h2 class="form-title">Create Account</h2>
+                <p class="form-subtitle">Join us and Start Shopping</p>
 
-                if (response.ok && data.access_token) {
-                    localStorage.setItem('access_token', data.access_token);
-                    localStorage.setItem('refresh_token', data.refresh_token);
+                <div id="g_id_signin"></div>
+                <div class="divider">Or</div>
 
-                    alert('Login successful');
+                <div class="error"></div>
 
-                    window.location.href = data.next && data.next !== '/' ? data.next : '/account/';
+                <input type="email" name="email" class="input-field" id="email" placeholder="Enter your email" required>
+                <input type="text" name="phonenumber" class="input-field" id="phonenumber" placeholder="Enter your phone number" required>
+                <input type="password" id="password-" class="input-field" placeholder="Create a password" required>
+                <button type='submit' class="submit-btn">Register</button>
 
-                } else {
-                    alert(data.detail || 'Login failed. Please try again.');
-                }
+                <div class="login">
+                    <span>Already have an account? <a href="#" class="toggle-link" data-target="loginForm">Login</a></span>
+                </div>
 
-            } catch (error){
-                alert("An error occurred during login. Please try again.");
-                console.error("Login error:", error);
-            }
-        })
-    </script>
+                <div class="terms">
+                    <span>By Continuing, you agree to Kasuwaa's <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
+                </div>
+             </form>
+        </section>
+    </main>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="{% static './js_files/auth.js'%}"></script>
 </body>
 </html>

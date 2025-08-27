@@ -117,7 +117,7 @@ def registration(request):
 
         return response
     
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    return Response({'errors' : serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

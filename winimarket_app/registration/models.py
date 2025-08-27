@@ -75,7 +75,10 @@ class Profile(models.Model):
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='buyer')             # User role
     full_name = models.CharField(max_length=255, blank=True, null=True)                       # Full name
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True) # Profile picture
-    created_at = models.DateTimeField(auto_now_add=True)                                      # Profile creation time
+    created_at = models.DateTimeField(auto_now_add=True) # Profile creation time
+    
+    class Meta:
+        ordering = ['-created_at']  # Order profiles by creation date (newest first)                            
 
     def __str__(self):
         return f"{self.user.email} - {self.role}"  # String representation

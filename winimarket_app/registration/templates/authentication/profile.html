@@ -1,173 +1,45 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>Document</title>
+    <title>Kasuwaa - Profile Setup</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static './css/auth/login.css' %}">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
-    <form action="" id="roleForm">
-        <h2>Choose Your Role</h2>
-        <p>Please select your role to continue:</p>
-        <label>
-        <input type="radio" name="role" value="buyer" checked> Buyer
-        </label> <br>
-        <label>
-            <input type="radio" name="role" value="seller"> Seller
-        </label> <br>
-        <button type="submit">Next</button>
-    </form>
+    <header>
+        <div class="head-title">
+            Kasuwaa
+        </div>
+    </header>
 
-    <form action="" id="buyerProfileForm" style="display: none;">
-        <h2>Buyer Form</h2>
-        <input type="text" id="buyerFullName" name="full_name" placeholder="Full Name" required><br>
-        <input type="file" id="buyerProfilePicture" name="profile_picture" accept="image/*"><br>
-        <button type="submit">Finish</button>
-    </form>
+    <div class="login-message-mobile">
+        <div class="message">
+            <span>Profile Set Up successfully</span>
+        </div>
+    </div>
 
-    <form action="" id="sellerProfileForm" style="display:none;">
-        <h2>Seller Form</h2>
-        <input type="text" id="storeName" name="store_name" placeholder="Store Name" required><br>
-        <input type="file" id="storeLogo" name="store_logo" accept="image/*"><br>
-        <textarea id="storeDescription" name="store_description" placeholder="Store Description"></textarea><br>
-        <input type="text" id="businessAddress" name="business_address" placeholder="Business Address"><br>
-        <input type="text" id="momoDetails" name="momo_details" placeholder="Momo Details"><br>
-        <button type="submit">Finish</button>
-    </form>
+    <main class="auth-container">
+        <section class="form-card">
+            <form action="" id="profileForm" class="form-content active">
+                <h2 class="title">Add your name and Profile Image</h2>
+                <p class="subtitle">Adding your profile image is optional.</p>
 
-    <script>
-        function showBuyerProfileForm() {
-            document.getElementById('roleForm').style.display = 'none';
-            document.getElementById('buyerProfileForm').style.display = 'block';
-            document.getElementById('sellerProfileForm').style.display = 'none';
-        }
+                <div class="profile_image">
+                    <img src="{% static './images/profile1.jfif' %}" alt="profile-img" id="show-profile" class="img" width="20">
+                    <input type="file" id="avatar" name="avatar" accept="images/*" style="display: none;">
+                    <label for="avatar">Upload Image</label>
+                </div>
+                <input type="text" name="name" id="buyer-name" class="input-field" placeholder="Enter your Full name">
+                <button type="submit" class="submit-btn">Submit</button>
+            </form>
+        </section>
+    </main>
 
-        function showSellerProfileForm() {
-            document.getElementById('roleForm').style.display = 'none';
-            document.getElementById('buyerProfileForm').style.display = 'none';
-            document.getElementById('sellerProfileForm').style.display = 'block';
-        }
-
-        let selectedRole = 'buyer'; // Default role
-        document.getElementById('roleForm').addEventListener('change', function(e){
-            if (e.target.name === 'role'){
-                selectedRole = e.target.value
-            }
-        })
-
-        document.getElementById('roleForm').addEventListener('submit', function(event) {
-            event.preventDefault();
-            const role = document.querySelector('input[name="role"]:checked').value;
-            if (role === 'buyer') {
-                showBuyerProfileForm();
-            } else {
-                showSellerProfileForm();
-            }
-        });
-
-        document.getElementById('buyerProfileForm').addEventListener('submit', async function(e){
-            e.preventDefault();
-            const role = 'buyer';
-            await submitProfile(role);
-        })
-
-        document.getElementById('sellerProfileForm').addEventListener('submit', async function(e){
-            e.preventDefault();
-            await submitSellerProfile();
-        })
-
-        function getCSRFToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        }
-
-        async function submitProfile(role){
-            const formData = new FormData();
-            formData.append('role', role);
-            formData.append('full_name', document.getElementById('buyerFullName').value);
-            const pic = document.getElementById('buyerProfilePicture').files[0];
-
-            if (pic) {
-                formData.append('profile_picture', pic);
-            }
-
-            try{
-                const response = await fetch('/account/api/profile/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: formData
-                })
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('Profile submitted successfully');
-                    // Redirect or show success message
-                    window.location.href = '/account/';
-                } else {
-                    alert('Profile error: ' + JSON.stringify(data));
-                }
-            } catch (error) {
-                console.error('Error submitting profile:', error);
-            }
-        }
-
-        async function submitSellerProfile(){
-            /* 1. Update profile role to seller */
-
-            const profileFormData = new FormData()
-            profileFormData.append('role', 'seller');
-            
-            let profileUpdate = await fetch('/account/api/profile/', {
-                method: 'PUT',
-                headers: {
-                    'X-CSRFToken': getCSRFToken()
-                },
-                body: profileFormData
-            });
-
-            if (!profileUpdate.ok){
-                alert('Could not update profile role to seller');
-                return;
-            }
-
-            /* 2. Submit seller profile */
-            const formData = new FormData();
-            formData.append('role', 'seller');
-            formData.append('store_name', document.getElementById('storeName').value);
-            const logo = document.getElementById('storeLogo').files[0];
-            if (logo) {
-                formData.append('store_logo', logo);
-            }
-            formData.append('store_description', document.getElementById('storeDescription').value);
-            formData.append('business_address', document.getElementById('businessAddress').value);
-            formData.append('momo_details', document.getElementById('momoDetails').value);
-
-            try{
-                const response = await fetch('/account/api/seller-profile/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: formData
-                })
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    alert('Seller profile submitted successfully');
-                    // Redirect or show success message
-                    window.location.href = '/account/';
-                } else {
-                    alert('Profile error: ' + JSON.stringify(data));
-                }
-
-            } catch (error) {
-                console.error('Error submitting seller profile:', error);
-            }
-        }
-    </script>
+    <script type="module" src="{% static './js_files/profile_setup.js' %}"></script>
 </body>
 </html>
