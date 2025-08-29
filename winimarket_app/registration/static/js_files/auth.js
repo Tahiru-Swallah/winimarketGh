@@ -122,7 +122,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             }
 
             setTimeout(() => {
-                window.location.href = data.next && data.next !== '/' ? data.next : '/account/';
+                window.location.href = data.next && data.next !== '/' ? data.next : '/';
             }, 1500); 
 
         } else {

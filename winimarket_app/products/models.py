@@ -33,7 +33,7 @@ class Product(models.Model):
     slug = models.SlugField(max_length=200, unique=True)                    # URL-friendly slug (unique)
     description = models.TextField()                                        # Product description
     min_price = models.DecimalField(max_digits=10, decimal_places=2)        # Minimum price (for price range)
-    max_price = models.DecimalField(max_digits=10, decimal_places=2)        # Maximum price (for price range)
+    max_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)        # Maximum price (for price range)
     quantity = models.PositiveIntegerField(default=1)                       # Stock quantity
     category = models.ForeignKey(Category, related_name='products', on_delete=models.SET_NULL, null=True)  # Product category
     condition = models.CharField(max_length=50, choices=[

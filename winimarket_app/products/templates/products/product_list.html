@@ -1,237 +1,142 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>Document</title>
+    <title>Kasuwaa-products</title>
+    <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
 </head>
 <body>
-    <div id="productFormWrapper" style="display:none;">
-        <form id="productForm" enctype="multipart/form-data">
-            <input type="text" name="name" placeholder="Product Name" required /><br>
-            <textarea name="description" placeholder="Product Description"></textarea><br>
-            <input type="number" name="min_price" placeholder="Min Price" required /><br>
-            <input type="number" name="max_price" placeholder="Max Price" required /><br>
-            <input type="number" name="quantity" placeholder="Quantity" required /><br>
-            <!-- Dropdown for product condition -->
-            <select name="condition" required>
-                <option value="">Select Condition</option>
-                <option value="new">New</option>
-                <option value="used">Used</option>
-                <option value="refurbished">Refurbished</option>    
-            </select><br>
-            <!-- Dropdown for category -->
-            <select name="category_id" id="categorySelect" required><br>
-                <option value="">Select Category</option>
-            </select><br>
+    <header>
+        <div class="logo">
+            <h1>Kasuwaa</h1>
+        </div>
 
-            <label for="">
-                <input type="radio" name="is_active" value="true" checked /> Is the Product Active/Available?
-            </label><br>
+        <div class="navbar">
+            <ul>
+                <li><a href="#"><span class="material-icons-outlined">home</span></a></li>
+                <li><a href="#"><span class="material-icons-outlined">favorite_border</span></a></li>
+                <li><a href="#"><span class="material-icons-outlined">shopping_cart</span></a></li>
+                <li><a href="#"><span class="material-icons-outlined">local_shipping</span></a></li>
+                <li><a href="#"><span class="material-icons-outlined">account_circle</span></a></li>
+            </ul>
+        </div>
+    </header>
 
-            <input type="file" name="images" multiple /> <br><!-- allow multiple images -->
-            <small>You can upload up to 5 images</small> <br><br>
-            <button type="submit">List Product</button>
+    <main>
+        <!-- PRODUCT AND CATEGORY LISTING PAGE-->
+        <section class="product-section">
+            <div class="category-sect">
+                <form action="" id="filterForm">
+                    <h2>Filter</h2>
+                    <label for="">Category</label>
+                    <select name="" id="select-category">
+                        <option value="cat">All Products</option>
+                    </select>
 
-            <div id="message"></div>
-        </form>
-    </div> <br> <br>
+                    <label for="">Price</label>
+                    <select name="" id="select-price">
+                        <option value="">Select Product Price</option>
+                    </select>
 
-    <div id="product-list"></div>
+                    <label for="">Condition</label>
+                    <select name="" id="select-condition">
+                        <option value="">Select Condition</option>
+                        <option value="new">New</option>
+                        <option value="used">Used</option>
+                        <option value="refurbished">Refurbished</option>
+                    </select>
 
-    <script>
-        async function checkUser(){
-            try{
+                    <button id="apply-filter" class="submit-btn">Apply Filter</button>
+                </form>
+            </div>
 
-                let response = await fetch('/account/api/profile/')
+            <div class="product-sect">
+                <div class="search-bar">
+                    <input type="text" name="search" placeholder="Search for products...">
+                    <button><span class="material-icons-outlined">search</span></button>
+                </div>
 
-                if (!response.ok) throw new Error('Failed to fetch user')
+                <div class="slide-box">
+                    <img src="{% static 'images/slide.jpg'%}" alt="slide-show-image">
+                </div>
 
-                let user = await response.json();
-                
-                if (user.role === 'seller'){
-                    document.getElementById('productFormWrapper').style.display = 'block'
-                } else{
-                    document.getElementById('productFormWrapper').style.display = 'none'
-                }
+                <div class="products-container">
+                    <!-- <div class="new-arrival">
+                        <h2 class="product-header-1">
+                            New Arrivals
+                        </h2> 
 
-            } catch(error){
-                console.error("Error checking user:", error)
-            }
-        }
+                        <div class="new">
+                            <div class="new-product">
+                                <div class="img-p">
+                                    <img src="{% static 'images/pic1.jpg' %}" alt="products">
+                                    
+                                </div>
+                                <div class="p-info">
+                                    <h4 class="product-name">Men Shirt</h4>
+                                    <p>$30 - $20</p>
+                                </div>
+                                <span class="material-icons-outlined">favorite_border</span>
+                            </div>
+                        </div>
+                    </div> -->
 
-        document.addEventListener('DOMContentLoaded', checkUser)
+                    <div class="new-arrival" id="all-products">
+                        <h2 class="product-header-1">
+                            All Products
+                        </h2>
 
-        async function loadCatefories(){
-            try{
-                const response = await fetch('/products/api/categories/')
+                        <div class="new" id="new"></div>
+                    </div>
+                </div>
+            </div>
+        </section>
 
-                if (!response.ok) throw new Error('Network response was not ok');
+        <section class="product-detail">
+            <div class="p-container active">
+                <div class="products-images">
+                    <div class="img-pr">
+                        <img src="{% static 'images/pic1.jpg' %}" alt="product" class="img-1" width="200">
+                    </div>
+                    <div class="img-pr-slide">
+                        <img src="{% static 'images/pic1.jpg' %}" alt="product">
+                        <img src="{% static 'images/pic2.jpg' %}" alt="product">
+                        <img src="{% static 'images/pic3.jpg' %}" alt="product">
+                        <img src="{% static 'images/pic4.jpg' %}" alt="product">
+                        <img src="{% static 'images/pic5.jpg' %}" alt="product">
+                    </div>
+                </div>
 
-                const categories = await response.json();
-                const categorySelect = document.getElementById('categorySelect');
+                <div class="product-info-d">
+                    <div class="h-p">
+                        <h2>Men Shirt</h2>
+                        <p>$23.00</p>
+                    </div>
 
-                categories.forEach(category => {
-                    const option = document.createElement('option');
-                    option.value = category.id;
-                    option.textContent = category.name;
-                    categorySelect.appendChild(option);
-                });
+                    <div class="cart-buy">
+                        <button class="cart-btn">Add To Cart <span class="material-icons-outlined">shopping_cart</span></button>
+                        <button class="order-btn">ORDER NOW <span class="material-icons-outlined">local_shipping</span></button>
+                    </div>
 
-            } catch(error){
-                console.error("Error loading categories:", error);
-            }
-        }
+                    <div class="descriptions">
+                        <h4>Description</h4>
+                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Culpa odit id debitis vero tempore, inventore nam cumque mollitia expedita ullam?</p>
+                    </div>
+                </div>
 
-        document.addEventListener('DOMContentLoaded', loadCatefories);
+                <span class="close">
+                    +
+                </span>
+            </div>
+        </section>
+    </main>
 
-        const imageInput = document.querySelector('input[name="images"]');
-        imageInput.addEventListener('change', function() {
-            if (imageInput.files.length > 5) {
-                alert("You can only upload a maximum of 5 images.");
-                imageInput.value = ''; // Clear the input
-            }
-        })
 
-        function getCSRFToken() {
-            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
-        }
 
-        document.getElementById('productForm').addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            const formData = new FormData(this);
-            const messageDiv = document.getElementById('message');
-            messageDiv.textContent = 'Submitting...'; 
-
-            try{
-
-                const response = await fetch('/products/api/products/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    },
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-
-                    if(response.status === 403 && errorData.error){
-                        messageDiv.textContent = "⚠️ " + errorData.error;
-
-                    } else{
-                        messageDiv.textContent = "❌ failed to list product:" + JSON.stringify(errorData);
-                    } 
-                    return;
-                }
-
-                const data = await response.json();
-                messageDiv.textContent = "✅ Product listed successfully!";
-
-                e.target.reset(); // Reset the form after successful submission
-
-            } catch (error) {
-                console.error("Error submitting form:", error);
-                alert("There was an error submitting the form. Please try again.");
-            }
-        })
-
-        async function loadProducts() {
-            try {
-                const response = await fetch('/products/api/products/');
-                if (!response.ok) throw new Error('Network response was not ok');
-
-                const products = await response.json();
-        
-                const productList = document.getElementById('product-list');
-                productList.innerHTML = ''; // Clear previous products
-
-                products.forEach(product => {
-                    let firstImage = product.images && product.images.length > 0 ? product.images[0].image : 'No image available';
-
-                    const productDiv = document.createElement('div');
-                    productDiv.innerHTML = `
-                        <img src="${firstImage}" alt="${product.name}" style="width: 100px; height: 100px;"><br>
-                        <h3>${product.name}</h3>
-                        <p>Price: ₡${product.min_price} - ₡${product.max_price}</p>
-                        <button onclick="addToWishList('${product.id}')">Add to Wishlist</button>
-                        <button onclick="addToCart('${product.id}', '${product.min_price}')">Add to Cart</button>
-                        <button class="buy-now" data-product-id="${product.id}" onclick='goToOrderPage(this)'>Buy Now</button>
-                    `;
-                    productList.appendChild(productDiv);
-                });
-
-            } catch (error) {
-                console.error("Error loading products:", error);
-            }
-        } 
-
-        function goToOrderPage(button){
-            const productId = button.getAttribute('data-product-id');
-            sessionStorage.setItem('selectedProduct', productId);
-            window.location.href = '/order/';
-        }
-
-        document.addEventListener('DOMContentLoaded', loadProducts);
-
-        async function addToWishList(productId) {
-            try{
-                const response = await fetch(`/products/api/wishlist/${productId}/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    }
-                });
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    console.error("Error adding to wishlist:", errorData);
-                    alert("Failed to add to wishlist: " + errorData.error);
-                    return;
-                }
-
-                const data = await response.json();
-                
-                alert("Product added to wishlist successfully!");
-
-            } catch(error) {
-                console.error("Error adding to wishlist:", error);
-            }
-        }
-
-        async function addToCart(productId, choice_price, quantity=1){
-            try{
-                const response = await fetch('/cart/api/add/', {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        product_id: productId,
-                        choice_price: choice_price,
-                        quantity: quantity
-                    })
-                })
-
-                const data = await response.json();
-                console.log("Response from add to cart:", data);
-                
-                if (!response.ok) {
-                    console.error("Error adding to cart:", data);
-                    alert("Failed to add to cart: " + data.error);
-                    return;
-                } else {
-                    alert("Product added to cart successfully!");
-                }
-
-            } catch(error) {
-                console.error("Error adding to cart:", error);
-                alert("There was an error adding the product to the cart. Please try again.");
-            }
-        }
-    </script>
+    <script type="module" src="{% static 'js_files/main/index.js'%}"></script>
 </body>
 </html>

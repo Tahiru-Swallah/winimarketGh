@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.db.models import Q
 
 # REST FRAMEWORK LIBRARIES
 from rest_framework.views import APIView
@@ -31,10 +32,18 @@ def wishlist_template_view(request):
 # Category Create, List View
 
 @api_view(['POST', 'GET'])
-@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def category_list_create(request):
     if request.method == 'POST':
+
+        if request.user.is_authenticated:
+            return Response(
+                {
+                    "error": "Only admin users can create categories."
+                },
+                status=status.HTTP_403_FORBIDDEN    
+            )
+        
         serializer = CategorySerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -51,18 +60,37 @@ def category_list_create(request):
 # -------------------------
 @api_view(['GET', 'POST'])
 @parser_classes([MultiPartParser, FormParser])
-@permission_classes([IsAuthenticated])  # protect creation, allow public GET
 def product_list_create(request):
     if request.method == 'GET':
         products = Product.objects.all()
+
+        # ----- FILTERING -----
+        category_id = request.query_params.get('category_id')
+        min_price = request.query_params.get('min_price')
+        condition = request.query_params.get('condition')
+
+        if category_id:
+            products = products.filter(category__id=category_id)
+        if min_price:
+            products = products.filter(min_price__gte=min_price)
+        if condition:
+            products = products.filter(condition=condition)
+
         serializer = ProductSerializer(products, many=True, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     elif request.method == 'POST':
-        if not hasattr(request.user, "profile") or not request.user.profile.role == "seller":
+        if not request.user.is_authenticated:
             return Response(
                 {
-                    "error": "Only sellers can create products."
+                    'error': 'User must be authenticated'
+                }, status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        if not hasattr(request.user, "profile") or (request.user.profile.role != 'seller' and not request.user.is_staff):
+            return Response(
+                {
+                    "error": "Only sellers or Admins can create products."
                 },
                 status=status.HTTP_403_FORBIDDEN    
             )
