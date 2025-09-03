@@ -15,9 +15,16 @@
             <h1>Kasuwaa</h1>
         </div>
 
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search for product items...">
+            <button><span class="material-icons-outlined">search</span></button>
+        </div>
+
+        <div class="menu-icon"><span class="material-icons-outlined">menu</span></div>
+
         <div class="navbar">
             <ul>
-                <li><a href="#"><span class="material-icons-outlined">home</span></a></li>
+                <li><a href="#"><span class="material-icons-outlined active">home</span></a></li>
                 <li><a href="#"><span class="material-icons-outlined">favorite_border</span></a></li>
                 <li><a href="#"><span class="material-icons-outlined">shopping_cart</span></a></li>
                 <li><a href="#"><span class="material-icons-outlined">local_shipping</span></a></li>
@@ -25,6 +32,19 @@
             </ul>
         </div>
     </header>
+
+    <div class="search-list" id="search-list">
+        <!-- search list here -->
+        <div class="search-list-item">
+            <div class="search-item-thumbnail">
+                <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+            </div>
+            <div class="search-item-info">
+                <h3>Die Hart Vol. 2</h3>
+                <p>2023</p>
+            </div>
+        </div>
+    </div>
 
     <main>
         <!-- PRODUCT AND CATEGORY LISTING PAGE-->
@@ -55,9 +75,24 @@
             </div>
 
             <div class="product-sect">
-                <div class="search-bar">
-                    <input type="text" name="search" placeholder="Search for products...">
-                    <button><span class="material-icons-outlined">search</span></button>
+                
+                <div class="mobile-cat">
+                    <div class="cat-info">
+                        <img src="{% static 'images/shirt.jpg' %}" alt="cat">
+                        <h5>Fashion</h5>
+                    </div>
+                    <div class="cat-info">
+                        <img src="{% static 'images/shirt.jpg' %}" alt="cat">
+                        <h5>Fashion</h5>
+                    </div>
+                    <div class="cat-info">
+                        <img src="{% static 'images/shirt.jpg' %}" alt="cat">
+                        <h5>Fashion</h5>
+                    </div>
+                    <div class="cat-info">
+                        <img src="{% static 'images/shirt.jpg' %}" alt="cat">
+                        <h5>Fashion</h5>
+                    </div>
                 </div>
 
                 <div class="slide-box">
@@ -93,49 +128,14 @@
                         <div class="new" id="new"></div>
                     </div>
                 </div>
+
+                <div class="bottom-loader"></div>
             </div>
         </section>
 
-        <section class="product-detail">
-            <div class="p-container active">
-                <div class="products-images">
-                    <div class="img-pr">
-                        <img src="{% static 'images/pic1.jpg' %}" alt="product" class="img-1" width="200">
-                    </div>
-                    <div class="img-pr-slide">
-                        <img src="{% static 'images/pic1.jpg' %}" alt="product">
-                        <img src="{% static 'images/pic2.jpg' %}" alt="product">
-                        <img src="{% static 'images/pic3.jpg' %}" alt="product">
-                        <img src="{% static 'images/pic4.jpg' %}" alt="product">
-                        <img src="{% static 'images/pic5.jpg' %}" alt="product">
-                    </div>
-                </div>
-
-                <div class="product-info-d">
-                    <div class="h-p">
-                        <h2>Men Shirt</h2>
-                        <p>$23.00</p>
-                    </div>
-
-                    <div class="cart-buy">
-                        <button class="cart-btn">Add To Cart <span class="material-icons-outlined">shopping_cart</span></button>
-                        <button class="order-btn">ORDER NOW <span class="material-icons-outlined">local_shipping</span></button>
-                    </div>
-
-                    <div class="descriptions">
-                        <h4>Description</h4>
-                        <p>Lorem ipsum, dolor sit amet consectetur adipisicing elit. Culpa odit id debitis vero tempore, inventore nam cumque mollitia expedita ullam?</p>
-                    </div>
-                </div>
-
-                <span class="close">
-                    +
-                </span>
-            </div>
+        <section class="product-detail" id="product-detail">
         </section>
     </main>
-
-
 
     <script type="module" src="{% static 'js_files/main/index.js'%}"></script>
 </body>

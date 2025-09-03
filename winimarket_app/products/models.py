@@ -48,9 +48,17 @@ class Product(models.Model):
     def save(self, *args, **kwargs):
         # Automatically generate slug from name if not provided
         if not self.slug:
-            self.slug = slugify(self.name)
-        super().save(*args, **kwargs)
+            base_slug = slugify(self.name)
+            slug = base_slug
+            counter = 1
 
+            middle_class = self.__class__
+            while middle_class.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+
+            self.slug = slug
+        super().save(*args, **kwargs)
     class Meta:
         ordering = ['-created_at']  # Newest products first
         indexes = [models.Index(fields=['-created_at'])]  # Index for faster queries

@@ -54,12 +54,6 @@ function isMobileDevice(){
     return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-if(isMobileDevice()){
-    console.log("You are using a mobile device")
-} else {
-    console.log("You are using a desktop device")
-}
-
 function showLoginMessage() {
     const loginMessage = document.querySelector('.login-message-mobile');
     loginMessage.classList.add('show');

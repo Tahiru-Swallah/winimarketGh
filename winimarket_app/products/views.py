@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.pagination import PageNumberPagination
 
 from .models import Product, Category, ProductImage, WishList
 from .serializers import (CategorySerializer, ProductSerializer,ProductImageSerializer, ProductImageBulkUploadSerializer,WishListSerializer)
@@ -20,7 +21,6 @@ from .serializers import (CategorySerializer, ProductSerializer,ProductImageSeri
 # -----------------------------
 # TEMPLATE RENDERING
 
-@login_required
 def product_list_view(request):
     return render(request, 'products/product_list.html')
 
@@ -55,6 +55,12 @@ def category_list_create(request):
         serializer = CategorySerializer(categories, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
+# PAGINATION
+class ProductPagination(PageNumberPagination):
+    page_size = 10  # Default number of products per page
+    page_size_query_param = 'page_size'  # Allow client to set custom size
+    max_page_size = 50  # Prevent too-large responses
+    
 # -------------------------
 # LIST + CREATE PRODUCTS
 # -------------------------
@@ -76,8 +82,11 @@ def product_list_create(request):
         if condition:
             products = products.filter(condition=condition)
 
-        serializer = ProductSerializer(products, many=True, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        paginator = ProductPagination()
+        paginated_products = paginator.paginate_queryset(products, request)
+
+        serializer = ProductSerializer(paginated_products, many=True, context={'request': request})
+        return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
         if not request.user.is_authenticated:
@@ -110,11 +119,26 @@ def product_list_create(request):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+@api_view(['GET'])
+def search_products(request):
+    search_query = request.query_params.get('search', None)
+    products = Product.objects.all()
+
+    if search_query:
+        products = products.filter(
+         Q(name__icontains = search_query) | Q(description__icontains = search_query)   
+        )
+
+    paginator = ProductPagination()
+    paginated_products = paginator.paginate_queryset(products, request)
+    serializer = ProductSerializer(paginated_products, many=True, context = {'request': request})
+
+    return paginator.get_paginated_response(serializer.data)
+
 # -------------------------
 # RETRIEVE + UPDATE + DELETE PRODUCT
 # -------------------------
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def product_detail_update_delete(request, pk):
     try:
@@ -131,6 +155,9 @@ def product_detail_update_delete(request, pk):
     elif request.method == 'PUT':
         if product.seller != request.user:
             return Response({"error": "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if not request.user.is_authenticated:
+            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
 
         category_id = request.data.get('category_id')
         category = None
@@ -155,6 +182,9 @@ def product_detail_update_delete(request, pk):
     elif request.method == 'DELETE':
         if product.seller != request.user:
             return Response({"error": "Not authorized to delete this product."}, status=status.HTTP_403_FORBIDDEN)
+        
+        if not request.user.is_authenticated:
+            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
 
         product.delete()
         return Response({"message": "Product deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
