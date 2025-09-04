@@ -268,3 +268,11 @@ export function closeProductDetail(skipHistory = false) {
     if (!skipHistory) history.pushState({}, '', '/');
 }
 
+const searchList = document.getElementById('search-list')
+const closeSearch = document.getElementById('close_search')
+const searchGrid = document.getElementById('search-grid')
+
+function showSearchResults(results){
+    searchGrid.innerHTML = '';
+
+}

@@ -135,6 +135,23 @@ def search_products(request):
 
     return paginator.get_paginated_response(serializer.data)
 
+@api_view(['GET'])
+def search_suggestions(request):
+    search_query = request.query_params.get('q', None)
+
+    if not search_query:
+        return Response([])
+    
+    products = Product.objects.filter(
+        Q(name__icontains = search_query) | Q(description__icontains=search_query)
+    ).values('id', 'name')[:8]
+
+    suggestions = [{
+        'id': p['id'],
+        'name': p['name'],
+    } for p in products]
+    
+    return Response(suggestions)
 # -------------------------
 # RETRIEVE + UPDATE + DELETE PRODUCT
 # -------------------------

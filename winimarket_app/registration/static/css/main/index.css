@@ -150,6 +150,10 @@ header .navbar ul li a span:hover{
   padding: var(--padding);
 }
 
+.search-suggestions .search-suggestion-item span{
+  font-size: 16px;
+}
+
 .search-suggestions .search-suggestion-item:hover{
   background: #eee;
 }

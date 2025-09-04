@@ -17,10 +17,10 @@
 
         <div class="search-bar">
             <input type="text" class="search-input" placeholder="Search for product items..." autocomplete="off">
-            <button><span class="material-icons-outlined">search</span></button>
+            <button><span class="material-icons-outlined icon">search</span></button>
             <div class="search-suggestions" id="search-suggestion">
                 <div class="search-suggestion-item">
-                    <img src="{% static 'images/pic2.jpg' %}" alt="pic2" width="50">
+                    <span class="material-icons-outlined">search</span>
                     <span>Bluetooth for handsfree</span>
                 </div>
             </div>
@@ -53,7 +53,7 @@
         <span class="material-icons-outlined" id="close_search">arrow_back</span>
         <!-- search list here -->
         <div class="search_grid">
-            <div class="search-list-item">
+            <div class="search-list-item" id="search-grid">
                 <div class="search-item-thumbnail">
                     <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
                 </div>
