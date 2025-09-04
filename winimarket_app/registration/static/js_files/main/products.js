@@ -265,6 +265,6 @@ export function closeProductDetail(skipHistory = false) {
         container.style.display = 'none';
         container.innerHTML = '';
     }, 300);
-    if (!skipHistory) history.pushState({}, '', '/products/');
+    if (!skipHistory) history.pushState({}, '', '/');
 }
 

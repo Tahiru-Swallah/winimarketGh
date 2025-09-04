@@ -135,7 +135,7 @@ header .navbar ul li a span.active{
   color: #fff;
 }
 
-.search-list{
+/* .search-list{
     position: fixed;
     width: 100%;
     height: 100vh;
@@ -192,7 +192,101 @@ header .navbar ul li a span.active{
   background-color: #ddd;
   outline: none;
   border-radius: 10px;
+} */
+
+/* --- Search List (Pinterest Inspired) --- */
+.search-list {
+  position: absolute;
+  top: 100%; 
+  left: 0;
+  width: 100%;
+  max-height: 500px;
+  overflow-y: auto;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  margin-top: 8px;
+  z-index: 1000;
+  padding: 8px 0;
 }
+
+/* Scrollbar (minimal style like Pinterest) */
+.search-list::-webkit-scrollbar {
+  width: 6px;
+}
+.search-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+}
+.search-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.search-list-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.search-list-item:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.search-item-thumbnail {
+  width: 50px;
+  height: 50px;
+  flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-right: 12px;
+}
+
+.search-item-thumbnail img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.search-item-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.search-item-info h3 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
+}
+
+.search-item-info p {
+  font-size: 13px;
+  color: #777;
+  margin: 0;
+}
+
+/* --- Dark mode --- */
+/* @media (prefers-color-scheme: dark) {
+  .search-list {
+    background: #1e1e1e;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  }
+  .search-list-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+  }
+  .search-item-info h3 {
+    color: #eee;
+  }
+  .search-item-info p {
+    color: #aaa;
+  }
+} */
+
 
 main {
   padding: 85px 10% 20px 15%;
@@ -266,41 +360,6 @@ main .product-section{
   width: 60%;
   padding-bottom: 6px;
 }
-
-/* .product-sect .search-bar{
-  margin-bottom: 16px;
-  width: 100%;
-  position: relative;
-}
-
-.product-sect .search-bar input{
-  padding: var(--padding);
-  border: 1px solid #ddd;
-  border-radius: var(--border-radius);
-  margin-top: 5px;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.3s ease;
-  width: 100%;
-}
-
-.product-sect .search-bar input:focus{
-  border-color: var(--primary-hover);
-}
-
-.product-sect .search-bar button{
-  background-color: transparent;
-  outline: none;
-  border: none;
-  position: absolute;
-  top: 20px;
-  right: 10px;
-}
-
-.product-sect .search-bar button span{
-  color: var(--text-color);
-  font-size: 18px;
-} */
 
 .product-sect .slide-box img{
   width: 100%;
@@ -685,13 +744,21 @@ main .product-section{
   display: none;
 }
 
+.bottom-navbar{
+  display: none;
+}
+
 @media screen and (max-width: 780px){
   header{
     padding: 12px 20px;
   }
 
   main{
-    padding: 85px 20px 10px 20px;
+    padding: 85px 20px;
+  }
+
+  html::-webkit-scrollbar{
+    width: 0;
   }
 
   header .navbar{
@@ -738,6 +805,7 @@ main .product-section{
     justify-content: space-around;
     gap: 10px;
     margin-bottom: 14px;
+    margin-top: 16px;
   }
 
   .mobile-cat .cat-info{
@@ -794,10 +862,164 @@ main .product-section{
   .search-bar{
     display: none;
   }
+
+  .bottom-navbar{
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: var(--bg-color);
+    width: 100%;
+    z-index: 99;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+    border-top: 2px solid #ddd;
+  }
+
+  .bottom-navbar ul{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 12px 20px;
+  }
 }
 
 @media screen and (max-width: 480px){
   main{
-    padding: 75px 12px 20px 12px;
+    padding: 75px 12px;
   }
 }
+
+/* 🌙 Dark Mode */
+/* @media (prefers-color-scheme: dark) {
+  :root {
+    --bg-color: #121212;              
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --text-color: #e0e0e0;         
+    --primary-color: #4A90E2;         
+    --primary-hover: #357ABD;
+    --accent-color: #FFD700;
+    --success-color: #4CAF50;
+    --error-color: #FF6B6B;
+  }
+
+  body {
+    background: var(--bg-color);
+    color: var(--text-color);
+  }
+
+  header {
+    background: #1e1e1e;
+    border-bottom: 1px solid #333;
+  }
+
+  header .logo h1 {
+    color: var(--primary-color);
+  }
+
+  header .navbar ul li a span {
+    background: #2c2c2c;
+    color: var(--text-color);
+  }
+
+  header .navbar ul li a span:hover,
+  header .navbar ul li a span.active {
+    background: var(--primary-hover);
+    color: #fff;
+  }
+
+  .search-bar .search-input {
+    background: #1e1e1e;
+    border: 1px solid #444;
+    color: var(--text-color);
+  }
+
+  .search-bar button span {
+    color: var(--text-color);
+  }
+
+  .search-list {
+    background: rgba(0, 0, 0, 0.6);
+  }
+
+  .search-list .search-list-item {
+    background-color: #1e1e1e;
+    border-bottom: 1px solid #333;
+    color: var(--text-color);
+  }
+
+  .search-list .search-list-item:hover {
+    background-color: #2a2a2a;
+  }
+
+  .category-sect form {
+    background-color: #1e1e1e;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .category-sect form select {
+    background: #2c2c2c;
+    color: var(--text-color);
+    border: 1px solid #444;
+  }
+
+  .new-product {
+    background: #1e1e1e;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.4);
+  }
+
+  .new-product span {
+    background: #2c2c2c;
+    color: var(--text-color);
+  }
+
+  .new-product span:hover {
+    background: var(--primary-hover);
+    color: #fff;
+  }
+
+  .p-container {
+    background: #1e1e1e;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .close {
+    background: #2c2c2c;
+    color: var(--text-color);
+  }
+
+  .order-btn {
+    border: 1px solid var(--text-color);
+    color: var(--text-color);
+  }
+
+  .order-btn:hover {
+    border-color: var(--primary-hover);
+    color: #ddd;
+  }
+
+  .cart-buy .cart-btn {
+    background: var(--primary-color);
+  }
+
+  .cart-buy .cart-btn:hover {
+    background: var(--primary-hover);
+  }
+  .menu-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: #333;
+    border-radius: 50%;
+    color: #fff;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+
+  .menu-icon:hover{
+    background: var(--primary-hover);
+  }
+}
+ */
