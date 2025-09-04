@@ -16,8 +16,14 @@
         </div>
 
         <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Search for product items...">
+            <input type="text" class="search-input" placeholder="Search for product items..." autocomplete="off">
             <button><span class="material-icons-outlined">search</span></button>
+            <div class="search-suggestions" id="search-suggestion">
+                <div class="search-suggestion-item">
+                    <img src="{% static 'images/pic2.jpg' %}" alt="pic2" width="50">
+                    <span>Bluetooth for handsfree</span>
+                </div>
+            </div>
         </div>
 
         <div class="menu-icon"><span class="material-icons-outlined">menu</span></div>
@@ -44,14 +50,73 @@
     </div>
 
     <div class="search-list" id="search-list">
+        <span class="material-icons-outlined" id="close_search">arrow_back</span>
         <!-- search list here -->
-        <div class="search-list-item">
-            <div class="search-item-thumbnail">
-                <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+        <div class="search_grid">
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
             </div>
-            <div class="search-item-info">
-                <h3>Die Hart Vol. 2</h3>
-                <p>2023</p>
+
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
+            </div>
+
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
+            </div>
+
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
+            </div>
+
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
+            </div>
+
+            <div class="search-list-item">
+                <div class="search-item-thumbnail">
+                    <img src="{% static 'images/pic1.jpg' %}" alt="thumbnail">
+                </div>
+                <div class="search-item-info">
+                    <h3>Die Hart Vol. 2</h3>
+                    <p>$23.00</p>
+                </div>
+                <span class="material-icons-outlined">favorite_border</span>
             </div>
         </div>
     </div>
