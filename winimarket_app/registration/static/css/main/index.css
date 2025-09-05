@@ -123,6 +123,7 @@ header .navbar ul li a span:hover{
   top: 13px;
   right: 10px;
   cursor: pointer;
+  display: none;
 }
 
 .search-bar button span{
@@ -169,8 +170,7 @@ header .navbar ul li a span.active{
     height: 100vh;
     background: var(--bg-color);
     z-index: 10;
-    padding: 75px 10% 70px 15%;
-    overflow: auto;
+    padding: 75px 10% 20px 15%;
     display: none;
     gap: 30px;
 }
@@ -198,6 +198,7 @@ header .navbar ul li a span.active{
 .search-list .search_grid{
   width: 60%;
   height: 100%;
+  overflow: auto;
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 20px;
@@ -209,6 +210,7 @@ header .navbar ul li a span.active{
   background: #fff;
   box-shadow: 0 2px 12px rgba(0,0,0,0.1);
   display: flex;
+  height: 300px;
   flex-direction: column;
   border-radius: var(--border-radius);
   padding: var(--padding);
@@ -246,7 +248,7 @@ header .navbar ul li a span.active{
   color: var(--primary-hover);
 }
 
-.search-list::-webkit-scrollbar{
+.search-list .search_grid::-webkit-scrollbar{
   width: 0px;
 }
 
@@ -541,6 +543,7 @@ main .product-section{
   height: 100%;
   padding: 90px 10% 80px 15%;
   background: rgba(0,0,0,0.1);
+  z-index: 100;
   display: none;
 }
 

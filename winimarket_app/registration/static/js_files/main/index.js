@@ -1,11 +1,13 @@
 import { renderCategories } from "./category.js";
 import { renderProductsPrices, closeProductDetail } from "./products.js";
 import { renderProducts, resetPagination, renderProductDetail } from "./products.js";
+import { initSearch } from "./search.js";
 
 document.addEventListener('DOMContentLoaded', async function(){
     await renderCategories();
     await renderProductsPrices();
     renderProducts();
+    initSearch()
 
     const filterForm = document.getElementById('filterForm');
     filterForm.addEventListener('submit', async function(e){

@@ -137,9 +137,12 @@ export async function renderProducts(filters = {}, append = false) {
                     <h4 class="product-name">${product.name}</h4>
                     <p>$${product.min_price}</p>
                 </div>
-                <span class="material-icons-outlined">favorite_border</span>
+                <span class="material-icons-outlined favorite-icon">favorite_border</span>
             `;
-            productElement.addEventListener('click', () => renderProductDetail(product.id));
+            productElement.addEventListener('click', (e) => {
+                if (e.target.classList.contains('favorite-icon')) return;
+                renderProductDetail(product.id)
+            });
             container.appendChild(productElement);
         });
 
@@ -186,7 +189,7 @@ function isMobileDevice(){
     return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
-export async function renderProductDetail(productId) {
+export async function renderProductDetail(productId, backURL = '/') {
     const container = document.getElementById('product-detail');
     container.style.display = 'block';
     void container.offsetWidth;
@@ -254,7 +257,7 @@ export async function renderProductDetail(productId) {
         }));
 
         // Push new state when product is opened
-        history.pushState({}, '', `/products/${productId}/`);
+        history.pushState({ backURL }, '', `/products/${productId}/`);
     }, delay);
 }
 
@@ -265,14 +268,13 @@ export function closeProductDetail(skipHistory = false) {
         container.style.display = 'none';
         container.innerHTML = '';
     }, 300);
-    if (!skipHistory) history.pushState({}, '', '/');
+
+    const state = history.state
+
+    if(state && state.backURL){
+        if (!skipHistory) history.pushState({}, '', state.backURL);
+    } else{
+        if (!skipHistory) history.pushState({}, '', '/');
+    }
 }
 
-const searchList = document.getElementById('search-list')
-const closeSearch = document.getElementById('close_search')
-const searchGrid = document.getElementById('search-grid')
-
-function showSearchResults(results){
-    searchGrid.innerHTML = '';
-
-}

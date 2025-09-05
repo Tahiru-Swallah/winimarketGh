@@ -121,7 +121,8 @@ def product_list_create(request):
 
 @api_view(['GET'])
 def search_products(request):
-    search_query = request.query_params.get('search', None)
+    search_query = request.query_params.get('q', None)
+    print(search_query)
     products = Product.objects.all()
 
     if search_query:
