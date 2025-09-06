@@ -153,6 +153,7 @@ def search_suggestions(request):
     } for p in products]
     
     return Response(suggestions)
+
 # -------------------------
 # RETRIEVE + UPDATE + DELETE PRODUCT
 # -------------------------
@@ -220,15 +221,27 @@ def wishlist_view(request, product_id=None):
         except Product.DoesNotExist:
             return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
         
+        wishlist_item, created = WishList.objects.get_or_create(
+            buyer=request.user.profile,
+            products = product
+        )
+
+        if not created:
+            wishlist_item.delete()
+            return Response({'message': 'Product removed from wish list', 'is_favorited': False}, status=status.HTTP_200_OK)
+        
         serializer = WishListSerializer(data={}, context={'product': product, 'buyer': request.user.profile})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            product_serialzer = ProductSerializer(product, context={'request': request})
+            data = product_serialzer.data
+            data['is_favorited'] = True
+            return Response(data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
     # List Wishlist
     elif request.method == 'GET':
-        wishlist = WishList.objects.filter(buyer=request.user.profile)
+        wishlist = (WishList.objects.filter(buyer=request.user.profile).select_related('products__category', 'products__seller').prefetch_related('products__images'))
         serializer = WishListSerializer(wishlist, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
@@ -237,6 +250,6 @@ def wishlist_view(request, product_id=None):
         try:
             wishlist_item = WishList.objects.get(buyer=request.user.profile, products__id=product_id)
             wishlist_item.delete()
-            return Response({"message": "Product removed from wishlist."}, status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "Product removed from wishlist.", 'is_favorited': False}, status=status.HTTP_204_NO_CONTENT)
         except WishList.DoesNotExist:
             return Response({"error": "Wishlist item not found."}, status=status.HTTP_404_NOT_FOUND)

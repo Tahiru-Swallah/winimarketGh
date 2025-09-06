@@ -1,4 +1,5 @@
-import { renderProductDetail } from './products.js'
+import { renderProductDetail, showSkeletons } from './products.js'
+import { toggleWishList } from './wishlist.js'
 
 async function fetchSuggestion(query){
     try{
@@ -32,48 +33,103 @@ function renderSuggestions(suggestions, searchSuggestions, runSearch){
     })
 }
 
-async function fetchSearchResults(query){
+async function fetchSearchResults(query, page = 1){
     try{
-        const response = await fetch(`/product/api/search/?q=${encodeURIComponent(query)}`)
+        const response = await fetch(`/product/api/search/?q=${encodeURIComponent(query)}&page=${page}`)
 
         if (!response.ok) throw new Error('Something went wrong while fetching search results')
 
         const data = await response.json()
-        console.log('data from search ', data)
         return data;
 
     } catch(error){
         console.error(error)
+        return {results: [], next: null}
     }
 }
 
-function renderSearchResults(data, searchGrid){
-    searchGrid.innerHTML = "";
+let currentPage = 1
+let loading = false
+let hasMore = true
+let lastQuery = ''
 
-    data.results.forEach(product => {
-        let item = document.createElement('div')
-        item.classList.add('search-list-item')
-        item.innerHTML = `
-            <div class="search-item-thumbnail">
-                <img src="${product.images[0]?.image}" alt='${product.name}'>
-            </div>
-            <div class="search-item-info">
-                <h3>${product.name}</h3>
-                <p>$${product.min_price}</p>
-            </div>
-            <span class="material-icons-outlined favorite-icon">favorite_border</span>
-        `
+async function renderSearchResults(query, searchGrid, append=false){
+    if (loading || !hasMore) return;
+    loading = true;
 
-        item.addEventListener('click', async (e) => {
-            if(e.target.classList.contains('favorite-icon')) return;
-            
-            const currentURL = window.location.href
+    if (!append) {
+        currentPage = 1;
+        hasMore = true;
+        searchGrid.innerHTML = "";
+        showSkeletons(searchGrid, 8, false);
+    }
 
-            await renderProductDetail(product.id, currentURL)
-        })
+    lastQuery = query;
 
-        searchGrid.appendChild(item)
-    })
+    const startTime = Date.now();
+    const data = await fetchSearchResults(query, currentPage);
+    const elapsed = Date.now() - startTime;
+
+    // Delay removal if API is too fast (to let skeletons "flash" at least 300ms)
+    const delay = elapsed < 300 ? 400 : (elapsed < 1000 ? 200 : 0);
+
+    setTimeout(() => {
+        // Remove skeletons
+        searchGrid.querySelectorAll('.skeleton-card').forEach(el => el.remove());
+
+        if (data.results.length === 0 && currentPage === 1) {
+            searchGrid.innerHTML = `<p>No results found for "${query}"</p>`;
+            hasMore = false;
+            loading = false;
+            return;
+        }
+
+        data.results.forEach(product => {
+            let item = document.createElement('div');
+            item.classList.add('search-list-item');
+            item.innerHTML = `
+                <div class="search-item-thumbnail">
+                    <img src="${product.images[0]?.image}" alt="${product.name}">
+                </div>
+                <div class="search-item-info">
+                    <h3>${product.name}</h3>
+                    <p>$${product.min_price}</p>
+                </div>
+                <span class="material-icons-outlined favorite-icon ${product.is_favorited ? 'favorited' : ''}" data-product-id="${product.id}">favorite_border</span>
+            `;
+
+            item.addEventListener('click', async (e) => {
+                if (e.target.classList.contains('favorite-icon')) return;
+                const currentURL = window.location.href;
+                await renderProductDetail(product.id, currentURL);
+            });
+
+            item.querySelector('.favorite-icon').addEventListener('click', async (e)=> {
+                e.stopPropagation()
+                await toggleWishList(product.id, e.target)
+            })
+
+            searchGrid.appendChild(item);
+        });
+
+        hasMore = data.next !== null;
+        if (hasMore) currentPage++;
+
+        loading = false;
+    }, delay);
+}
+
+
+// ====== SEARCH INFINITE SCROLL ======
+export function initSearchInfiniteScroll(searchList, searchGrid) {
+    searchList.addEventListener("scroll", () => {
+        const { scrollTop, scrollHeight, clientHeight } = searchList;
+        if (scrollTop + clientHeight >= scrollHeight - 100) {
+            if (lastQuery) {
+                renderSearchResults(lastQuery, searchGrid, true);
+            }
+        }
+    });
 }
 
 async function runSearch(query, searchSuggestions, searchList, searchGrid){
@@ -87,8 +143,11 @@ async function runSearch(query, searchSuggestions, searchList, searchGrid){
     // 🔥 hide scrollbar
     document.body.style.overflow = "hidden";
 
-    const data = await fetchSearchResults(query)
-    renderSearchResults(data, searchGrid)
+    currentPage = 1
+    hasMore = true
+    lastQuery = query
+
+    await renderSearchResults(query, searchGrid)
 
     const searchInput = document.querySelector('.search-input');
     const closeBtn = document.querySelector('.icon');

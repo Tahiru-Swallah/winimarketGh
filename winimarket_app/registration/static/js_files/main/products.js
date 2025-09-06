@@ -1,4 +1,4 @@
-import { fetchCategories } from "./category.js";
+import { toggleWishList } from "./wishlist.js";
 
 const cache = new Map()
 
@@ -51,7 +51,7 @@ export async function renderProductsPrices(){
 }
 
 
-function showSkeletons(container, count = 6, append=false) {
+export function showSkeletons(container, count = 6, append=false) {
     if(!append) container.innerHTML = '';
     for (let i = 0; i < count; i++) {
         const skeleton = document.createElement('div');
@@ -127,6 +127,7 @@ export async function renderProducts(filters = {}, append = false) {
         }
 
         data.results.forEach(product => {
+            console.log(product)
             const productElement = document.createElement('div');
             productElement.classList.add('new-product');
             productElement.innerHTML = `
@@ -137,12 +138,17 @@ export async function renderProducts(filters = {}, append = false) {
                     <h4 class="product-name">${product.name}</h4>
                     <p>$${product.min_price}</p>
                 </div>
-                <span class="material-icons-outlined favorite-icon">favorite_border</span>
+                <span class="material-icons-outlined favorite-icon ${product.is_favorited ? 'favorited' : ''}">favorite_border</span>
             `;
             productElement.addEventListener('click', (e) => {
                 if (e.target.classList.contains('favorite-icon')) return;
                 renderProductDetail(product.id)
             });
+
+            productElement.querySelector('.favorite-icon').addEventListener('click', async (e) => {
+                e.stopPropagation()
+                await toggleWishList(product.id, e.target)
+            })
             container.appendChild(productElement);
         });
 

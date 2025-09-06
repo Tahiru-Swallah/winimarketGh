@@ -72,6 +72,8 @@ class ProductSerializer(serializers.ModelSerializer):
     category_id = serializers.UUIDField(write_only=True, required=False)
     seller = SellerProfileSerializer(read_only=True)
 
+    is_favorited = serializers.SerializerMethodField()
+
     # Expose model properties as read-only fields
     price_range = serializers.CharField(read_only=True)
     is_available = serializers.BooleanField( read_only=True)
@@ -84,10 +86,10 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'seller', 'name', 'slug', 'description',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count'
+            'price_range', 'is_available', 'is_seller', 'image_count', 'is_favorited'
         ]
 
-        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'is_favorited']
 
     def validate_images(self, value):
         if len(value) > 5:
@@ -129,6 +131,20 @@ class ProductSerializer(serializers.ModelSerializer):
             ProductImage.objects.create(product=product, image=image)
 
         return product
+    
+    def get_is_favorited(self, obj):
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        if "wishlist_ids" not in self.context:
+            self.context['wishlist_ids'] = set(
+                WishList.objects.filter(buyer=request.user.profile).values_list('products_id', flat=True)
+            )
+
+        return obj.id in self.context['wishlist_ids']
+
     
 class WishListSerializer(serializers.ModelSerializer):
     products = ProductSerializer(read_only=True)

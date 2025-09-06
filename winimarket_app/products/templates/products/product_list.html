@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>winimarketGh-products</title>
     <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -14,7 +15,7 @@
         <div class="logo">
             <h1>WinimarketGh</h1>
         </div>
-
+        
         <div class="search-bar">
             <input type="text" class="search-input" placeholder="Search for product items..." autocomplete="off">
             <button class="icon"><span class="material-icons-outlined">close</span></button>
@@ -37,13 +38,23 @@
     </header>
 
     <div class="bottom-navbar">
-        <ul>
-            <li><a href="#"><span class="material-icons-outlined">home</span></a></li>
-            <li><a href="#"><span class="material-icons-outlined">search</span></a></li>
-            <li><a href="#"><span class="material-icons-outlined">add_2</span></a></li>
-            <li><a href="#"><span class="material-icons-outlined">favorite_border</span></a></li>
-            <li><a href="#"><span class="material-icons-outlined">shopping_cart</span></a></li>
-        </ul>
+        <div class="icon-container">
+            <div class="b-icon">
+                <span class="material-icons-outlined active">home</span>
+            </div>
+            <div class="b-icon">
+                <span class="material-icons-outlined">search</span>
+            </div>
+            <div class="b-icon">
+                <span class="list-product">+</span>
+            </div>
+            <div class="b-icon">
+                <span class="material-icons-outlined">favorite_border</span>
+            </div>
+            <div class="b-icon">
+                <span class="material-icons-outlined">shopping_cart</span>
+            </div>
+        </div>
     </div>
 
     <div class="search-list" id="search-list">

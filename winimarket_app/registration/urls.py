@@ -34,9 +34,6 @@ urlpatterns = [
     #SELLER PROFILE API
     path('api/seller-profile/', views.seller_profile_view),
 
-    #REGISTER VIEWS
-    path('register/', views.register_view, name='register'),
-
     #PROFILE VIEWS
     path('profile/', views.profile_template, name='profile'),
 ]

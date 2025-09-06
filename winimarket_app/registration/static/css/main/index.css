@@ -269,9 +269,9 @@ header .navbar ul li a span.active{
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-.search_grid span:hover{
-  background: var(--primary-hover);
-  color: var(--bg-color);
+.search_grid span.favorited{
+  color: #fff;
+  background-color: var(--primary-hover);
 }
 
 .search-list.opening {
@@ -380,6 +380,7 @@ main .product-section{
   height: 300px;
   border-radius: var(--border-radius);
   object-fit: cover;
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.7);
 }
 
 .products-container .new-arrival .product-header-1{
@@ -479,9 +480,9 @@ main .product-section{
   transition: background 0.3s ease, color 0.3s ease;
 }
 
-.new-product span:hover{
+.new-product .favorite-icon.favorited {
   background-color: var(--primary-hover);
-  color: #fff;
+  color: #fff; /* ❤️ when favorited */
 }
 
 .img-p{
@@ -878,25 +879,44 @@ main .product-section{
     display: none;
   }
 
-  .bottom-navbar{
-    display: flex;
+  .bottom-navbar {
     position: fixed;
     bottom: 0;
-    right: 0;
-    background: var(--bg-color);
+    left: 0;
     width: 100%;
-    z-index: 99;
+    background: var(--bg-color);
+    border-top: 2px solid #ddd;
     border-top-left-radius: 8px;
     border-top-right-radius: 8px;
-    border-top: 2px solid #ddd;
+    z-index: 99;
+    display: block;
   }
 
-  .bottom-navbar ul{
+  .bottom-navbar .icon-container{
     display: flex;
+    justify-content: space-around; /* 👈 makes items evenly spaced */
     align-items: center;
-    justify-content: space-between;
-    width: 100%;
-    padding: 12px 20px;
+    padding: 10px 20px;
+  }
+
+  .b-icon span{
+    color: var(--text-color);
+    font-size: 2.2rem;
+    transition: color 0.4s ease;
+  }
+
+  .b-icon span:hover{
+    color: var(--primary-hover);
+  }
+
+  .b-icon .list-product{
+    font-size: 2.2rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  .b-icon .list-product:hover{
+    color: var(--primary-hover);
   }
 }
 

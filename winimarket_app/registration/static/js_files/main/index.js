@@ -1,7 +1,7 @@
 import { renderCategories } from "./category.js";
 import { renderProductsPrices, closeProductDetail } from "./products.js";
 import { renderProducts, resetPagination, renderProductDetail } from "./products.js";
-import { initSearch } from "./search.js";
+import { initSearch, initSearchInfiniteScroll } from "./search.js";
 
 document.addEventListener('DOMContentLoaded', async function(){
     await renderCategories();
@@ -31,6 +31,14 @@ document.addEventListener('DOMContentLoaded', async function(){
 
     // Handle browser back/forward buttons
     window.addEventListener('popstate', handleURLLoad);
+
+
+    const searchList = document.querySelector(".search-list")
+    const searchGrid = document.getElementById('search-grid')
+
+    if(searchList && searchGrid){
+        await initSearchInfiniteScroll(searchList, searchGrid)
+    }
 });
 
 function handleURLLoad() {

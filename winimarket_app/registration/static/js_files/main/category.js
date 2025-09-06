@@ -16,7 +16,6 @@ export async function fetchCategories (){
 
 export async function renderCategories(){
     const categories = await fetchCategories()
-    console.log(categories)
 
     const selectCategory = document.getElementById('select-category')
 
