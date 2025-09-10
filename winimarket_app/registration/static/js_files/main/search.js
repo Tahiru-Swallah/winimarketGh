@@ -1,5 +1,5 @@
 import { renderProductDetail, showSkeletons } from './products.js'
-import { toggleWishList } from './wishlist.js'
+import { toggleWishList, bindFavoriteIcon } from './wishlist.js'
 
 async function fetchSuggestion(query){
     try{
@@ -95,7 +95,7 @@ async function renderSearchResults(query, searchGrid, append=false){
                     <h3>${product.name}</h3>
                     <p>$${product.min_price}</p>
                 </div>
-                <span class="material-icons-outlined favorite-icon ${product.is_favorited ? 'favorited' : ''}" data-product-id="${product.id}">favorite_border</span>
+                <span class="material-icons-outlined favorite-icon" data-product-id="${product.id}">favorite_border</span>
             `;
 
             item.addEventListener('click', async (e) => {
@@ -104,10 +104,8 @@ async function renderSearchResults(query, searchGrid, append=false){
                 await renderProductDetail(product.id, currentURL);
             });
 
-            item.querySelector('.favorite-icon').addEventListener('click', async (e)=> {
-                e.stopPropagation()
-                await toggleWishList(product.id, e.target)
-            })
+            const favIcon = item.querySelector('.favorite-icon')
+            bindFavoriteIcon(favIcon, product.id)
 
             searchGrid.appendChild(item);
         });

@@ -1,4 +1,5 @@
-import { toggleWishList } from "./wishlist.js";
+import { bindFavoriteIcon } from "./wishlist.js";
+import { addToCart, isInCart } from "./cart.js";
 
 const cache = new Map()
 
@@ -127,7 +128,6 @@ export async function renderProducts(filters = {}, append = false) {
         }
 
         data.results.forEach(product => {
-            console.log(product)
             const productElement = document.createElement('div');
             productElement.classList.add('new-product');
             productElement.innerHTML = `
@@ -138,17 +138,17 @@ export async function renderProducts(filters = {}, append = false) {
                     <h4 class="product-name">${product.name}</h4>
                     <p>$${product.min_price}</p>
                 </div>
-                <span class="material-icons-outlined favorite-icon ${product.is_favorited ? 'favorited' : ''}">favorite_border</span>
+                <span class="material-icons-outlined favorite-icon" data-product-id="${product.id}">favorite_border</span>
             `;
+
             productElement.addEventListener('click', (e) => {
                 if (e.target.classList.contains('favorite-icon')) return;
                 renderProductDetail(product.id)
             });
 
-            productElement.querySelector('.favorite-icon').addEventListener('click', async (e) => {
-                e.stopPropagation()
-                await toggleWishList(product.id, e.target)
-            })
+            const favIcon = productElement.querySelector('.favorite-icon')
+            bindFavoriteIcon(favIcon, product.id)
+
             container.appendChild(productElement);
         });
 
@@ -218,6 +218,9 @@ export async function renderProductDetail(productId, backURL = '/') {
 
     setTimeout(() => {
         container.innerHTML = `
+            <div class="close-mobile">
+                <span class="material-icons-outlined">arrow_back</span>
+            </div>
             <div class="p-container">
                 <div class="products-images">
                     <div class="img-pr">
@@ -246,11 +249,40 @@ export async function renderProductDetail(productId, backURL = '/') {
             </div>
         `;
 
+        const cartBtn = container.querySelector('.cart-btn')
+        if (isInCart(product.id)) {
+            cartBtn.textContent = "Remove from Cart";
+            cartBtn.classList.add("in-cart");
+        } else {
+            cartBtn.textContent = "Add to Cart";
+            cartBtn.classList.remove("in-cart");
+        }
+        
+        // 🔹 Click handler (toggle)
+        cartBtn.addEventListener("click", async () => {
+            const result = await addToCart(product.id);
+
+            if (result) {
+                if (result.is_in_cart) {
+                    cartBtn.textContent = "Remove from Cart";
+                    cartBtn.classList.add("is_in_cart");
+                } else {
+                    cartBtn.textContent = "Add to Cart";
+                    cartBtn.classList.remove("is_in_cart");
+                }
+            }
+        });
+
         const pContainer = container.querySelector('.p-container');
         requestAnimationFrame(() => pContainer.classList.add('show'));
 
         const closeBtn = container.querySelector('.close');
         closeBtn.addEventListener('click', () => closeProductDetail());
+
+        if(isMobileDevice()){
+            const closeBtnMobile = container.querySelector('.close-mobile')
+            closeBtnMobile.addEventListener('click', ()=> closeProductDetail())
+        }
 
         container.addEventListener('click', (e) => {
             if (!isMobileDevice() && e.target.id === 'product-detail') closeProductDetail();

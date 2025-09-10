@@ -20,7 +20,9 @@ urlpatterns = [
 
     #TEMPLATE RENDERING
     path('', views.product_list_view, name='product_list'),
-    path('products/wishlist/', views.wishlist_template_view, name='wishlist_template'),
+    
+    path('wishlist/', TemplateView.as_view(template_name="products/product_list.html")),
+    path('products/cart/', TemplateView.as_view(template_name="products/product_list.html")),
 
     path('products/<uuid:product_id>/', TemplateView.as_view(template_name="products/product_list.html")),
 ]

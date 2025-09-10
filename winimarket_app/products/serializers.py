@@ -167,3 +167,11 @@ class WishListSerializer(serializers.ModelSerializer):
             return wishlist_item
         
         return wishlist_item
+    
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+
+        if 'products' in data:
+            data['products']['is_favorited'] = True
+        
+        return data

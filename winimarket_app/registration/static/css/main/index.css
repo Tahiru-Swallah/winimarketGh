@@ -87,6 +87,7 @@ header .navbar ul li a span {
   font-size: 20px;
   color: var(--text-color);
   border-radius: 50%;
+  cursor: pointer;
   background: #ddd;
   transition: background 0.3s ease, color 0.3s ease;
 }
@@ -169,7 +170,7 @@ header .navbar ul li a span.active{
     width: 100%;
     height: 100vh;
     background: var(--bg-color);
-    z-index: 10;
+    z-index: 5;
     padding: 75px 10% 20px 15%;
     display: none;
     gap: 30px;
@@ -277,11 +278,25 @@ header .navbar ul li a span.active{
 .search-list.opening {
     opacity: 1;
     transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
 .search-list.closing{
   opacity: 0;
   transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.wishlist-product.closing{
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+}
+
+.wishlist-product.opening {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity 0.4s ease, transform 0.4s ease;
 }
  
 /* --- Dark mode --- */
@@ -544,7 +559,7 @@ main .product-section{
   height: 100%;
   padding: 90px 10% 80px 15%;
   background: rgba(0,0,0,0.1);
-  z-index: 100;
+  z-index: 9;
   display: none;
 }
 
@@ -637,9 +652,10 @@ main .product-section{
 }
 
 .img-pr-slide{
+  width: 100%;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: space-between;
   margin-top: 13px;
 }
 
@@ -671,6 +687,10 @@ main .product-section{
   width: 40px;
   height: 40px;
   cursor: pointer;
+}
+
+.close-mobile{
+  display: none;
 }
 
 .product-info-d {
@@ -733,6 +753,10 @@ main .product-section{
   background: var(--primary-hover);
 }
 
+.cart-buy .cart-btn.is_in_cart{
+  background: var(--primary-hover);
+}
+
 .cart-buy{
   display: flex;
   gap: 20px;
@@ -752,6 +776,59 @@ main .product-section{
   color: var(--text-color);
 }
 
+.wishlist-product{
+  position: fixed;
+  width: 100%;
+  top: 0;
+  right: 0;
+  height: 100vh;
+  background: var(--bg-color);
+  z-index: 4;
+  padding: 85px 10% 20px 15%;
+  display: none;
+  gap: 30px;
+}
+
+#close_wishlist{
+  position: fixed;
+  margin-top: 20px;
+  width: 40px;
+  height: 40px;
+  background: #ddd;
+  color: var(--text-color);
+  border-radius: var(--border-radius);
+  transition: background 0.4s ease, color 0.4s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#close_wishlist:hover{
+  background-color: var(--primary-hover);
+  color: #fff;
+}
+
+.wishlist-grid {
+  width: 60%;
+  height: 100%;
+  overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  margin: 0 auto;
+  padding: var(--padding);
+  gap: 12px;
+}
+
+.wishlist-grid::-webkit-scrollbar{
+  width: 0px;
+}
+
+.wishlist-grid .new .new-product span.favorited{
+  color: #fff;
+  background-color: var(--primary-hover);
+}
+
 .menu-icon{
   display: none;
 }
@@ -762,6 +839,12 @@ main .product-section{
 
 .bottom-navbar{
   display: none;
+}
+
+.material-icons-outlined, button, span[role="button"] {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  outline: none;
 }
 
 @media screen and (max-width: 780px){
@@ -853,6 +936,37 @@ main .product-section{
     overflow: auto;
     border-radius: 0px;
     background: transparent;
+  }
+
+  .close{
+    display: none;
+  }
+
+  .close-mobile{
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    width: 40px;
+    height: 40px;
+    background: #ddd;
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    transition: background 0.4s ease, color 0.4s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    line-height: 1;
+    font-size: 24px;
+    z-index: 2;
+  }
+
+  .close-mobile .material-icons-outlined {
+    font-size: inherit;       /* inherit from parent */
+    line-height: 1;           /* fix vertical misalignment */
+    display: inline-flex;     /* treat it as flex child */
+    align-items: center;
+    justify-content: center;
   }
 
   .products-images{

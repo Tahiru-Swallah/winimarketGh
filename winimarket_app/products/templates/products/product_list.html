@@ -28,11 +28,11 @@
 
         <div class="navbar">
             <ul>
-                <li><a href="#"><span class="material-icons-outlined active">home</span></a></li>
-                <li><a href="#"><span class="material-icons-outlined">favorite_border</span></a></li>
-                <li><a href="#"><span class="material-icons-outlined">shopping_cart</span></a></li>
-                <li><a href="#"><span class="material-icons-outlined">local_shipping</span></a></li>
-                <li><a href="#"><span class="material-icons-outlined">account_circle</span></a></li>
+                <li><a><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-2">favorite_border</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-5">account_circle</span></a></li>
             </ul>
         </div>
     </header>
@@ -60,8 +60,7 @@
     <div class="search-list" id="search-list">
         <span class="material-icons-outlined" id="close_search">arrow_back</span>
         <!-- search list here -->
-        <div class="search_grid" id="search-grid">
-        </div>
+        <div class="search_grid" id="search-grid"></div>
     </div>
 
     <main>
@@ -151,7 +150,25 @@
             </div>
         </section>
 
-        <section class="product-detail" id="product-detail">
+        <section class="product-detail" id="product-detail"></section>
+
+        <section id="wishlist-product" class="wishlist-product">
+            <span class="material-icons-outlined" id="close_wishlist">arrow_back</span>
+            <div class="wishlist-grid">
+                <div class="new">
+                    <div class="new-product">
+                        <div class="img-p">
+                            <img src="{% static 'images/pic1.jpg' %}" alt="products">
+                            
+                        </div>
+                        <div class="p-info">
+                            <h4 class="product-name">Men Shirt</h4>
+                            <p>$20</p>
+                        </div>
+                        <span class="material-icons-outlined">favorite_border</span>
+                    </div>
+                </div>
+            </div>
         </section>
     </main>
 
