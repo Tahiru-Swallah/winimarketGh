@@ -267,7 +267,7 @@ export async function renderProductDetail(productId, backURL = '/') {
                     cartBtn.textContent = "Remove from Cart";
                     cartBtn.classList.add("is_in_cart");
                 } else {
-                    cartBtn.textContent = "Add to Cart";
+                    cartBtn.innerHTML = 'Add To Cart <span class="material-icons-outlined">shopping_cart</span>'
                     cartBtn.classList.remove("is_in_cart");
                 }
             }
