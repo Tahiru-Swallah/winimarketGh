@@ -114,9 +114,8 @@ def update_cart_item(request, product_id):
     except ValueError:
         return Response({"error": "Invalid quantity"}, status=status.HTTP_400_BAD_REQUEST)
     
-    if quantity <= 0:
-        cart_item.delete()
-        return Response({"message": "Cart item removed"}, status=status.HTTP_204_NO_CONTENT)
+    if quantity < 1:
+        quantity = 1
     
     cart_item.quantity = quantity
     cart_item.save()

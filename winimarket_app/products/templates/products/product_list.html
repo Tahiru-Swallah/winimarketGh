@@ -161,33 +161,19 @@
             <span class="material-icons-outlined" id="close_cart">arrow_back</span>
 
             <div class="cart-container-grid" id="cart-container-grid">
-                <div class="cart-products">
-                    <div class="cart-show" id="cart-show">
-                        <div class="c-im">
-                            <div class="cart-img">
-                                <img src="{% static 'images/pic1.jpg' %}" alt="product" width="400">
-                            </div>
-                            <div class="cart-info">
-                                <h2>Product name</h2>
-                                <p class="price">$23.00</p>
-                                <p class="seller">Seller: <span>Product seller name</span></p>
-                            </div>
-                        </div>
-                        <div class="cart-quantity">
-                            <button class="decrease" data-product-id="product-id">-</button>
-                            <span class="quantity">1</span>
-                            <button class="increase" data-product-id="product-id">+</button>
-                        </div>
-                        <span class="delete-cart">+</span>
-                    </div>
-                </div>
+                <div class="cart-products"></div>
                 
                 <div class="cart-summary" id="cart-summary">
-                    <h2>
-                        Cart Summary Goes here
-                    </h2>
+                    <h4>
+                        Cart Summary
+                    </h4>
 
-                    <p>Please don't touch this section</p>
+                    <div class="extra-info">
+                        <span class="total">Total:</span>
+                        <span class="cart-total-price">$231.00</span>
+                    </div>
+
+                    <button class="checkout-btn">Place Order</button>
                 </div>
             </div>
         </section>

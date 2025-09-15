@@ -3,7 +3,7 @@ import { renderProductsPrices, closeProductDetail } from "./products.js";
 import { renderProducts, resetPagination, renderProductDetail } from "./products.js";
 import { initSearch, initSearchInfiniteScroll } from "./search.js";
 import { initWishListContainer, openWishlist, closeWishlist } from "./wishlist.js";
-import { initCartContainer } from "./cart.js"
+import { initCartContainer, displayCartContainer } from "./cart.js"
 
 document.addEventListener('DOMContentLoaded', async function(){
     await renderCategories();
@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', async function(){
     initSearch()
     await initWishListContainer()
     await initCartContainer()
+    displayCartContainer()
 
     const filterForm = document.getElementById('filterForm');
     filterForm.addEventListener('submit', async function(e){
