@@ -46,16 +46,6 @@ document.addEventListener('DOMContentLoaded', async function(){
     }
 });
 
-/* function handleURLLoad() {
-    const match = window.location.pathname.match(/^\/products\/([0-9a-fA-F-]+)\/$/);
-    if (match) {
-        const productId = match[1];
-        renderProductDetail(productId);
-    } else {
-        closeProductDetail(); // Hide detail if returning to list
-    }
-} */
-
 function handleURLLoad() {
     const productMatch = window.location.pathname.match(/^\/products\/([0-9a-fA-F-]+)\/$/);
     const wishlistContainer = document.getElementById('wishlist-product');

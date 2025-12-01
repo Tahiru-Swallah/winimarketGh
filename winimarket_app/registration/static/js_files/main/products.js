@@ -234,7 +234,7 @@ export async function renderProductDetail(productId, backURL = '/') {
                 <div class="product-info-d">
                     <div class="h-p">
                         <h2>${product.name}</h2>
-                        <p>$${product.min_price}</p>
+                        <p>$${product.price}</p>
                     </div>
                     <div class="cart-buy">
                         <button class="cart-btn">Add To Cart <span class="material-icons-outlined">shopping_cart</span></button>
