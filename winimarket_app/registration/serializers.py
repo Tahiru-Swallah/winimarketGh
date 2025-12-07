@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
-from .models import CustomUser, Profile, SellerProfile
+from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification
 from django.utils import timezone
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
@@ -93,12 +93,37 @@ class ProfileSerializer(serializers.ModelSerializer):
         validated_data['user'] = user
         return super().create(validated_data)
     
+class SellerAddressSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SellerAddress
+        fields = "__all__"
+        read_only_fields = ('id', 'seller')
+
+
+class SellerPaymentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SellerPayment
+        fields = "__all__"
+        read_only_fields = ('id', 'seller')
+
+
+class SellerVerificationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SellerVerification
+        fields = "__all__"
+        read_only_fields = ('id', 'seller', 'status')
+
+    
 class SellerProfileSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     store_logo = serializers.ImageField(required=False, allow_null=True)
+
+    address = SellerAddressSerializer(read_only=True)
+    payment = SellerPaymentSerializer(read_only=True)
+    verification = SellerVerificationSerializer(read_only=True)   
     class Meta:
         model = SellerProfile
-        fields = ('id', 'profile', 'store_name','store_logo','store_description', 'business_address', 'momo_details', 'social_links', 'verification_status', 'created_at')
+        fields = ('id', 'profile', 'store_name','store_logo','store_description', 'address', 'payment', 'verification', 'is_verified', 'is_blacklisted', 'created_at')
         read_only_fields = ('id', 'profile', 'created_at')
 
     def validate_store_logo(self, value):

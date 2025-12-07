@@ -14,7 +14,7 @@ class SellerProfileAdmin(admin.ModelAdmin):
 
 @admin.register(SellerVerification)
 class SellerVerificationAdmin(admin.ModelAdmin):
-    list_display = ('seller', 'id_card', 'business_certificate', 'selfie_with_id', 'status', 'submitted_at', 'reviewed_at', 'note') 
+    list_display = ('seller', 'id_card_image', 'id_type', 'id_number', 'selfie_with_id', 'status', 'submitted_at', 'reviewed_at', 'note') 
 
 @admin.register(SellerPayment)
 class SellerPaymentAdmin(admin.ModelAdmin):
