@@ -105,6 +105,8 @@ export async function renderProducts(filters = {}, append = false) {
     const data = await fetchProducts(filters, currentPage);
     const elapsed = Date.now() - startTime;
 
+    console.log(data)
+
     let delay;
     if (elapsed < 300) delay = 400;
     else if (elapsed < 1000) delay = 200;
