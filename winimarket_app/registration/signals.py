@@ -40,6 +40,7 @@ def create_seller_data(sender, instance, created, **kwargs):
             defaults={
                 'region': 'Not set',
                 'city': 'Not set',
-                'address_line': 'Not set'
+                'address': 'Not set',
+                'country': 'Ghana'
             }
         )
