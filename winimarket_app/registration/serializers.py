@@ -6,7 +6,6 @@ from django.utils import timezone
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
-
     email_or_phonenumber = serializers.CharField()
     password = serializers.CharField(write_only = True)
 
@@ -16,19 +15,31 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
         user = None
 
-        try:
-            user = CustomUser.objects.get(email=email_or_phonenumber)
-        except CustomUser.DoesNotExist:
+        if '@' in email_or_phonenumber:
+            try:
+                user = CustomUser.objects.get(email=email_or_phonenumber.lower())
+            except CustomUser.DoesNotExist:
+                raise serializers.ValidationError({
+                    'email_or_phonenumber': 'No account found with this email.'
+                })
+        
+        else: 
             try:
                 user = CustomUser.objects.get(phonenumber=email_or_phonenumber)
             except CustomUser.DoesNotExist:
-                raise serializers.ValidationError('Invalid email or phonenumber')
+                raise serializers.ValidationError({
+                    'email_or_phonenumber': 'No account found with this phone number.'
+                })
         
         if not user.check_password(password):
-            raise serializers.ValidationError('Invalid credentials')
+            raise serializers.ValidationError({
+                'password': 'Invalid credentials. Please try again.'
+            })
         
         if not user.is_active:
-            raise serializers.ValidationError('User is inactive')
+            raise serializers.ValidationError({
+                'account': 'This account is inactive. Please contact support.'
+            })
         
         user.last_login = timezone.now()
         user.save(update_fields=['last_login'])
@@ -78,12 +89,12 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ('id', 'user', 'role', 'full_name', 'profile_picture', 'created_at')
-        read_only_fields = ('id', 'user', 'created_at')
+        read_only_fields = ('id', 'user', 'role', 'created_at')
 
     def validate_profile_picture(self, value):
         if value:
             if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError("Store logo must be less than 2MB")
+                raise serializers.ValidationError("Profile Picture must be less than 2MB")
             if not value.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
         return value
@@ -96,24 +107,54 @@ class ProfileSerializer(serializers.ModelSerializer):
 class SellerAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerAddress
-        fields = "__all__"
-        read_only_fields = ('id', 'seller')
+        fields = ("id", "region", "city", "country", "address",)
+        read_only_fields = ('id',)
 
-
+    def validate(self, attrs):
+        # Basic validation
+        if not attrs.get('city'):
+            raise serializers.ValidationError({"city": "City is required."})
+        if not attrs.get('address'):
+            raise serializers.ValidationError({"address": "Address line is required."})
+        return attrs
 class SellerPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerPayment
-        fields = "__all__"
-        read_only_fields = ('id', 'seller')
+        fields = ("id", "bank_name", "bank_account", "momo_name", "momo_number",)
+        read_only_fields = ('id',)
 
+    def validate(self, attrs):
+        momo = attrs.get('momo_number') or getattr(self.instance, 'momo_number', None)
+        bank = attrs.get('bank_account') or getattr(self.instance, 'bank_account', None)
+
+        if not momo and not bank:
+            raise serializers.ValidationError("At least one payout method (MoMo or Bank) is required.")
+        return attrs
 
 class SellerVerificationSerializer(serializers.ModelSerializer):
+    id_card_image = serializers.ImageField(required=True)
+    selfie_with_id = serializers.ImageField(required=True)
     class Meta:
         model = SellerVerification
-        fields = "__all__"
-        read_only_fields = ('id', 'seller', 'status')
+        fields = ("id", "id_type", "id_number", "id_card_image", "selfie_with_id", "status", "note", "submitted_at", "reviewed_at")
+        read_only_fields = ('id', 'status', 'note', 'submitted_at', 'reviewed_at')
 
-    
+    def validate_id_card_image(self, value):
+        if value:
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("ID image must be less than 5MB")
+            if not getattr(value, "content_type", "").startswith('image/'):
+                raise serializers.ValidationError("Uploaded file is not an image.")
+        return value
+
+    def validate_selfie_with_id(self, value):
+        if value:
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Selfie must be less than 5MB")
+            if not getattr(value, "content_type", "").startswith('image/'):
+                raise serializers.ValidationError("Uploaded file is not an image.")
+        return value
+
 class SellerProfileSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     store_logo = serializers.ImageField(required=False, allow_null=True)
