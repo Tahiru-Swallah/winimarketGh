@@ -16,8 +16,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import CustomUser, Profile, SellerProfile
-from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer
+from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification
+from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer, SellerVerificationSerializer, SellerAddressSerializer, SellerPaymentSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.utils import timezone
 
@@ -263,3 +263,139 @@ def seller_store_view(request):
             return Response(serializer.data, status=status.HTTP_200_OK if request.method == 'PUT' else status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def seller_address_view(request):
+    """
+    Update SellerAddress. Requires store info completed (store_name must exist).
+    """
+
+    profile = request.user.profile
+
+    if profile.role != 'seller':
+        return Response({"detail": "You must set your role to seller first."}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        seller = profile.seller_profile
+    except SellerProfile.DoesNotExist:
+        return Response({"detail": "Seller profile not found. Complete store info first."}, status=status.HTTP_404_NOT_FOUND)
+    
+    if not seller.store_name:
+        return Response({"detail": "Complete store info first."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    address, _ = SellerAddress.objects.get_or_create(seller=seller)
+    serializer = SellerAddressSerializer(address, data=request.data, context={'request': request}, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['PUT'])
+@permission_classes([IsAuthenticated])
+def seller_payment_view(request):
+    """
+    Update SellerPayment. Requires store info and address completed.
+    """
+
+    profile = request.user.profile
+
+    if profile.role != 'seller':
+        return Response({"detail": "You must set your role to seller first."}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        seller = profile.seller_profile
+    except SellerProfile.DoesNotExist:
+        return Response({"detail": "Seller profile not found. Complete store info first."}, status=status.HTTP_404_NOT_FOUND)
+    
+    address = getattr(seller, 'address', None)
+
+    if not address or not address.city or not address.region:
+        return Response({"detail": "Complete address info first."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    try:
+        address = seller.address
+    except SellerAddress.DoesNotExist:
+        return Response({"detail": "Seller address not found. Complete address info first."}, status=status.HTTP_404_NOT_FOUND)
+    
+    payment, _ = SellerPayment.objects.get_or_create(seller=seller)
+    serializer = SellerPaymentSerializer(payment, data=request.data, context={'request': request}, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+     
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+@parser_classes([MultiPartParser, FormParser])
+def seller_verification_view(request):
+    """
+    Upload verification documents. Requires payment information set.
+    Creates SellerVerification (status pending).
+    """
+
+    profile = request.user.profile
+
+    if profile.role != 'seller':
+        return Response({"detail": "You must set your role to seller first."}, status=status.HTTP_403_FORBIDDEN)
+    
+    try:
+        seller = profile.seller_profile
+    except SellerProfile.DoesNotExist:
+        return Response({"detail": "Seller profile not found. Complete store info first."}, status=status.HTTP_404_NOT_FOUND)
+    
+    payment = getattr(seller, 'payment', None)
+
+    if not payment or (not payment.momo_number and not payment.bank_account):
+        return Response({"detail": "Complete payment info first."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    verification, _ = SellerVerification.objects.get_or_create(seller=seller)
+    serializer = SellerVerificationSerializer(verification, data=request.data, context={'request': request}, partial=True)
+    if serializer.is_valid():
+        serializer.save(seller=seller)
+        return Response({"detail": "Verification Submitted. Await admin review."}, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+# -----------------------
+# Admin endpoints
+# -----------------------
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def admin_approve_verification(request, seller_id):
+    """
+    Admin endpoint to approve or reject a seller verification.
+    Payload: {"action": "approve" | "reject", "note": "optional note"}
+    """
+    action = request.data.get('action')
+    note = request.data.get('note', '')
+
+    try:
+        seller = SellerProfile.objects.get(id=seller_id)
+    except SellerProfile.DoesNotExist:
+        return Response({"detail": "Seller not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    try:
+        verification = seller.verification
+    except SellerVerification.DoesNotExist:
+        return Response({"detail": "Verification record not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    if action == 'approve':
+        verification.status = 'approved'
+        verification.note = note
+        verification.reviewed_at = timezone.now()
+        verification.save()
+        # mark seller as verified
+        seller.is_verified = True
+        seller.save()
+        return Response({"detail": "Seller verified and approved."}, status=status.HTTP_200_OK)
+
+    if action == 'reject':
+        verification.status = 'rejected'
+        verification.note = note
+        verification.reviewed_at = timezone.now()
+        verification.save()
+        seller.is_verified = False
+        seller.save()
+        return Response({"detail": "Seller verification rejected."}, status=status.HTTP_200_OK)
+
+    return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
