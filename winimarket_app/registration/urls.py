@@ -27,10 +27,15 @@ urlpatterns = [
 
     #PROFILE API
     path('api/profile/', views.profile_view),
-    
-    #ROLE SELECTION API
-    path('api/profile/set-role/', views.profile_view),
 
     #SELLER PROFILE API
-    path('api/seller-profile/', views.seller_profile_view),
+    path('api/profile/set-role/', views.set_role),
+
+    path('api/seller-profile/', views.seller_store_view),
+
+    path('api/seller-address/', views.seller_address_view),
+
+    path('api/seller-payment-info/', views.seller_payment_view),
+
+    path('api/seller-verification/', views.seller_verification_view),
 ]
