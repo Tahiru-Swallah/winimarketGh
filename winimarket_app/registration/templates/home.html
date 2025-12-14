@@ -10,7 +10,6 @@
     <h2>Hello {{ request.user.email}}</h2>
 
     <button onclick="logOutUser()">Logout</button>
-    <button><a href="{% url 'registration:change_password'%}">Change Password</a></button>
 
     <script>
         function getCSRFToken() {

@@ -38,4 +38,8 @@ urlpatterns = [
     path('api/seller-payment-info/', views.seller_payment_view),
 
     path('api/seller-verification/', views.seller_verification_view),
+
+    path('verify-email/<uuid:token>/', views.verify_email, name='verify_email'),
+    
+    path('resend-verification/', views.resend_verification_email, name='resend_verification_email'),
 ]

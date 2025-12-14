@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>winimarketGh - Login/SignUp</title>
+    <meta name="google-client-id" content="{{ GOOGLE_CLIENT_ID }}">
+    <title>WinimarketGh - Login/SignUp</title>
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{% static './css/auth/login.css' %}">
+    <link rel="stylesheet" href="{% static 'css/auth/login.css' %}">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
@@ -16,20 +17,44 @@
             <i class='bxr  bxs-shopping-bag-alt'  ></i> 
         </div> -->
         <div class="head-title">
-            WinimarketGh
+            WiniMarketGH
         </div>
 
-        <div class="login-message desktop"></div>
+        <div class="login-message desktop">
+            <div class="message">
+                <div class="success-logo">
+                    <img src="{% static 'images/logo-success.jpg' %}" alt="Logo-success" width="40">
+                </div>
+                <div class="text">
+                    <h4>Login Successful</h4>
+                </div>
+                <div class="loading">
+                    <div></div>
+                    <div></div>
+                    <div></div>
+                </div>
+            </div>
+        </div>
     </header>
 
     <div class="login-message-mobile">
         <div class="message">
-            <span>Login Successful</span>
+            <div class="success-logo">
+                <img src="{% static 'images/logo-success.jpg' %}" alt="Logo-success" width="40">
+            </div>
+            <div class="text">
+                <h4>Login Successful</h4>
+            </div>
+            <div class="loading">
+                <div></div>
+                <div></div>
+                <div></div>
+            </div>
         </div>
     </div>
 
     <main class="auth-container">
-        <section class="form-card">
+        <section class="form-card" id="form-card">
 
             <!-- LOGIN FORM  -->
             <form action="" id="loginForm" class="form-content active">
@@ -42,7 +67,10 @@
                 <div class="error"></div>
 
                 <input type="text" id="emailOrPhone" name="email_or_phonenumber" class="input-field" placeholder="Email or Phone" required>
-                <input type="password" id="password" name="password" class="input-field" placeholder="Password" required>
+                <div>
+                    <input type="password" id="password" name="password" class="input-field" placeholder="Password" required>
+                    <span class="show-password">Show</span>
+                </div>
                 <a href="#" class="forgot-password">Forgot Password</a>
                 <button type="submit" class="submit-btn">Login</button>
 
@@ -51,7 +79,7 @@
                 </div>
 
                 <div class="terms">
-                    <span>By Continuing, you agree to Kasuwaa's <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
+                    <span>By Continuing, you agree to WiniMarketGH <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
                 </div>
 
             </form>
@@ -68,7 +96,10 @@
 
                 <input type="email" name="email" class="input-field" id="email" placeholder="Enter your email" required>
                 <input type="text" name="phonenumber" class="input-field" id="phonenumber" placeholder="Enter your phone number" required>
-                <input type="password" id="password-" class="input-field" placeholder="Create a password" required>
+                <div>
+                    <input type="password" id="password-" name="password" class="input-field" placeholder="Password" required>
+                    <span class="show-password">Show</span>
+                </div>
                 <button type='submit' class="submit-btn">Register</button>
 
                 <div class="login">
@@ -76,13 +107,116 @@
                 </div>
 
                 <div class="terms">
-                    <span>By Continuing, you agree to Kasuwaa's <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
+                    <span>By Continuing, you agree to WiniMarketGH <a href="#">Terms of Service</a> and acknowledge you've read our <a href="#">Privacy Policy. Notice at all collection.</a></span>
                 </div>
              </form>
         </section>
+
+        <section class="role-selection-section">
+            <!-- ROLE SELECTION MODAL -->
+            <div id="roleSelectionModal" class="modal hidden">
+                <div class="modal-overlay"></div>
+                <div class="modal-content">
+                    <h2 class="modal-title">Welcome to WinimarketGh!</h2>
+                    <p class="modal-subtitle">Choose how you want to use the platform</p>
+
+                    <div class="role-options">
+                        <!-- Buyer Card -->
+                        <div class="role-card" id="buyerRole">
+                            <i class='bx bxs-shopping-bag role-icon'></i>
+                            <h3>Buy Products</h3>
+                            <p>Explore products and start shopping.</p>
+                        </div>
+
+                        <!-- Seller Card -->
+                        <div class="role-card" id="sellerRole">
+                            <i class='bx bxs-store-alt role-icon'></i>
+                            <h3>Sell Products</h3>
+                            <p>Create your store and reach thousands of customers.</p>
+                        </div>
+                    </div>
+
+                    <button class="modal-close" id="closeRoleModal">×</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Toast notification container -->
+        <div id="toast-container"></div>
     </main>
 
+    <!-- BUYER PROFILE MODAL -->
+    <div id="buyerProfileModal" class="modal hidden">
+        <div class="modal-overlay"></div>
+
+        <div class="modal-content buyer-profile">
+            <h2 class="modal-title">Complete Your Profile</h2>
+            <p class="modal-subtitle">
+                Just one more step to get started
+            </p>
+
+            <form id="buyerProfileForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="buyerFullName">Full Name</label>
+                    <input
+                        type="text"
+                        id="buyerFullName"
+                        name="full_name"
+                        class="input-field"
+                        placeholder="e.g. John Doe"
+                        required
+                    />
+                </div>
+
+                <div class="form-group">
+                    <label for="buyerProfilePicture">
+                        Profile Picture <span class="optional">(optional)</span>
+                    </label>
+                    <input
+                        type="file"
+                        id="buyerProfilePicture"
+                        name="profile_picture"
+                        accept="image/*"
+                        class="input-field"
+                    />
+                </div>
+
+                <div class="error-message" id="buyerProfileError"></div>
+
+                <button type="submit" class="submit-btn">
+                    Save & Continue
+                </button>
+            </form>
+        </div>
+    </div>
+
+    
+
+
     <script src="https://accounts.google.com/gsi/client" async defer></script>
-    <script src="{% static './js_files/auth.js'%}"></script>
+    <script type="module" src="{% static 'js_files/auth.js'%}"></script>
+    <!-- <script src="{% static 'js_files/dark.js'%}"></script> -->
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const passwordInput = document.getElementById("password-");
+            const passwordInputTwo = document.getElementById("password");
+            const toggleBtn = document.querySelectorAll(".show-password");
+
+            toggleBtn.forEach(btn => {
+                btn.addEventListener("click", () => {
+                    if (passwordInput.type === "password" && passwordInputTwo.type === "password") {
+                        passwordInput.type = "text";
+                        passwordInputTwo.type = 'text'
+                        btn.textContent = "Hide";
+                    }else {
+                        passwordInput.type = "password";
+                        passwordInputTwo.type = "password";
+                        btn.textContent = "Show";
+                    }
+                });
+            })
+        });
+
+    </script>
 </body>
 </html>

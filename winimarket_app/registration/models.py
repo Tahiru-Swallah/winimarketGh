@@ -40,7 +40,9 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)  # Unique identifier for each user
     email = models.EmailField(unique=True, null=True, blank=False, db_index=True)      # User's email (unique)
     phonenumber = PhoneNumberField(unique=True, blank=True, null=True)      # User's phone number (unique, can be blank)
-    date_joined = models.DateTimeField(auto_now_add=True)                   # Timestamp when user joined
+    date_joined = models.DateTimeField(auto_now_add=True)      
+    
+    email_verified = models.BooleanField(default=False)             # Timestamp when user joined
 
     is_active = models.BooleanField(default=True)   # Is the user active?
     is_staff = models.BooleanField(default=False)   # Is the user a staff/admin?
@@ -75,6 +77,7 @@ class Profile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)  # Unique identifier for each profile
     user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='profile')  # Link to CustomUser
     role = models.CharField(max_length=10, choices=ROLE_CHOICES, default='buyer')             # User role
+    role_confirmed = models.BooleanField(default=False)      # Is the role confirmed?
 
     full_name = models.CharField(max_length=255, blank=True, null=True)                       # Full name
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True) # Profile picture
@@ -133,6 +136,9 @@ class SellerVerification(models.Model):
     submitted_at = models.DateTimeField(auto_now_add=True)
     reviewed_at = models.DateTimeField(blank=True, null=True)
 
+    class Meta:
+        ordering = ['-submitted_at']
+
     def __str__(self):
         return f"{self.seller.store_name} - {self.status}"
     
@@ -151,6 +157,9 @@ class SellerPayment(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ['-created_at']
+
     def __str__(self):
         return f"{self.seller.store_name} - Payment Info"
     
@@ -168,3 +177,51 @@ class SellerAddress(models.Model):
     def __str__(self):
         return f"{self.city} - {self.seller.store_name}"
 
+class SellerAuditLog(models.Model):
+    ACTION_CHOICES = (
+        ('approved', 'Approved'),
+        ('rejected', 'Rejected'),
+        ('blacklisted', 'Blacklisted'),
+        ('unblacklisted', 'Unblacklisted'),
+    )
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    seller = models.ForeignKey(SellerProfile, on_delete=models.CASCADE, related_name='audit_logs')
+    admin_user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='admin_actions'
+    )
+    action = models.CharField(max_length=20, choices=ACTION_CHOICES)
+    note = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.seller.store_name} - {self.action}"
+
+
+class EmailVerification(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='email_verification')
+    token = models.CharField(max_length=255, unique=True)
+    is_verified = models.BooleanField(default=False)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    verified_at = models.DateTimeField(blank=True, null=True)
+    expires_at = models.DateTimeField()
+
+    def is_expired(self):
+        from django.utils import timezone
+        return timezone.now() > self.expires_at
+    
+    def mark_verified(self):
+        from django.utils import timezone
+        self.is_verified = True
+        self.verified_at = timezone.now()
+        self.save()

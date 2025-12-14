@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -16,10 +16,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification
+from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification, EmailVerification
 from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer, SellerVerificationSerializer, SellerAddressSerializer, SellerPaymentSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.utils import timezone
+from .utils import generate_verification_token, regenerate_verification_token
+from .emails import send_verification_email
 
 # -----------------------------
 # Template Views
@@ -190,12 +192,13 @@ def profile_view(request):
     if request.method == 'GET':
         serializer = ProfileSerializer(user.profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    serializer = ProfileSerializer(user.profile, data=request.data, context={'request': request}, partial=True)
-    if serializer.is_valid():
-        profile = serializer.save()
-        return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == "PUT":
+        serializer = ProfileSerializer(user.profile, data=request.data, context={'request': request}, partial=True)
+        if serializer.is_valid():
+            profile = serializer.save()
+            return Response(ProfileSerializer(profile).data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------------
 # Role Selection API View
@@ -211,20 +214,18 @@ def set_role(request):
     if role not in ['buyer', 'seller']:
         return Response({'error': 'Invalid role, choose buyer or seller.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    if profile.role == "seller":
-        # Prevent downgrading from seller to buyer
-        return Response({'error': 'Role already set to seller cannot be changed again.'}, status=status.HTTP_400_BAD_REQUEST)
+    # Prevent changing role after confirmation
+    if profile.role_confirmed:
+        return Response(
+            {'error': 'Role has already been set and cannot be changed.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
     
-    if role == 'seller':
-        profile.role = 'seller'
-        profile.save()
-        # Create an empty SellerProfile for the user
-        return Response({'message': 'Role set to seller successfully.'}, status=status.HTTP_200_OK)
-    
-    profile.role = "buyer"
+    profile.role = role
+    profile.role_confirmed = True
     profile.save()
 
-    return Response({'message': f'Role updated to buyer successfully.'}, status=status.HTTP_200_OK)
+    return Response({'message': f'Role updated to {profile.role} successfully.'}, status=status.HTTP_200_OK)
 
 # -----------------------
 # Seller onboarding
@@ -243,6 +244,9 @@ def seller_store_view(request):
 
     if profile.role != 'seller':
         return Response({"detail": "You must set your role to seller first."}, status=status.HTTP_403_FORBIDDEN)
+    
+    if not user.email_verified:
+        return Response({"detail": "Verify your email address before setting store info."}, status=status.HTTP_403_FORBIDDEN)
     
     seller = getattr(profile, 'seller_profile', None)
 
@@ -284,6 +288,9 @@ def seller_address_view(request):
     if not seller.store_name:
         return Response({"detail": "Complete store info first."}, status=status.HTTP_400_BAD_REQUEST)
     
+    if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before setting address info."}, status=status.HTTP_403_FORBIDDEN)
+    
     address, _ = SellerAddress.objects.get_or_create(seller=seller)
     serializer = SellerAddressSerializer(address, data=request.data, context={'request': request}, partial=True)
     if serializer.is_valid():
@@ -312,6 +319,9 @@ def seller_payment_view(request):
 
     if not address or not address.city or not address.region:
         return Response({"detail": "Complete address info first."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before setting payment info."}, status=status.HTTP_403_FORBIDDEN)
     
     try:
         address = seller.address
@@ -348,6 +358,9 @@ def seller_verification_view(request):
 
     if not payment or (not payment.momo_number and not payment.bank_account):
         return Response({"detail": "Complete payment info first."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before submitting verification."}, status=status.HTTP_403_FORBIDDEN)
     
     verification, _ = SellerVerification.objects.get_or_create(seller=seller)
     serializer = SellerVerificationSerializer(verification, data=request.data, context={'request': request}, partial=True)
@@ -399,3 +412,44 @@ def admin_approve_verification(request, seller_id):
         return Response({"detail": "Seller verification rejected."}, status=status.HTTP_200_OK)
 
     return Response({"detail": "Invalid action."}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+def verify_email(request, token):
+    try:
+        verification = EmailVerification.objects.get(token=token)
+    except EmailVerification.DoesNotExist:
+        return Response({"detail": "Invalid verification link."}, status=status.HTTP_400_BAD_REQUEST)
+
+    if verification.is_verified:
+        return Response({"detail": "Email already verified."}, status=status.HTTP_200_OK)
+    
+    if verification.is_expired():
+        return Response({"detail": "Verification link has expired."}, status=status.HTTP_400_BAD_REQUEST)
+    
+    verification.mark_verified()
+    
+    user = verification.user
+    user.email_verified = True
+    user.save(update_fields=['email_verified'])
+    return Response({"detail": "Email verified successfully."}, status=status.HTTP_200_OK)
+
+RESEND_COOLDOWN_MINUTES = 5
+
+@api_view(['POST'])
+def resend_verification_email(request):
+    user = request.user
+
+    if user.email_verified:
+        return Response({"detail": "Email already verified."}, status=status.HTTP_200_OK)
+    
+    verification = EmailVerification.objects.get(user=user)
+
+    if verification.created_at > timezone.now() - timezone.timedelta(minutes=RESEND_COOLDOWN_MINUTES):
+        return Response({"detail": f"Please wait before requesting another verification email."}, status=status.HTTP_429_TOO_MANY_REQUESTS)
+    
+    if verification.is_expired():
+        verification = regenerate_verification_token(verification)
+
+    send_verification_email(user, verification.token)
+
+    return Response({"detail": "Verification email resent."}, status=status.HTTP_200_OK)

@@ -3,6 +3,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification
 from django.utils import timezone
+from django.db import IntegrityError, transaction
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
@@ -65,30 +66,34 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate_email(self, value):
         if CustomUser.objects.filter(email=value).exists():
-            raise serializers.ValidationError('Email already exists')
-        return value
+            raise serializers.ValidationError('An account with this email already exists')
+        return value.lower()
 
     def validate_phonenumber(self, value):
         if CustomUser.objects.filter(phonenumber=value).exists():
-            raise serializers.ValidationError('Phonenumber already exists')
+            raise serializers.ValidationError('An account with this phone number already exists')
         return value
 
     def create(self, validated_data):
-        user = CustomUser(
-            email = validated_data['email'],
-            phonenumber = validated_data['phonenumber'],
-        )
+        try:
+            with transaction.atomic():
+                user = CustomUser(
+                    email = validated_data['email'].lower(),
+                    phonenumber = validated_data['phonenumber']
+                )
+                user.set_password(validated_data['password'])
 
-        user.set_password(validated_data['password'])
-        user.save()
-
-        return user
+                user.save()
+                return user
+            
+        except IntegrityError as e:
+            raise serializers.ValidationError({'detail' : 'A user with this email or phone number already exists.'}) from e
     
 class ProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)
     class Meta:
         model = Profile
-        fields = ('id', 'user', 'role', 'full_name', 'profile_picture', 'created_at')
+        fields = ('id', 'user', 'role', "role_confirmed", 'full_name', 'profile_picture', 'created_at')
         read_only_fields = ('id', 'user', 'role', 'created_at')
 
     def validate_profile_picture(self, value):

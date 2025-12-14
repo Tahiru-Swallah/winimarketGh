@@ -32,6 +32,22 @@
     list-style: none;
 }
 
+/* Allow text selection only for input and textarea fields */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent iOS zoom on focus while staying compatible with older devices */
+input,
+select,
+textarea {
+  font-size: 16px !important;                /* prevents iPhone zoom */
+  -webkit-text-size-adjust: 100%; /* ensures normal text scaling */
+  line-height: 1.4;               /* keeps spacing tidy */
+  box-sizing: border-box;         /* predictable sizing */
+}
+
 body {
     background-color: var(--bg-color);
     font-family: var(--font-primary);
@@ -123,7 +139,12 @@ header .head-title{
     right: 20px;
 }
 
+div{
+    position: relative;
+}
+
 .input-field {
+    width: 100%;
     padding: var(--padding);
     border: 1px solid #ddd;
     border-radius: var(--border-radius);
@@ -147,6 +168,15 @@ header .head-title{
 
 .forgot-password:hover {
     text-decoration: underline;
+}
+
+.show-password{
+    color: var(--text-color);
+    font-size: 12px;
+    position: absolute;
+    bottom: 23px;
+    right: 10px;
+    cursor: pointer;
 }
 
 .submit-btn {
@@ -207,27 +237,137 @@ header .head-title{
     position: absolute;
     top: 20px;
     right: 20px;
-    background: var(--success-color);
+    background: #fff;
     width: 200px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     color: #fff;
     padding: 15px 10px;
     border-radius: var(--border-radius);
     transition: display 0.3s ease;
 }
 
-.login-message div{
-    position: absolute;
-    width: 14px;
-    height: 14px;
-    background: var(--success-color);
-    top: -8px;
-    right: 20px;
-    rotate: 45deg;
+.login-message .message{
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    gap: 8px;
+    color: var(--text-color);
+    border-radius: var(--border-radius);
+    font-size: 14px;
+    font-family: var(--font-alt);
 }
 
 .login-message-mobile{
     display: none;
 }
+
+.loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.loading div {
+    width: 8px;
+    height: 8px;
+    background-color: #4caf50; /* green (you can change) */
+    border-radius: 50%;
+    animation: bounce 0.6s infinite alternate;
+}
+
+.loading div:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.loading div:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+}
+
+.modal-content {
+    position: relative;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 12px;
+    max-width: 500px;
+    width: 90%;
+    z-index: 10;
+    text-align: center;
+}
+
+.role-options {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 1.5rem;
+}
+
+.role-card {
+    flex: 1;
+    margin: 0 0.5rem;
+    padding: 1rem;
+    border: 2px solid #ddd;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.role-card:hover {
+    border-color: #007bff;
+    transform: translateY(-3px);
+}
+
+.role-icon {
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
+    color: #007bff;
+}
+
+.modal-close {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+
+
+@keyframes bounce {
+    from {
+        transform: translateY(0);
+        opacity: 0.4;
+    }
+    to {
+        transform: translateY(-6px);
+        opacity: 1;
+    }
+}
+
 
 .profile_image{
     width: 100%;
@@ -277,6 +417,37 @@ header .head-title{
     font-family: var(--font-alt);
 }
 
+#toast-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.toast {
+  background: var(--primary-color);
+  color: var(--bg-color);
+  padding: 12px 18px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  font-weight: 500;
+  font-size: 14px;
+  opacity: 1;
+  transform: translateY(20px);
+  animation: slideIn 0.4s forwards, fadeOut 0.5s 3s forwards;
+}
+
+.toast.error {
+  background: var(--error-color);
+}
+
+.toast.success {
+  background: var(--success-color);
+}
+
 @media screen and (max-width: 768px) {
     header {
         justify-content: center;
@@ -316,9 +487,14 @@ header .head-title{
     }
 
     .login-message-mobile .message{
-        background: var(--success-color);
-        color: var(--bg-color);
-        padding: 20px 30px;
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        gap: 8px;
+        width: 200px;
+        background: #fff;
+        color: var(--text-color);
+        padding: var(--padding) 18px;
         border-radius: var(--border-radius);
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
         font-size: 14px;
@@ -344,6 +520,15 @@ header .head-title{
         font-size: 18px;
         margin-bottom: 15px;
     }
+
+    .show-password{
+        color: var(--text-color);
+        font-size: 12px;
+        position: absolute;
+        bottom: 27px;
+        right: 10px;
+        cursor: pointer;
+    }
 }
 
 
@@ -352,3 +537,99 @@ header .head-title{
         padding: 18px 10px;
     }
 }
+
+/* Dark Mode */
+/* @media (prefers-color-scheme: dark) {
+  :root{
+    --bg-color: #0f172a;
+    --card-bg: rgba(30, 41, 59, 0.8);
+    --text-color: #f1f5f9;
+    --primary-color: #2563eb;
+    --primary-hover: #1d4ed8;
+    --accent-color: #facc15;
+    --success-color: #22c55e;
+    --error-color: #f87171;
+  }
+
+  body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+  }
+
+  .form-card {
+    background: #1e293b;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .input-field {
+    background: #0f172a;
+    color: #f1f5f9;
+    border-color: #334155;
+  }
+
+  .input-field:focus {
+    border-color: var(--primary-color);
+  }
+
+  .forgot-password,
+  .signup a,
+  .login a,
+  .terms a {
+    color: var(--primary-color);
+  }
+
+  .divider {
+    color: #aaa;
+  }
+
+  .divider::before,
+  .divider::after {
+    background: #334155;
+  }
+
+  .submit-btn {
+    background: var(--primary-color);
+    color: #fff;
+  }
+
+  .submit-btn:hover {
+    background: var(--primary-hover);
+  }
+
+  .profile_image .img {
+    border: 2px solid var(--primary-color);
+  }
+
+  .profile_image label {
+    background: var(--primary-color);
+    color: #fff;
+  }
+
+  .profile_image label:hover {
+    background: var(--primary-hover);
+  }
+
+  .title,
+  .subtitle {
+    color: #f1f5f9;
+  }
+
+  .login-message,
+  .login-message-mobile .message {
+    background: #1e293b;
+    color: #f1f5f9;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+  }
+
+  .loading div {
+    background-color: #22c55e;
+  }
+
+  @media screen and (max-width: 768px) {
+    .form-card {
+        padding: 0px;
+        background-color: transparent;
+        box-shadow: none;
+    }   
+    }
+} */
