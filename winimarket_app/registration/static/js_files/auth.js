@@ -278,7 +278,7 @@ document.getElementById('buyerRole').addEventListener('click', async () => {
 document.getElementById('sellerRole').addEventListener('click', async () => {
     try {
         await setUserRole('seller');
-        window.location.href = '/seller/onboarding/';
+        window.location.href = '/account/seller/onboarding/';
     } catch (error) {
         console.error('Error setting role to seller:', error);
     }

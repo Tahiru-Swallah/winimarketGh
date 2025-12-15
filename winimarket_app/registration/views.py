@@ -36,6 +36,10 @@ def login_view(request):
     # Render the login page
     return render(request, 'authentication/login.html')
 
+def seller_onboarding(request):
+    # Render the seller onboarding page
+    return render(request, 'authentication/onboarding.html')
+
 # -----------------------------
 # API Views for Authentication
 # -----------------------------
@@ -245,8 +249,8 @@ def seller_store_view(request):
     if profile.role != 'seller':
         return Response({"detail": "You must set your role to seller first."}, status=status.HTTP_403_FORBIDDEN)
     
-    if not user.email_verified:
-        return Response({"detail": "Verify your email address before setting store info."}, status=status.HTTP_403_FORBIDDEN)
+    """ if not user.email_verified:
+        return Response({"detail": "Verify your email address before setting store info."}, status=status.HTTP_403_FORBIDDEN) """
     
     seller = getattr(profile, 'seller_profile', None)
 
@@ -288,8 +292,8 @@ def seller_address_view(request):
     if not seller.store_name:
         return Response({"detail": "Complete store info first."}, status=status.HTTP_400_BAD_REQUEST)
     
-    if not request.user.email_verified:
-        return Response({"detail": "Verify your email address before setting address info."}, status=status.HTTP_403_FORBIDDEN)
+    """ if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before setting address info."}, status=status.HTTP_403_FORBIDDEN) """
     
     address, _ = SellerAddress.objects.get_or_create(seller=seller)
     serializer = SellerAddressSerializer(address, data=request.data, context={'request': request}, partial=True)
@@ -320,8 +324,8 @@ def seller_payment_view(request):
     if not address or not address.city or not address.region:
         return Response({"detail": "Complete address info first."}, status=status.HTTP_400_BAD_REQUEST)
     
-    if not request.user.email_verified:
-        return Response({"detail": "Verify your email address before setting payment info."}, status=status.HTTP_403_FORBIDDEN)
+    """ if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before setting payment info."}, status=status.HTTP_403_FORBIDDEN) """
     
     try:
         address = seller.address
@@ -359,14 +363,16 @@ def seller_verification_view(request):
     if not payment or (not payment.momo_number and not payment.bank_account):
         return Response({"detail": "Complete payment info first."}, status=status.HTTP_400_BAD_REQUEST)
     
-    if not request.user.email_verified:
-        return Response({"detail": "Verify your email address before submitting verification."}, status=status.HTTP_403_FORBIDDEN)
+    """ if not request.user.email_verified:
+        return Response({"detail": "Verify your email address before submitting verification."}, status=status.HTTP_403_FORBIDDEN) """
     
     verification, _ = SellerVerification.objects.get_or_create(seller=seller)
     serializer = SellerVerificationSerializer(verification, data=request.data, context={'request': request}, partial=True)
     if serializer.is_valid():
-        serializer.save(seller=seller)
+        serializer.save()
         return Response({"detail": "Verification Submitted. Await admin review."}, status=status.HTTP_201_CREATED)
+    
+    print(serializer.errors)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------

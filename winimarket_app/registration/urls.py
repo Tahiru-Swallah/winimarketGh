@@ -39,6 +39,8 @@ urlpatterns = [
 
     path('api/seller-verification/', views.seller_verification_view),
 
+    path('seller/onboarding/', views.seller_onboarding, name='seller_onboarding'),
+
     path('verify-email/<uuid:token>/', views.verify_email, name='verify_email'),
     
     path('resend-verification/', views.resend_verification_email, name='resend_verification_email'),

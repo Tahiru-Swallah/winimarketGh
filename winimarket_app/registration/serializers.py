@@ -174,8 +174,8 @@ class SellerProfileSerializer(serializers.ModelSerializer):
 
     def validate_store_logo(self, value):
         if value:
-            if value.size > 2 * 1024 * 1024:
-                raise serializers.ValidationError("Store logo must be less than 2MB")
+            if value.size > 5 * 1024 * 1024:
+                raise serializers.ValidationError("Store logo must be less than 5MB")
             if not value.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
         return value

@@ -74,7 +74,7 @@ class JWTAuthenticationMiddleware(MiddlewareMixin):
                 "access_token",
                 request.new_access_token,
                 httponly=True,
-                secure=settings.SECURE_COOKIES,   # 🔐 True if HTTPS
+                secure=settings.SECURE_COOKIE,   # 🔐 True if HTTPS
                 samesite="Lax",
                 max_age=3600,   # 1 hour
             )

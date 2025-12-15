@@ -1,0 +1,122 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller Onboarding | WinimarketGh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+
+    <!-- Fonts (same as auth page) -->
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/auth/onboarding.css' %}">
+</head>
+<body>
+
+<main class="onboarding-container">
+
+    <!-- Header -->
+    <header class="onboarding-header">
+        <h1>Seller Onboarding</h1>
+        <p>Complete the steps below to start selling on WinimarketGh</p>
+    </header>
+
+    <!-- Progress -->
+    <div class="progress-wrapper">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-text" id="progressText">Step 1 of 4</span>
+    </div>
+
+    <div class="error-card" id="errorCard" hidden>
+        <p id="errorText"></p>
+    </div>
+
+    <!-- Steps -->
+    <section class="onboarding-steps">
+
+        <!-- STEP 1: Store Info -->
+        <div class="step active" data-step="1">
+            <h2>Store Information</h2>
+
+            <input type="text" id="storeName" class="input-field" placeholder="Store name">
+            <textarea id="storeDescription" class="input-field" placeholder="Store description"></textarea>
+
+            <div class="file-input">
+                <label>Store Logo (optional)</label>
+                <input type="file" id="storeLogo" accept="image/*">
+                <div id="storeLogoPreview"></div>
+            </div>
+        </div>
+
+        <!-- STEP 2: Address -->
+        <div class="step" data-step="2">
+            <h2>Business Address</h2>
+
+            <input type="text" id="country" class="input-field" value="Ghana" disabled>
+            <input type="text" id="region" class="input-field" placeholder="Region">
+            <input type="text" id="city" class="input-field" placeholder="City">
+            <textarea id="address" class="input-field" placeholder="Address"></textarea>
+        </div>
+
+        <!-- STEP 3: Payment -->
+        <div class="step" data-step="3">
+            <h2>Payment Information</h2>
+
+            <input type="text" id="momoName" class="input-field" placeholder="MoMo Account Name">
+            <input type="text" id="momoNumber" class="input-field" placeholder="MoMo Number">
+
+            <hr>
+
+            <input type="text" id="bankName" class="input-field" placeholder="Bank Name (optional)">
+            <input type="text" id="bankAccount" class="input-field" placeholder="Bank Account Number (optional)">
+        </div>
+
+        <!-- STEP 4: Verification -->
+        <div class="step" data-step="4">
+            <h2>Identity Verification</h2>
+
+            <select id="idType" class="input-field">
+                <option value="">Select ID Type</option>
+                <option value="ghana_card">Ghana Card</option>
+                <option value="student_id">Student ID</option>
+            </select>
+
+            <input type="text" id="idNumber" class="input-field" placeholder="Enter ID Number">
+            <small id="idNumberTooltip" class="tooltip-text"></small> <!-- Tooltip -->
+
+            <div class="file-input">
+                <label>ID Card Image</label>
+                <input type="file" id="idCardImage" accept="image/*">
+                <div class="preview" id="idCardPreview"></div>
+            </div>
+
+            <div class="file-input">
+                <label>Selfie with ID</label>
+                <input type="file" id="selfieWithId" accept="image/*">
+                <div class="preview" id="selfiePreview"></div>
+            </div>
+
+            <div class="disclaimer">
+                <p>
+                    We require your ID documents and a selfie to verify your identity. 
+                    This helps us ensure trust and safety on WinimarketGh. 
+                    Your documents are stored securely and are only used for verification purposes.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Navigation -->
+    <div class="onboarding-actions">
+        <button class="btn secondary" id="prevBtn" disabled>Back</button>
+        <button class="btn primary" id="nextBtn">Continue</button>
+    </div>
+
+</main>
+
+<script type="module" src="{% static 'js_files/onboarding.js' %}"></script>
+</body>
+</html>
