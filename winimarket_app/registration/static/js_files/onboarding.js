@@ -41,31 +41,6 @@ function handleFileInput(fileInput, previewContainerId, maxSizeMB = 5) {
 }
 
 // ===============================
-// ERROR CARD
-// ===============================
-function showError(message, inputField = null) {
-    const card = document.createElement('div');
-    card.className = 'error-card';
-    card.textContent = message;
-    card.style.color = 'var(--error-color)';
-    card.style.background = 'rgba(255,77,77,0.1)';
-    card.style.padding = '10px';
-    card.style.borderRadius = '8px';
-    card.style.marginTop = '5px';
-
-    if (inputField) {
-        const parent = inputField.parentElement;
-        // Remove previous error
-        const prev = parent.querySelector('.error-card');
-        if (prev) prev.remove();
-        parent.appendChild(card);
-    } else {
-        document.body.appendChild(card);
-        setTimeout(() => card.remove(), 5000);
-    }
-}
-
-// ===============================
 // FILE INPUT LISTENERS
 // ===============================
 const storeLogoInput = document.getElementById('storeLogo');
@@ -102,6 +77,15 @@ const errorText = document.getElementById('errorText');
 /* ===============================
    UI HELPERS
 ================================ */
+function showError(message, inputField = null) {
+    errorText.textContent = message;
+    errorCard.hidden = false;
+
+    if (inputField) {
+        inputField.classList.add('input-error');
+    }
+}
+
 function clearError() {
     errorText.textContent = '';
     errorCard.hidden = true;
@@ -225,32 +209,51 @@ async function submitVerification() {
     if (!res.ok) throw new Error(errData.detail || 'Verification submission failed');
 }
 
+function showSuccessState() {
+    //document.querySelector('.onboarding-container').style.display = 'none';
+    const success = document.getElementById('successState');
+    success.style.display = 'flex';
+
+    console.log(success);
+
+    setTimeout(() => {
+        window.location.href = '/account/seller/dashboard/';
+    }, 3500);
+}
+
+
 /* ===============================
    STEP CONTROLLER
 ================================ */
 async function handleNext() {
     try {
         nextBtn.disabled = true;
-        clearError();
 
-        if (currentStep === 1) await submitStoreInfo();
-        else if (currentStep === 2) await submitAddressInfo();
-        else if (currentStep === 3) await submitPaymentInfo();
+        if (currentStep === 1) {
+            await submitStoreInfo();
+        } 
+        else if (currentStep === 2) {
+            await submitAddressInfo();
+        } 
+        else if (currentStep === 3) {
+            await submitPaymentInfo();
+        } 
         else if (currentStep === 4) {
             await submitVerification();
-            window.location.href = '/seller/dashboard/';
+            showSuccessState();
             return;
         }
 
         currentStep++;
         showStep(currentStep);
 
-    } catch (err) {
-        showError(err.detail || "Something went wrong. Please try again.");
+    } catch (error) {
+        showError(error.detail || 'Please check your input.');
     } finally {
         nextBtn.disabled = false;
     }
 }
+
 
 function handleBack() {
     if (currentStep > 1) {

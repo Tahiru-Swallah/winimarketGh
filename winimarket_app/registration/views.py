@@ -36,9 +36,15 @@ def login_view(request):
     # Render the login page
     return render(request, 'authentication/login.html')
 
+@login_required
 def seller_onboarding(request):
     # Render the seller onboarding page
     return render(request, 'authentication/onboarding.html')
+
+@login_required
+def seller_dashboard(request):
+    # Render the seller dashboard page
+    return render(request, 'seller/dashboard.html')
 
 # -----------------------------
 # API Views for Authentication
@@ -140,9 +146,6 @@ class logOutView(APIView):
 
         response.delete_cookie('access_token')
         response.delete_cookie('refresh_token')
-
-        request.user.last_logout = timezone.now()
-        request.user.save(update_fields=['last_logout'])
         
         return response
 

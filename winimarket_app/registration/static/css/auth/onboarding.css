@@ -277,6 +277,76 @@ select.input-field {
     display: block;
 }
 
+.onboarding-success {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: var(--bg-color);
+    z-index: 999;
+    align-items: center;
+    justify-content: center;
+}
+
+.success-card {
+    background: white;
+    padding: 40px;
+    border-radius: var(--border-radius);
+    text-align: center;
+    max-width: 420px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    animation: fadeInUp 0.4s ease;
+}
+
+.success-icon {
+    width: 70px;
+    height: 70px;
+    background: var(--success-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    margin: 0 auto 20px;
+}
+
+.success-card h2 {
+    margin-bottom: 10px;
+    font-family: var(--font-secondary);
+}
+
+.success-card p {
+    color: var(--text-color);
+    font-size: 0.95rem;
+}
+
+.success-meta {
+    margin: 20px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.85rem;
+    color: #555;
+}
+
+.redirect-text {
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: #888;
+}
+
+/* Animation */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 
 /* ==============================
    ANIMATIONS

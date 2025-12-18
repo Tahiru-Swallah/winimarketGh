@@ -128,6 +128,10 @@ class SellerVerificationAdmin(admin.ModelAdmin):
 
     actions = ['approve_verification', 'reject_verification']
 
+    """ def changelist_view(self, request, extra_context=None):
+        print("🔥 SellerVerificationAdmin is ACTIVE")
+        return super().changelist_view(request, extra_context)
+ """
     def masked_id_number(self, obj):
         if obj.id_number:
             return f"****{obj.id_number[-4:]}"
@@ -135,7 +139,13 @@ class SellerVerificationAdmin(admin.ModelAdmin):
     masked_id_number.short_description = "ID Number"
 
     def approve_verification(self, request, queryset):
+        approved = 0
+
         for verification in queryset:
+            print(verification.seller)
+            if verification.status == 'approved':
+                continue  # Skip already approved verifications
+
             verification.status = 'approved'
             verification.reviewed_at = timezone.now()
             verification.save()
@@ -145,16 +155,22 @@ class SellerVerificationAdmin(admin.ModelAdmin):
             seller.save()
 
             SellerAuditLog.objects.create(
-            seller=seller,
-            admin_user=request.user,
-            action='approved',
-            note='Verification approved via admin panel'
-        )
-
-        self.message_user(request, "Selected sellers have been approved.")
+                seller=seller,
+                admin_user=request.user,
+                action='approved',
+                note='Verification approved via admin panel'
+            )
+            
+        approved += 1
+        self.message_user(request, f"{approved} seller(s) approved successfully.")
 
     def reject_verification(self, request, queryset):
+        rejected = 0
+
         for verification in queryset:
+            if verification.status == 'rejected':
+                continue  # Skip already rejected verifications
+
             verification.status = 'rejected'
             verification.reviewed_at = timezone.now()
             verification.save()
@@ -170,7 +186,8 @@ class SellerVerificationAdmin(admin.ModelAdmin):
                 note='Verification rejected via admin panel'
             )
 
-        self.message_user(request, "Selected sellers have been rejected.")
+        rejected += 1
+        self.message_user(request, f"{rejected} seller(s) rejected successfully.")
 
     approve_verification.short_description = "Approve selected verifications"
     reject_verification.short_description = "Reject selected verifications"

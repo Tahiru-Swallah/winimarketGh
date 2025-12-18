@@ -1,0 +1,93 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Seller Dashboard | WinimarketGh</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/auth/dashboard.css' %}">
+</head>
+<body>
+
+    <!-- TOP BAR -->
+    <header class="dashboard-topbar">
+        <div class="logo">WinimarketGh</div>
+
+        <div class="topbar-center">
+            <span class="store-name">My Store</span>
+            <span class="badge verified">Verified</span>
+        </div>
+
+        <div class="topbar-actions">
+            <button class="icon-btn">🔔</button>
+            <div class="profile-menu">👤</div>
+        </div>
+    </header>
+
+    <!-- MAIN LAYOUT -->
+    <div class="dashboard-layout">
+
+        <!-- SIDEBAR -->
+        <aside class="dashboard-sidebar">
+            <nav>
+                <a class="active">Dashboard</a>
+                <a>Products</a>
+                <a>Orders</a>
+                <a>Payments</a>
+                <a>Store Profile</a>
+                <a>Verification</a>
+            </nav>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="dashboard-content">
+
+            <!-- STATS -->
+            <section class="stats-grid">
+                <div class="stat-card">
+                    <h4>Products</h4>
+                    <span id="totalProducts">0</span>
+                </div>
+
+                <div class="stat-card">
+                    <h4>Pending Orders</h4>
+                    <span id="pendingOrders">0</span>
+                </div>
+
+                <div class="stat-card">
+                    <h4>Completed Orders</h4>
+                    <span id="completedOrders">0</span>
+                </div>
+
+                <div class="stat-card">
+                    <h4>Earnings</h4>
+                    <span id="earnings">GHS 0.00</span>
+                </div>
+            </section>
+
+            <!-- QUICK ACTIONS -->
+            <section class="quick-actions">
+                <button class="primary-btn">➕ Add Product</button>
+                <button class="secondary-btn">📦 View Orders</button>
+                <button class="secondary-btn">✏️ Edit Store</button>
+            </section>
+
+            <!-- RECENT ORDERS -->
+            <section class="card">
+                <h3>Recent Orders</h3>
+
+                <div class="order-list" id="recentOrders">
+                    <p class="empty">No orders yet.</p>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script src="{% static 'js_files/dashboard.js' %}"></script>
+</body>
+</html>

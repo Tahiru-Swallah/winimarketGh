@@ -1,4 +1,4 @@
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
@@ -31,29 +31,13 @@ def wishlist_template_view(request):
 # -----------------------------
 # Category Create, List View
 
-@api_view(['POST', 'GET'])
+@api_view(['GET'])
 @parser_classes([MultiPartParser, FormParser])
 def category_list_create(request):
-    if request.method == 'POST':
+    categories = Category.objects.all()
+    serializers = CategorySerializer(categories, many=True, context={'request': request})
 
-        if request.user.is_authenticated:
-            return Response(
-                {
-                    "error": "Only admin users can create categories."
-                },
-                status=status.HTTP_403_FORBIDDEN    
-            )
-        
-        serializer = CategorySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    elif request.method == 'GET':
-        categories = Category.objects.all()
-        serializer = CategorySerializer(categories, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(serializers.data, status=status.HTTP_200_OK)
     
 # PAGINATION
 class ProductPagination(PageNumberPagination):
@@ -68,7 +52,7 @@ class ProductPagination(PageNumberPagination):
 @parser_classes([MultiPartParser, FormParser])
 def product_list_create(request):
     if request.method == 'GET':
-        products = Product.objects.all()
+        products = Product.objects.select_related('category', 'seller').prefetch_related('images').all()
 
         # ----- FILTERING -----
         category_id = request.query_params.get('category_id')
@@ -83,9 +67,9 @@ def product_list_create(request):
             products = products.filter(condition=condition)
 
         paginator = ProductPagination()
-        paginated_products = paginator.paginate_queryset(products, request)
+        page = paginator.paginate_queryset(products, request)
 
-        serializer = ProductSerializer(paginated_products, many=True, context={'request': request})
+        serializer = ProductSerializer(page, many=True, context={'request': request})
         return paginator.get_paginated_response(serializer.data)
 
     elif request.method == 'POST':
@@ -96,33 +80,26 @@ def product_list_create(request):
                 }, status=status.HTTP_401_UNAUTHORIZED
             )
         
-        if not hasattr(request.user, "profile") or (request.user.profile.role != 'seller' and not request.user.is_staff):
+        if not request.user.profile.role != 'seller' and not request.user.is_staff:
             return Response(
                 {
                     "error": "Only sellers or Admins can create products."
                 },
                 status=status.HTTP_403_FORBIDDEN    
             )
-        
-        category_id = request.data.get('category_id')
-        try:
-            category = Category.objects.get(id=category_id)
-        except Category.DoesNotExist:
-            return Response({"error": "Category not found."}, status=status.HTTP_404_NOT_FOUND)
 
         serializer = ProductSerializer(
             data=request.data,
-            context={'category': category, 'request': request}
+            context={'request': request}
         )
-        if serializer.is_valid():
-            serializer.save(seller=request.user)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.is_valid(raise_exception=True)
+        serializer.save(seller=request.user.profile.seller_profile)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 @api_view(['GET'])
 def search_products(request):
     search_query = request.query_params.get('q', None)
-    print(search_query)
     products = Product.objects.all()
 
     if search_query:
@@ -131,8 +108,8 @@ def search_products(request):
         )
 
     paginator = ProductPagination()
-    paginated_products = paginator.paginate_queryset(products, request)
-    serializer = ProductSerializer(paginated_products, many=True, context = {'request': request})
+    page = paginator.paginate_queryset(products, request)
+    serializer = ProductSerializer(page, many=True, context = {'request': request})
 
     return paginator.get_paginated_response(serializer.data)
 
@@ -160,53 +137,35 @@ def search_suggestions(request):
 @api_view(['GET', 'PUT', 'DELETE'])
 @parser_classes([MultiPartParser, FormParser])
 def product_detail_update_delete(request, pk):
-    try:
-        product = Product.objects.get(id=pk)
-    except Product.DoesNotExist:
-        return Response({"error": "Product not found."}, status=status.HTTP_404_NOT_FOUND)
+    product = get_object_or_404(Product, pk=pk)
 
     # ------------------ GET ------------------
     if request.method == 'GET':
         serializer = ProductSerializer(product, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+    if not request.user.is_authenticated:
+            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
+        
+    if product.seller.profile.user != request.user and not request.user.is_staff:
+        return Response({"error": "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
 
     # ------------------ PUT ------------------
-    elif request.method == 'PUT':
-        if product.seller != request.user:
-            return Response({"error": "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
-        
-        if not request.user.is_authenticated:
-            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
-
-        category_id = request.data.get('category_id')
-        category = None
-        if category_id:
-            try:
-                category = Category.objects.get(id=category_id)
-            except Category.DoesNotExist:
-                return Response({"error": "Category not found."}, status=status.HTTP_404_NOT_FOUND)
-
+    if request.method == 'PUT':
         serializer = ProductSerializer(
             product,
             data=request.data,
             partial=True,
-            context={'category': category, 'request': request}
+            context={'request': request}
         )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        serializer.is_valid()(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data)
 
     # ------------------ DELETE ------------------
-    elif request.method == 'DELETE':
-        if product.seller != request.user:
-            return Response({"error": "Not authorized to delete this product."}, status=status.HTTP_403_FORBIDDEN)
-        
-        if not request.user.is_authenticated:
-            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
-
-        product.delete()
-        return Response({"message": "Product deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    product.delete()
+    return Response({"message": "Product deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
 
 
 # -----------------------------

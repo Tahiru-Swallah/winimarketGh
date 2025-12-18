@@ -5,66 +5,64 @@ from uuid import uuid4
 from registration.serializers import SellerProfileSerializer, ProfileSerializer
 
 class CategorySerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=False, allow_null=True)  # Allow image to be optional
-    
     class Meta:
         model = Category
-        fields = ['id', 'name', 'slug', 'image', 'created_at', 'updated_at']
+        fields = ['id', 'name', 'slug', 'image_url', 'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
 
-    def validate_image(self, value):
-        if value:
-            if value.size > 2 * 1024 * 1024:  # Limit image size to 2MB
-                raise serializers.ValidationError("Image size must be less than 2MB.")
-            if not value.name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                raise serializers.ValidationError("Image must be a PNG or JPEG file.")
-            if not value.content_type.startswith('image/'):
-                raise serializers.ValidationError("Uploaded file must be an image.")    
-        return value
-
 class ProductImageSerializer(serializers.ModelSerializer):
-    image = serializers.ImageField(required=True)  # Image is required for product images
-    
     class Meta:
         model = ProductImage
-        fields = ['id', 'product', 'image', 'uploaded_at']
+        fields = ['id', 'image', 'thumbnail', 'medium', 'large', 'is_primary', 'uploaded_at']
         read_only_fields = ['id', 'uploaded_at']
 
-    def validate_image(self, value):
-        if value:
-            if value.size > 2 * 1024 * 1024:  # Limit image size to 2MB
-                raise serializers.ValidationError("Image size must be less than 2MB.")
-            if not value.name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                raise serializers.ValidationError("Image must be a PNG or JPEG file.")
-            if not value.content_type.startswith('image/'):
+    def validate_image(self, image):
+        if image:
+            if image.size > 5 * 1024 * 1024:  # Limit image size to 2MB
+                raise serializers.ValidationError("Image size must be less than 5MB.")
+            
+            if not image.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file must be an image.")    
-        return value
+        return image
     
 class ProductImageBulkUploadSerializer(serializers.Serializer):
     images = serializers.ListField(
-        child=serializers.ImageField(max_length=None, allow_empty_file=False, use_url=True),
+        child=serializers.ImageField(),
         allow_empty=False
     )
 
-    def validate_images(self, value):
-        for image in value:
+    def validate_images(self, images):
+        if len(images) > 3:
+            raise serializers.ValidationError("A maximum of 3 images can be uploaded.")
+
+        for image in images:
             if image.size > 5 * 1024 * 1024:  # Limit each image size to 5MB
-                raise serializers.ValidationError("Each image must be less than 5MB.")
-            if not image.name.lower().endswith(('.png', '.jpg', '.jpeg')):
-                raise serializers.ValidationError("Each image must be a PNG or JPEG file.")
+                raise serializers.ValidationError("Each image must be ≤ 5MB.")
+            
             if hasattr(image, 'content_type') and not image.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded files must be images.")
-        return value
+            
+        return images
     
     def create(self, validated_data):
         product = self.context['product']
         images = validated_data['images']
-        image_objs = [
-            ProductImage.objects.create(product=product, image=image)
-            for image in images
-        ]
 
-        return image_objs
+        if product.images.count() + len(images) > 3:
+            raise serializers.ValidationError("Total images for a product cannot exceed 3.")
+
+        created_images = []
+
+        for index, image in enumerate(images):
+            created_images.append(
+                ProductImage.objects.create(
+                    product=product,
+                    image=image,
+                    is_primary=(index == 0 and not product.images.filter(is_primary=True).exists())
+                )
+            )
+
+        return created_images
     
 class ProductSerializer(serializers.ModelSerializer):
     images = ProductImageSerializer(many=True, required=False, allow_empty=True)
@@ -72,7 +70,7 @@ class ProductSerializer(serializers.ModelSerializer):
     category_id = serializers.UUIDField(write_only=True, required=False)
     seller = SellerProfileSerializer(read_only=True)
 
-    is_favorited = serializers.SerializerMethodField()
+    #is_favorited = serializers.SerializerMethodField()
 
     # Expose model properties as read-only fields
     price_range = serializers.CharField(read_only=True)
@@ -83,56 +81,71 @@ class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = [
-            'id', 'seller', 'name', 'slug', 'description',
+            'id', 'seller', 'name', 'slug', 'description', 'price',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count', 'is_favorited'
+            'price_range', 'is_available', 'is_seller', 'image_count'
         ]
 
-        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'is_favorited']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count']
 
-    def validate_images(self, value):
-        if len(value) > 5:
-            raise serializers.ValidationError("A product can have a maximum of 5 images.")
+    def validate_category_id(self, value):
+        if not Category.objects.filter(id=value).exists():
+            raise serializers.ValidationError("Category with the given ID does not exist.")
         return value
     
     def create(self, validated_data):
-        images = self.context['request'].FILES.getlist('images')
-        category = self.context.get('category')
-        if not category and 'category_id' in validated_data:
-            from .models import Category
-            category = Category.objects.get(id=validated_data.pop('category_id'))
+        request = self.context.get('request')
+        images = request.FILES.getlist('images') if request else []
 
-        if category:
-            validated_data['category'] = category
-
-        validated_data['seller'] = self.context['request'].user.profile.seller_profile  # Automatically set the seller to the current user
-        validated_data['slug'] = slugify(validated_data['name']) + "-" + str(uuid4())[:8] # Automatically generate slug from name
-
-        product = super().create(validated_data)
-
-        for image in images:
-            ProductImage.objects.create(product=product, image=image)
-
-        return product
-    
-    def update(self, instance, validated_data):
-        image_data = self.context['request'].FILES.getlist('images')
-        category = self.context.get('category', None)
-        if not category and 'category_id' in validated_data:
-            from .models import Category
-            category = Category.objects.get(id=validated_data.pop('category_id'))
-        if category:
-            instance.category = category
+        if len(images) > 3:
+            raise serializers.ValidationError("A maximum of 3 images can be uploaded.")
         
-        product = super().update(instance, validated_data)
+        category_id = validated_data.pop('category_id', None)
+        if category_id:
+            validated_data['category'] = Category.objects.get(id=category_id)
 
-        for image in image_data:
-            ProductImage.objects.create(product=product, image=image)
+        validated_data['seller'] = request.user.profile.seller_profile
+
+        product = Product.objects.create(**validated_data)
+
+        for index, image in enumerate(images):
+            ProductImage.objects.create(
+                product=product,
+                image=image,
+                is_primary=(index == 0)
+            )
 
         return product
+
+    def update(self, instance, validated_data):
+        request = self.context.get('request')
+        images = request.FILES.getlist('images') if request else []
+
+        category_id = validated_data.pop('category_id', None)
+
+        if category_id:
+            instance.category = Category.objects.get(id=category_id)
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        instance.save()
+
+        for index, image in enumerate(images):
+            if len(images) > 3:
+                return serializers.ValidationError("A maximum of 3 images are allowed per product.")
+            
+            instance.images.all().delete()
+
+            ProductImage.objects.create(
+                product=instance,
+                image=image,
+                is_primary=(index == 0)  # New images added via update are not primary by default
+            )
+
+        return instance
     
-    def get_is_favorited(self, obj):
+    """ def get_is_favorited(self, obj):
         request = self.context.get('request')
 
         if not request or not request.user.is_authenticated:
@@ -143,7 +156,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 WishList.objects.filter(buyer=request.user.profile).values_list('products_id', flat=True)
             )
 
-        return obj.id in self.context['wishlist_ids']
+        return obj.id in self.context['wishlist_ids'] """
 
     
 class WishListSerializer(serializers.ModelSerializer):

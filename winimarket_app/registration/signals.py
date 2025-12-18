@@ -34,10 +34,8 @@ def create_seller_data(sender, instance, created, **kwargs):
         seller, _ = SellerProfile.objects.get_or_create(profile=instance)
 
         # Create Verification (pending)
-        SellerVerification.objects.get_or_create(
-            seller=seller,
-            defaults={'status': 'pending'}
-        )
+        if not hasattr(seller, 'verification') or not SellerVerification.objects.filter(seller=seller).exists():
+            SellerVerification.objects.create(seller=seller, status='pending')
 
         # Create empty Payment row
         SellerPayment.objects.get_or_create(seller=seller)
@@ -52,3 +50,5 @@ def create_seller_data(sender, instance, created, **kwargs):
                 'country': 'Ghana'
             }
         )
+
+    return

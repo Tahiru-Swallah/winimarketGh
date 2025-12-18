@@ -66,6 +66,8 @@ Q_CLUSTER = {
     "orm": "default",
 }
 
+UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY')
+
 SECURE_COOKIE = config('SECURE_COOKIE', default=False, cast=bool)
 
 PAYSTACK_TESTED_PUBLIC_API_KEY = config('PAYSTACK_TESTED_PUBLIC_API_KEY')

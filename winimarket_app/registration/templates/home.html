@@ -17,37 +17,29 @@
         }
         
         async function logOutUser(){
-            const refreshToken = localStorage.getItem('refresh_token');
+            try{
 
-            if (!refreshToken) {
-                console.warn('No refresh token available, user already logged out');
-                return;
-            }
-
-            try {
                 const response = await fetch('/account/api/logout/', {
                     method: 'POST',
                     headers: {
-                        'X-CSRFToken': getCSRFToken(),
-                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
                     },
-                    credentials: 'include',
-                    body: JSON.stringify({ refresh_token: refreshToken })
-                });
+                    credentials: "include"
+                })
 
-                const data = await response.json();
+                if (!response.ok) throw new Error('Failed to logout.')
 
-                if (response.ok) {
-                    localStorage.removeItem('access_token');
-                    localStorage.removeItem('refresh_token');
+                const data = await response.json()
 
-                    alert('Logout Successfully');
+                //showToast('✅ Logout successful!', 'success')
+
+                setTimeout(() => {
                     window.location.href = '/account/login/';
-                } else {
-                    console.log(data.detail);
-                }
-            } catch (error) {
-                console.error(error);
+                }, 1500);
+
+            } catch(error){
+                console.error('Error Loggin out: ' + error)
+                //showToast('⚠️ Failed to log out. Try again.', 'error')
             }
         }
     </script>
