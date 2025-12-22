@@ -62,6 +62,7 @@ class ProductAdmin(admin.ModelAdmin):
         "name",
         "slug",
         "category",
+        "price",
         "min_price",
         "max_price",
         "quantity",
@@ -89,7 +90,7 @@ class ProductAdmin(admin.ModelAdmin):
             "fields": ("name", "slug", "category", "description", "seller", "condition", "is_active")
         }),
         ("Pricing & Stock", {
-            "fields": ("min_price", "max_price", "quantity"),
+            "fields": ("price", "min_price", "max_price", "quantity"),
             "classes": ("collapse",)
         }),
         ("Timestamps", {

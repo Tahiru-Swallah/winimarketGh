@@ -1,0 +1,121 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <title>winimarketGh-products</title>
+    <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>WinimarketGh</h1>
+        </div>
+        
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search for product items..." autocomplete="off">
+            <button class="icon"><span class="material-icons-outlined">close</span></button>
+            <div class="search-suggestions" id="search-suggestion">
+                <div class="search-suggestion-item"></div>
+            </div>
+        </div>
+
+        <div class="menu-icon"><span class="material-icons-outlined">menu</span></div>
+
+        <div class="navbar">
+            <ul>
+                <li><a><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-2">favorite_border</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="search-list" id="search-list">
+        <span class="material-icons-outlined" id="close_search">arrow_back</span>
+        <!-- search list here -->
+        <div class="search_grid" id="search-grid"></div>
+    </div>
+
+    <main>
+        <section class="hero-section-widget">
+            <div class="hero-section-grid">
+                <!-- hero section items here -->
+                <div class="hero-text">
+                    <h2>Buy and Sell with Confidence on Campus</h2>
+                    <p>
+                        Winimarket connect verified student etrepreneurs with buyers accross campus and beyond.
+                        Discover quality products, pay securely with Mobile Money, and shop knowing every seller is verified.
+                    </p>
+
+                    <div class="hero-CTA">
+                        <button class="hero-CTA-btn">Start Shopping ⬇️</button>
+                        <button class="hero-CTA-btn-2">Become a Seller</button>
+                    </div>
+                </div>
+
+                <div class="hero-img">
+                    <img src="{% static 'images/hero-1.jpg' %}" alt="hero image">
+                </div>
+            </div>
+
+            <div class="hero-trust-card">
+                <div class="verified">
+                    <span class="material-icons-outlined">verified</span>
+                    <p>Verified Sellers</p>
+                </div>
+
+                <div class="secure-payment">
+                    <span class="material-icons-outlined">lock</span>
+                    <p>Secure Payment</p>
+                </div>
+
+                <div class="efficient-delivery">
+                    <span class="material-icons-outlined">local_shipping</span>
+                    <p>Efficient Delivery</p>
+                </div>
+
+                <div class="online-support">
+                    <span class="material-icons-outlined">support_agent</span>
+                    <p>Online Support</p>
+                </div>
+            </div>
+        </section>
+        
+        <div class="cat-title-filter">
+            <div>
+                <h2 class="section-title">Shop by Category</h2>
+            </div>
+            
+            <div class="filter">
+                <span class="material-icons-outlined">filter_list</span>
+                <p>Filter</p>
+            </div>
+        </div>
+
+        <section class="category">
+            <div class="category-slider">
+                <div class="category-track" id="categoryTrack">
+                    <!-- category items here -->
+                </div>
+            </div>
+        </section>
+       
+        <section class="products-section">
+            <h2 class="section-title product-header">Featured Products</h2>
+            <div class="products-grid" id="productsGrid">
+                <!-- products items here -->
+            </div>
+        </section>
+    </main>
+
+    <div class="bottom-loader"></div>
+
+    <script type="module" src="{% static 'js_files/main/index.js'%}"></script>
+</body>
+</html>

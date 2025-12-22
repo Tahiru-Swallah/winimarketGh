@@ -13,17 +13,3 @@ export async function fetchCategories (){
         console.error("Error fetching categories:", error);
     }
 }
-
-export async function renderCategories(){
-    const categories = await fetchCategories()
-
-    const selectCategory = document.getElementById('select-category')
-
-    categories.forEach(cat=> {
-        const option = document.createElement('option')
-        option.textContent = cat.name
-        option.value = cat.id
-
-        selectCategory.appendChild(option)
-    })
-}

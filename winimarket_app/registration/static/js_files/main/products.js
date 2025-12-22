@@ -1,5 +1,5 @@
-import { bindFavoriteIcon } from "./wishlist.js";
 import { addToCart, isInCart } from "./cart.js";
+import { fetchCategories } from "./category.js";
 
 const cache = new Map()
 
@@ -91,7 +91,7 @@ export async function renderProducts(filters = {}, append = false) {
         filters = filtersState;
     }
 
-    const container = document.getElementById('new');
+    const container = document.getElementById('productsGrid');
     if (!append) container.innerHTML = '';
 
     // Show skeleton or loader
@@ -104,8 +104,6 @@ export async function renderProducts(filters = {}, append = false) {
     const startTime = Date.now();
     const data = await fetchProducts(filters, currentPage);
     const elapsed = Date.now() - startTime;
-
-    console.log(data)
 
     let delay;
     if (elapsed < 300) delay = 400;
@@ -131,25 +129,16 @@ export async function renderProducts(filters = {}, append = false) {
 
         data.results.forEach(product => {
             const productElement = document.createElement('div');
-            productElement.classList.add('new-product');
+            productElement.classList.add('product-card');
             productElement.innerHTML = `
-                <div class="img-p">
-                    <img src="${product.images[0]?.image || '/static/images/default.jpg'}" alt="${product.name}">
+                <div class="product-img">
+                    <img src="${product.images[0]?.image}" alt="${product.name}">
                 </div>
-                <div class="p-info">
-                    <h4 class="product-name">${product.name}</h4>
-                    <p>$${product.min_price}</p>
+                <div class="product-info">
+                    <h3 class="product-name">${product.name}</h3>
+                    <p class="product-price">₡${product.price}</p>
                 </div>
-                <span class="material-icons-outlined favorite-icon" data-product-id="${product.id}">favorite_border</span>
             `;
-
-            productElement.addEventListener('click', (e) => {
-                if (e.target.classList.contains('favorite-icon')) return;
-                renderProductDetail(product.id)
-            });
-
-            const favIcon = productElement.querySelector('.favorite-icon')
-            bindFavoriteIcon(favIcon, product.id)
 
             container.appendChild(productElement);
         });
@@ -316,5 +305,85 @@ export function closeProductDetail(skipHistory = false) {
     } else{
         if (!skipHistory) history.pushState({}, '', '/');
     }
+}
+
+export async function renderCategorySlider() {
+  const track = document.getElementById('categoryTrack');
+  const categories = await fetchCategories();
+  const productHeader = document.querySelector('.product-header');
+
+  if (!categories.length) {
+    track.innerHTML = `<p style="text-align:center;">No categories found</p>`;
+    return;
+  }
+
+   // Prepend a virtual "All Products" category
+  const allOption = { id: 'all', name: 'All Products', image: null}; 
+  // You can use any default image you like (or leave null to fetch one)
+  const updatedCategories = [allOption, ...categories];
+
+  const categoryHTML = await Promise.all(
+    updatedCategories.map(async (cat) => {
+      const imageUrl = cat.image_url || await getCachedCategoryImage(cat.name);
+
+      return `
+        <div class="category-item" data-id="${cat.id}" data-name="${cat.name}">
+          <div class="category-circle">
+            <img src="${imageUrl}" alt="${cat.name}">
+          </div>
+          <p class="category-name">${cat.name}</p>
+        </div>
+      `;
+    })
+  );
+
+  track.innerHTML = categoryHTML.join('');
+
+  // Clicking a category applies filter
+  track.querySelectorAll('.category-item').forEach(item => {
+    item.addEventListener('click', async () => {
+      const categoryId = item.dataset.id;
+
+      if (categoryId === 'all') {
+        resetPagination();
+        productHeader.textContent = 'All Products';
+        await renderProducts();
+        return;
+      } else{
+        const filters = { category_id: categoryId };
+        resetPagination(filters);
+        productHeader.textContent = item.dataset.name;
+        await renderProducts(filters);
+      }
+    });
+  });
+}
+
+const UNSPLASH_ACCESS_KEY = "pbRRkrnw3NFbDfGTumTxMiQgPIzULt01ZaUI_Ka9EIU";
+
+async function getCategoryImage(categoryName) {
+  try {
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(categoryName)}&per_page=1&client_id=${UNSPLASH_ACCESS_KEY}`
+    );
+    const data = await response.json();
+    if (data.results && data.results.length > 0) {
+      return data.results[0].urls.small;
+    }
+    return "https://via.placeholder.com/150?text=" + categoryName; // fallback
+  } catch (err) {
+    console.error("Unsplash error:", err);
+    return "https://via.placeholder.com/150?text=" + categoryName;
+  }
+}
+
+async function getCachedCategoryImage(categoryName) {
+  const cacheKey = `cat_image_${categoryName.toLowerCase()}`;
+  const cached = localStorage.getItem(cacheKey);
+  if (cached) return cached;
+
+  const url = await getCategoryImage(categoryName);
+  localStorage.setItem(cacheKey, url);
+  return url;
 }
 

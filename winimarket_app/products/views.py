@@ -22,11 +22,7 @@ from .serializers import (CategorySerializer, ProductSerializer,ProductImageSeri
 # TEMPLATE RENDERING
 
 def product_list_view(request):
-    return render(request, 'products/product_list.html')
-
-@login_required
-def wishlist_template_view(request):
-    return render(request, 'products/wishlist.html')
+    return render(request, 'products/index.html')
 
 # -----------------------------
 # Category Create, List View
