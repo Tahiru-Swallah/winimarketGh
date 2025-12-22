@@ -24,6 +24,12 @@ from .serializers import (CategorySerializer, ProductSerializer,ProductImageSeri
 def product_list_view(request):
     return render(request, 'products/index.html')
 
+def product_detail_view(request, pk, slug):
+    product = get_object_or_404(Product.objects.select_related('seller', 'seller__profile', 'category').prefetch_related("images"), pk=pk, slug=slug, is_active=True)
+
+    return render(request, 'products/product_detail.html', {'product': product})
+
+
 # -----------------------------
 # Category Create, List View
 

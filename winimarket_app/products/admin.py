@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
-from .models import Category, Product, ProductImage, WishList
+from .models import Category, Product, ProductImage
 
 # ========== CATEGORY ADMIN ==========
 @admin.register(Category)

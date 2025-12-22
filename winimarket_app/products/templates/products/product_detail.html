@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ product.name }} - WinimarketGh{% endblock %}
+
+{% block content %}
+<div class="product-detail-section">
+
+  <div class="product-detail-grid">
+
+    <!-- LEFT: PRODUCT IMAGES -->
+    <div class="product-images">
+        <!-- Main Image -->
+        <div class="main-image-wrapper">
+            <img id="mainProductImage" src="{{ product.images.first.image.url }}" alt="{{ product.name }}"/>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="thumbnail-strip">
+            {% for image in product.images.all %}
+                <img src="{{ image.image.url|default:image.image.url }}" data-full="{{ image.image.url }}" class="thumbnail {% if forloop.first %}active{% endif %}" alt="{{ product.name }}"/>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- RIGHT: PRODUCT INFO -->
+    <div class="product-info-detail">
+
+      <!-- Product name -->
+      <h2 class="product-name-detail">{{ product.name }}</h2>
+
+      <!-- Price -->
+      <p class="product-price-detail">
+        ₵{{ product.price }}
+        {% if product.max_price and product.max_price != product.min_price %}
+          – ₵{{ product.max_price }}
+        {% endif %}
+        <span class="product-condition {{ product.condition }}">{{ product.condition }}</span>
+      </p>
+
+      <!-- Trust badges -->
+      <div class="product-badges">
+        {% if product.seller.is_verified %}
+          <span class="badge verified">
+            ✔ Verified Seller
+          </span>
+        {% endif %}
+        <span class="badge secure">Secure Payment</span>
+      </div>
+
+      <!-- Description -->
+      <p class="product-description">
+        {{ product.description }}
+      </p>
+
+      <!-- Seller info -->
+      <div class="seller-card">
+        <img
+            src="{% if product.seller.store_logo %}{{ product.seller.store_logo.url }}{% else %}{% static 'images/profile1.jfif' %}{% endif %}"
+            alt="{{ product.seller.store_name }}"
+            class="seller-avatar"
+        />
+
+        <div class="seller-info">
+          <h4 class="seller-name">
+            {{ product.seller.store_name }}
+          </h4>
+
+          {% if product.seller.is_verified %}
+            <span class="seller-verified">
+              ✔ Verified Store
+            </span>
+          {% endif %}
+        </div>
+
+        <a href="#" class="view-store-btn">
+          View Store
+        </a>
+      </div>
+
+      <!-- CTA -->
+      <button class="add-to-cart-btn">
+        Add to Cart
+      </button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+    const mainImage = document.getElementById("mainProductImage");
+    const thumbnails = document.querySelectorAll(".thumbnail");
+
+    thumbnails.forEach((thumb) => {
+        thumb.addEventListener('click', () => {
+            mainImage.style.opacity = 0;
+
+            setTimeout(() => {
+                mainImage.src = thumb.dataset.full;
+                mainImage.style.opacity = 1;
+            }, 150)
+
+            thumbnails.forEach(t => t.classList.remove('active'));
+            thumb.classList.add('active');
+        })
+    })
+</script>
+{% endblock %}

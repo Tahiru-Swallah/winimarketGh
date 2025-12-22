@@ -1,0 +1,49 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{% endblock %}</title>  
+    <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>WinimarketGh</h1>
+        </div>
+        
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Search for product items..." autocomplete="off">
+            <button class="icon"><span class="material-icons-outlined">close</span></button>
+            <div class="search-suggestions" id="search-suggestion">
+                <div class="search-suggestion-item"></div>
+            </div>
+        </div>
+
+        <div class="menu-icon"><span class="material-icons-outlined">menu</span></div>
+
+        <div class="navbar">
+            <ul>
+                <li><a><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-2">favorite_border</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
+                <li><a><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
+            </ul>
+        </div>
+    </header>
+
+    <div class="search-list" id="search-list">
+        <span class="material-icons-outlined" id="close_search">arrow_back</span>
+        <!-- search list here -->
+        <div class="search_grid" id="search-grid"></div>
+    </div>
+
+    <main>
+        {% block content %}
+        {% endblock %}
+    </main>
+</body>
+</html>

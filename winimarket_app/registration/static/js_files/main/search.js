@@ -1,4 +1,4 @@
-import { renderProductDetail, showSkeletons } from './products.js'
+import { showSkeletons } from './products.js'
 import { toggleWishList, bindFavoriteIcon } from './wishlist.js'
 
 async function fetchSuggestion(query){

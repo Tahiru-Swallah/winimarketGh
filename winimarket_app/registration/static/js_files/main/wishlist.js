@@ -1,6 +1,5 @@
 import { getCSRFToken } from '../utils.js';
 import { showSkeletons } from './products.js';
-import { renderProductDetail } from './products.js';
 
 // wishlistManager.js
 let wishlistIds = new Set();

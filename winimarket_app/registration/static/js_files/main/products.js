@@ -131,6 +131,7 @@ export async function renderProducts(filters = {}, append = false) {
             const productElement = document.createElement('div');
             productElement.classList.add('product-card');
             productElement.innerHTML = `
+            <a href="/product/detail/${product.id}/${product.slug}/" class="product-link">
                 <div class="product-img">
                     <img src="${product.images[0]?.image}" alt="${product.name}">
                 </div>
@@ -138,6 +139,7 @@ export async function renderProducts(filters = {}, append = false) {
                     <h3 class="product-name">${product.name}</h3>
                     <p class="product-price">₡${product.price}</p>
                 </div>
+            </a>
             `;
 
             container.appendChild(productElement);
@@ -154,158 +156,6 @@ window.addEventListener('scroll', () => {
         renderProducts({}, true);
     }
 });
-
-
-export async function fetchProductDetail(productId){
-    const url = `/products/api/products/${productId}/`
-
-    if (cache.has(url)){
-        return cache.get(url)
-    }
-
-    try{
-
-        const response = await fetch(url)
-
-        if(!response.ok){
-            throw new Error('Error fetching a single product')
-        }
-
-        const product = await response.json()
-        cache.set(url, product)
-
-        return product;
-
-    } catch(error){
-        console.error('Something went retrieving a single product ' + error)
-        return null;
-    }
-}
-
-function isMobileDevice(){
-    return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-}
-
-export async function renderProductDetail(productId, backURL = '/') {
-    const container = document.getElementById('product-detail');
-    container.style.display = 'block';
-    void container.offsetWidth;
-    container.classList.add('opening');
-    container.classList.remove('closing');
-
-    container.innerHTML = `<div class="loader"></div>`;
-
-    const startTime = Date.now();
-    const product = await fetchProductDetail(productId);
-    const elapsed = Date.now() - startTime;
-    let delay = elapsed < 300 ? 400 : elapsed < 1000 ? 200 : 0;
-
-    if (!product) {
-        setTimeout(() => {
-            container.innerHTML = `<p>No product found</p>`;
-        }, delay);
-        return;
-    }
-
-    setTimeout(() => {
-        container.innerHTML = `
-            <div class="close-mobile">
-                <span class="material-icons-outlined">arrow_back</span>
-            </div>
-            <div class="p-container">
-                <div class="products-images">
-                    <div class="img-pr">
-                        <img src="${product.images[0]?.image}" alt="${product.name}" class="img-1">
-                    </div>
-                    <div class="img-pr-slide">
-                        ${product.images.map(img => `<img src="${img.image}" alt="${product.name}">`).join('')}
-                    </div>
-                </div>
-
-                <div class="product-info-d">
-                    <div class="h-p">
-                        <h2>${product.name}</h2>
-                        <p>$${product.price}</p>
-                    </div>
-                    <div class="cart-buy">
-                        <button class="cart-btn">Add To Cart <span class="material-icons-outlined">shopping_cart</span></button>
-                        <button class="order-btn">ORDER NOW <span class="material-icons-outlined">local_shipping</span></button>
-                    </div>
-                    <div class="descriptions">
-                        <h4>Description</h4>
-                        <p>${product.description || "No description available."}</p>
-                    </div>
-                </div>
-                <span class="close">+</span>
-            </div>
-        `;
-
-        const cartBtn = container.querySelector('.cart-btn')
-        if (isInCart(product.id)) {
-            cartBtn.textContent = "Remove from Cart";
-            cartBtn.classList.add("in-cart");
-        } else {
-            cartBtn.textContent = "Add to Cart";
-            cartBtn.classList.remove("in-cart");
-        }
-        
-        // 🔹 Click handler (toggle)
-        cartBtn.addEventListener("click", async () => {
-            const result = await addToCart(product.id);
-
-            if (result) {
-                if (result.is_in_cart) {
-                    cartBtn.textContent = "Remove from Cart";
-                    cartBtn.classList.add("is_in_cart");
-                } else {
-                    cartBtn.innerHTML = 'Add To Cart <span class="material-icons-outlined">shopping_cart</span>'
-                    cartBtn.classList.remove("is_in_cart");
-                }
-            }
-        });
-
-        const pContainer = container.querySelector('.p-container');
-        requestAnimationFrame(() => pContainer.classList.add('show'));
-
-        const closeBtn = container.querySelector('.close');
-        closeBtn.addEventListener('click', () => closeProductDetail());
-
-        if(isMobileDevice()){
-            const closeBtnMobile = container.querySelector('.close-mobile')
-            closeBtnMobile.addEventListener('click', ()=> closeProductDetail())
-        }
-
-        container.addEventListener('click', (e) => {
-            if (!isMobileDevice() && e.target.id === 'product-detail') closeProductDetail();
-        });
-
-        const mainImage = container.querySelector('.img-1');
-        const thumbnails = container.querySelectorAll('.img-pr-slide img');
-        thumbnails.forEach(thumbnail => thumbnail.addEventListener('click', () => {
-            mainImage.src = thumbnail.src;
-        }));
-
-        // Push new state when product is opened
-        history.pushState({ backURL }, '', `/products/${productId}/`);
-    }, delay);
-}
-
-export function closeProductDetail(skipHistory = false) {
-    const container = document.getElementById('product-detail');
-    container.classList.add('closing');
-    setTimeout(() => {
-        container.style.display = 'none';
-        container.innerHTML = '';
-    }, 300);
-
-    const state = history.state
-
-    if(state && state.backURL){
-        if (!skipHistory) history.pushState({}, '', state.backURL);
-    } else{
-        if (!skipHistory) history.pushState({}, '', '/');
-    }
-}
 
 export async function renderCategorySlider() {
   const track = document.getElementById('categoryTrack');

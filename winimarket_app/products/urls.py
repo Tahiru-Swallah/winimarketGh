@@ -14,6 +14,8 @@ urlpatterns = [
     path('product/api/search/', views.search_products),
     path('product/api/search/suggestions/', views.search_suggestions),
 
+    path('product/detail/<uuid:pk>/<slug:slug>/', views.product_detail_view, name='product_detail_api'),
+
     # WishList API URLs
     path('products/api/wishlist/<uuid:product_id>/', views.wishlist_view),
     path('products/api/wishlist/', views.wishlist_view),
