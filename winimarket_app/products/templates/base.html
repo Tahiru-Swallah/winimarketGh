@@ -84,7 +84,7 @@
     <!-- Overlay for drawer -->
     <div id="cartOverlay" class="cart-overlay hidden"></div>
 
-    <script type="module">
+    <script>
         const cartDrawer = document.getElementById("cartDrawer");
         const cartOverlay = document.getElementById("cartOverlay");
         const closeCartBtn = document.getElementById("closeCartDrawer");
@@ -110,12 +110,7 @@
 
         async function fetchCart(){
             try{
-                const response = await fetch('/cart/api/view/', {
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest'
-                    },
-                    credentials: 'include'
-                })
+                const response = await fetch('/cart/api/view/')
 
                 if (response.status === 403 || response.status === 401) {
                     // User is not authenticated → redirect
@@ -129,7 +124,7 @@
                     cartTotalEl.textContent = '₡0.00';
                 }
 
-                const data = response.json()
+                const data = await response.json()
                 cartTotalEl.textContent = `₡${Number(data.total_price).toFixed(2)}`;
                 console.log("Cart data:", data);
 
@@ -153,7 +148,7 @@
                 div.className = ('cart-item');
 
                 div.innerHTML = `
-                    <img src="${item.product.images?.[0]?.image || '/static/images/default-product.png'}" alt="${item.product.name}">
+                    <img src="${item.product.primary_image || '/static/images/default-product.png'}" alt="${item.product.name}">
                     
                     <div class="cart-item-info">
                         <p class="cart-item-name">${item.product.name}</p>
@@ -194,6 +189,7 @@
                     headers: {
                         "Content-Type": "application/json",
                         "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": getCSRFToken(),
                     },
                     credentials: "include",
                     body: JSON.stringify({ quantity }),
@@ -207,10 +203,11 @@
 
         async function removeFromCart(cartItemId) {
             try {
-                await fetch(`/cart/api/cart/remove/${cartItemId}/`, {
+                await fetch(`/cart/api/remove/${cartItemId}/`, {
                     method: "DELETE",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
+                        "X-CSRFToken": getCSRFToken(),
                     },
                     credentials: "include",
                 });
@@ -226,7 +223,7 @@
         }
 
         const addToCartBtn = document.querySelector(".add-to-cart-btn");
-        addToCartBtn.addEventListener('click', async () => {
+        addToCartBtn?.addEventListener('click', async () => {
             const productId = addToCartBtn.dataset.productId
 
             try{

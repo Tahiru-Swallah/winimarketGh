@@ -85,7 +85,7 @@ def add_to_cart(request):
 @permission_classes([IsAuthenticated])
 def update_cart_item(request, cart_item_id):
     try:
-        cart_item = CartItem.objects.select_related('product', 'cart').get(id=cart_item_id, cart__buyer=request.user.profile, status='active')
+        cart_item = CartItem.objects.select_related('product', 'cart').get(id=cart_item_id, cart__buyer=request.user.profile)
     except CartItem.DoesNotExist:
         return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
     
