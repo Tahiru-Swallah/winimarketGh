@@ -79,7 +79,7 @@
       </div>
 
       <!-- CTA -->
-      <button class="add-to-cart-btn">
+      <button class="add-to-cart-btn" data-product-id="{{ product.id }}">
         Add to Cart
       </button>
 
@@ -89,7 +89,7 @@
 
 </div>
 
-<script>
+<script type="module">
     const mainImage = document.getElementById("mainProductImage");
     const thumbnails = document.querySelectorAll(".thumbnail");
 

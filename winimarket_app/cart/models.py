@@ -37,7 +37,7 @@ class CartItem(models.Model):
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='cart_items')
     quantity = models.PositiveIntegerField(default=1)
-    choice_price = models.DecimalField(max_digits=10, decimal_places=2)
+    choice_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     added_at = models.DateTimeField(auto_now_add=True)
 
@@ -46,7 +46,7 @@ class CartItem(models.Model):
         indexes = [models.Index(fields=['cart', 'product'])]
 
     def save(self, *args, **kwargs):
-        if not self.choice_price:
+        if self.choice_price is None:
             self.choice_price = self.product.price
 
         if not self.product.is_active:
@@ -62,4 +62,6 @@ class CartItem(models.Model):
 
     @property
     def subtotal(self):
+        if self.choice_price is None:
+            return 0
         return self.quantity * self.choice_price

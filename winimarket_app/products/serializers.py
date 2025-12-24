@@ -87,7 +87,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'price_range', 'is_available', 'is_seller', 'image_count'
         ]
 
-        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'updated_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count']
 
     def validate_category_id(self, value):
         if not Category.objects.filter(id=value).exists():

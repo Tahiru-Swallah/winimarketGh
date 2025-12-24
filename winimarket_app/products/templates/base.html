@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token }}">
     <title>{% block title %}{% endblock %}</title>  
     <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
@@ -28,7 +29,6 @@
         <div class="navbar">
             <ul>
                 <li><a><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
-                <li><a><span class="material-icons-outlined" id="nav-icon-2">favorite_border</span></a></li>
                 <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
                 <li><a><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
             </ul>
@@ -45,5 +45,218 @@
         {% block content %}
         {% endblock %}
     </main>
+
+    <!-- Cart Drawer -->
+    <div id="cartDrawer" class="cart-drawer hidden">
+        <div class="cart-drawer-header">
+            <h3>Your Cart</h3>
+            <button id="closeCartDrawer" class="close-btn">&times;</button>
+        </div>
+
+        <div class="cart-drawer-items" id="cartItemsContainer">
+            <!-- Cart items injected dynamically -->
+            <!-- Example item structure:
+            <div class="cart-item">
+                <img src="product-image.jpg" alt="Product Name">
+                <div class="cart-item-info">
+                    <p class="cart-item-name">Product Name</p>
+                    <p class="cart-item-price">$29.99</p>
+                    <div class="cart-item-quantity">
+                        <button class="decrease-qty">-</button>
+                        <span>1</span>
+                        <button class="increase-qty">+</button>
+                    </div>
+                </div>
+                <button class="remove-cart-item">&times;</button>
+            </div>
+            -->
+        </div>
+
+        <div class="cart-drawer-footer">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">$0.00</span>
+            </div>
+            <button id="checkoutBtn" class="checkout-btn">Proceed to Checkout</button>
+        </div>
+    </div>
+
+    <!-- Overlay for drawer -->
+    <div id="cartOverlay" class="cart-overlay hidden"></div>
+
+    <script type="module">
+        const cartDrawer = document.getElementById("cartDrawer");
+        const cartOverlay = document.getElementById("cartOverlay");
+        const closeCartBtn = document.getElementById("closeCartDrawer");
+        const cartItemsContainer = document.getElementById("cartItemsContainer");
+        const cartTotalEl = document.getElementById("cartTotal");
+
+        const cartIcon = document.getElementById("nav-icon-3");
+
+        function openCart(){
+            cartDrawer.classList.add("open");
+            cartOverlay.classList.add("open");
+            fetchCart()
+        }
+
+        function closeCart(){
+            cartDrawer.classList.remove("open");
+            cartOverlay.classList.remove("open");
+        }
+
+        cartIcon?.addEventListener("click", openCart);
+        closeCartBtn?.addEventListener("click", closeCart);
+        cartOverlay?.addEventListener("click", closeCart);
+
+        async function fetchCart(){
+            try{
+                const response = await fetch('/cart/api/view/', {
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    credentials: 'include'
+                })
+
+                if (response.status === 403 || response.status === 401) {
+                    // User is not authenticated → redirect
+                    const currentUrl = window.location.pathname; // keep current location
+                    window.location.href = `/account/login/?next=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                if (!response.ok){
+                    cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
+                    cartTotalEl.textContent = '₡0.00';
+                }
+
+                const data = response.json()
+                cartTotalEl.textContent = `₡${Number(data.total_price).toFixed(2)}`;
+                console.log("Cart data:", data);
+
+                renderCartItems(data.items);
+
+            } catch(error){
+                console.error("Error fetching cart data:", error);
+            }
+        }
+
+        function renderCartItems(items){
+            cartItemsContainer.innerHTML = '';
+
+            if(!items.length){
+                cartItemsContainer.innerHTML = '<p class="empty-cart">Your cart is empty.</p>';
+                return;
+            }
+
+            items.forEach(item => {
+                const div = document.createElement('div');
+                div.className = ('cart-item');
+
+                div.innerHTML = `
+                    <img src="${item.product.images?.[0]?.image || '/static/images/default-product.png'}" alt="${item.product.name}">
+                    
+                    <div class="cart-item-info">
+                        <p class="cart-item-name">${item.product.name}</p>
+                        <p class="cart-item-price">₡${item.choice_price}</p>
+
+                        <div class="cart-item-quantity">
+                            <button class="qty-btn" data-action="decrease">−</button>
+                            <span>${item.quantity}</span>
+                            <button class="qty-btn" data-action="increase">+</button>
+                        </div>
+                    </div>
+
+                    <button class="remove-cart-item">&times;</button>
+                `;
+
+                div.querySelectorAll('.qty-btn').forEach(button => {
+                    button.addEventListener('click', () => {
+                        const newQty = button.dataset.action === 'increase' ? item.quantity + 1 : item.quantity - 1;
+                        updateCartItem(item.id, newQty);
+                    });
+                });
+
+                div.querySelector('.remove-cart-item').addEventListener('click', () => {
+                    // Handle item removal
+                    removeFromCart(item.id);
+                });
+
+                cartItemsContainer.appendChild(div);
+            })
+        }
+
+        async function updateCartItem(cartItemId, quantity) {
+            if (quantity < 1) return;
+
+            try {
+                await fetch(`/cart/api/update/${cartItemId}/`, {
+                    method: "PATCH",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({ quantity }),
+                });
+
+                fetchCart();
+            } catch (err) {
+                console.error("Update cart error:", err);
+            }
+        }
+
+        async function removeFromCart(cartItemId) {
+            try {
+                await fetch(`/cart/api/cart/remove/${cartItemId}/`, {
+                    method: "DELETE",
+                    headers: {
+                        "X-Requested-With": "XMLHttpRequest",
+                    },
+                    credentials: "include",
+                });
+
+                fetchCart();
+            } catch (err) {
+                console.error("Remove cart item error:", err);
+            }
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        const addToCartBtn = document.querySelector(".add-to-cart-btn");
+        addToCartBtn.addEventListener('click', async () => {
+            const productId = addToCartBtn.dataset.productId
+
+            try{
+
+                const response = await fetch('/cart/api/add/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({product_id: productId, quantity: 1})
+                })
+
+                if (response.status === 403 || response.status === 401) {
+                    // User is not authenticated → redirect
+                    const currentUrl = window.location.pathname; // keep current location
+                    window.location.href = `/account/login/?next=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                if(response.ok){
+                    openCart()
+                    
+                    addToCartBtn.textContent = "Added to Cart!";
+                }
+
+            } catch(error){
+                console.error("Error adding to cart:", error);
+            }
+        })
+    </script>
 </body>
 </html>

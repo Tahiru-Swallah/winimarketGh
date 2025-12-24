@@ -17,6 +17,7 @@ from .models import Cart, CartItem
 from .serializers import CartSerializer, CartItemSerializer
 from products.models import Product
 from decimal import Decimal
+from django.db import transaction
 
 @login_required
 def cart_view(request):
@@ -25,20 +26,10 @@ def cart_view(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def view_cart(request):
-    try:
-        cart= Cart.objects.get(buyer=request.user.profile)
-    except Cart.DoesNotExist:
-        return Response({"item": [], 'total': 0}, status=status.HTTP_404_NOT_FOUND)
+    cart, _ = Cart.objects.get_or_create(buyer=request.user.profile, status='active')
 
-    cart_items = CartItem.objects.filter(cart=cart)
-    serializer = CartItemSerializer(cart_items, many=True, context={'request': request})
-
-    total_price = sum([item.choice_price * item.quantity for item in cart_items])
-
-    return Response({
-        "items": serializer.data,
-        "total": total_price
-    }, status=status.HTTP_200_OK)
+    serializers = CartSerializer(cart, context={'request': request})
+    return Response(serializers.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -51,7 +42,7 @@ def add_to_cart(request):
         return Response({"error": "Quantity must be greater than 0"}, status=status.HTTP_400_BAD_REQUEST)
 
     try:
-        product = Product.objects.get(id=product_id)
+        product = Product.objects.select_for_update().get(id=product_id)
     except Product.DoesNotExist:
         return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
 
@@ -60,48 +51,41 @@ def add_to_cart(request):
         return Response({"error": "Not enough stock available"}, status=status.HTTP_400_BAD_REQUEST)
 
     # Validate choice_price
-    if not choice_price:
-        choice_price = product.min_price
-    else:
-        try:
-            choice_price = Decimal(choice_price)
-            if choice_price < product.min_price or choice_price > product.max_price:
-                return Response({"error": "Invalid choice price"}, status=status.HTTP_400_BAD_REQUEST)
-        except:
-            return Response({"error": "Invalid choice price format"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Create or update cart item
-    cart, _ = Cart.objects.get_or_create(buyer=request.user.profile)
-
     try:
-        cart_item = CartItem.objects.get(cart=cart, product=product)
-
-        cart_item.delete()
-        return Response({
-            'message': 'Product removed from cart successfully',
-            'is_in_cart': False,
-            'product_id': str(product.id)
-        }, status=status.HTTP_200_OK)
+        choice_price = Decimal(choice_price) if choice_price else product.price
+    except:
+        return Response({"error": "Invalid choice price"}, status=status.HTTP_400_BAD_REQUEST)
     
-    except CartItem.DoesNotExist:
-        cart_item = CartItem.objects.create(
-            cart=cart,
-            product=product,
-            quantity=quantity,
-            choice_price=choice_price
-        )
+    if not (product.price == choice_price):
+        return Response({"error": "Choice price out of allowed range"}, status=status.HTTP_400_BAD_REQUEST)
 
-        serializer = CartItemSerializer(cart_item, context={'request': request})
+    with transaction.atomic():
+        cart, _ = Cart.objects.get_or_create(buyer=request.user.profile, status='active')
+
+        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': quantity, 'choice_price': choice_price})
+
+        if not created:
+            new_quantity = cart_item.quantity + quantity
+
+            if product.quantity < new_quantity:
+                return Response({"error": "Not enough stock available"}, status=status.HTTP_400_BAD_REQUEST)
+            
+            cart_item.quantity = new_quantity
+            cart_item.choice_price = choice_price
+            cart_item.save(updated_fields=['quantity', 'choice_price'])
+
+        serializers = CartItemSerializer(cart_item, context={'request': request})
         return Response({
-            **serializer.data,
-            'is_in_cart': True,
-        }, status=status.HTTP_201_CREATED)
+            **serializers.data,
+            "added": True if created else False
+        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+
 
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
-def update_cart_item(request, product_id):
+def update_cart_item(request, cart_item_id):
     try:
-        cart_item = CartItem.objects.get(id=product_id, cart__buyer=request.user.profile)
+        cart_item = CartItem.objects.select_related('product', 'cart').get(id=cart_item_id, cart__buyer=request.user.profile, status='active')
     except CartItem.DoesNotExist:
         return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
     
@@ -111,27 +95,32 @@ def update_cart_item(request, product_id):
     
     try:
         quantity = int(quantity)
-    except ValueError:
+    except (ValueError, TypeError):
         return Response({"error": "Invalid quantity"}, status=status.HTTP_400_BAD_REQUEST)
     
     if quantity < 1:
-        quantity = 1
+        return Response({"error": "Quantity must be at least 1"}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if quantity > cart_item.product.quantity:
+        return Response({"error": "Requested quantity exceeds available stock."}, status=status.HTTP_400_BAD_REQUEST)
     
     cart_item.quantity = quantity
-    cart_item.save()
+    cart_item.save(updated_fields=['quantity'])
 
     serializer = CartItemSerializer(cart_item, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
-def remove_from_cart(request, product_id):
-    cart= Cart.objects.get(buyer=request.user.profile)
+def remove_from_cart(request, cart_item_id):
+    cart= Cart.objects.get(buyer=request.user.profile, status='active')
+
     try:
-        cart_item = CartItem.objects.get(id=product_id, cart=cart)
-        cart_item.delete()
+        cart_item = CartItem.objects.get(id=cart_item_id, cart=cart)
     except CartItem.DoesNotExist:
         return Response({"error": "Cart item not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    cart_item.delete()
 
     serializer = CartSerializer(cart, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
