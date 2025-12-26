@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
 
 # REST FRAMEWORK LIBRARIES
 from rest_framework.views import APIView
@@ -14,197 +13,157 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from .models import Order, OrderItem
-from .serializer import OrderSerializer, OrderItemSerializer, OrderStatusSerializer
-from cart.models import Cart
-from products.models import Product, ProductImage
+from .models import Order, OrderItem, OrderStatus, OrderTrackingStatus, ShippingAddress
+from .serializer import OrderSerializer, OrderItemSerializer
+from cart.models import Cart, CartItem
+from products.models import Product
 
 from django.utils import timezone
 from datetime import timedelta
-
-import requests
-import hashlib
 from django.conf import settings
+from django.db import transaction
 
-@login_required
-def order_template_view(request):
-    return render(request, 'order/order_items.html')
-
-@login_required
-def payment_success(request):
-    return render(request, 'order/payment_success.html')
-
-@login_required
-def payment_failed(request):
-    return render(request, 'order/payment_failed.html')
-
-@login_required
-def verify_payment_page(request, order_id):
-    return render(request, 'order/verify_payment.html', {'order_id': order_id})
-
+# ---------------------------
+# CREATE ORDER VIEW
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def direct_purchase(request):
+def checkout(request):
     buyer = request.user.profile
-    product_id = request.data.get('product_id') 
-    quantity = int(request.data.get('quantity', 1))
+    shipping_address_id = request.data.get('shipping_address_id')
 
-    if not product_id:
-        return Response({'error': 'Product ID is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    address = request.data.get('address')
-    postal_code = request.data.get('postal_code')
-    city = request.data.get('city')
 
-    if not all([address, postal_code, city]):
-        return Response({
-            'error': 'Address, Postal Code and City are required'
-        }, status=status.HTTP_400_BAD_REQUEST)
+    if not shipping_address_id:
+        return Response({'error': 'Shipping address is required.'}, status=status.HTTP_400_BAD_REQUEST)
     
     try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        return Response({'error': 'Product does not exist'}, status=status.HTTP_400_BAD_REQUEST)
+        address = ShippingAddress.objects.get(buyer=buyer, id=shipping_address_id)
+    except ShippingAddress.DoesNotExist:
+        return Response({'error': 'Invalid shipping address.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    order = Order.objects.create(
-        buyer=buyer,
-        address=address,
-        postal_code=postal_code,
-        city=city
-    )
-
-    price = product.min_price
-    total_price = price * quantity
-
-    OrderItem.objects.create(
-        order=order,
-        product=product,
-        quantity=quantity,
-        price=price,
-    )
-
-    order.total_price = total_price
-    order.save()
-
-    serializer = OrderSerializer(order, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-@login_required
-def cancel_order(request, order_id):
-    order = get_object_or_404(Order, id=order_id, buyer=request.user.profile)
-    if order.status == 'pending':
-        order.status = 'cancelled'
-        order.cancelled_at = timezone.now()
-        order.save()
-        return JsonResponse(
-            {"message": "Order cancelled successfully"}
-        )
-    return JsonResponse({
-        "error": "Cannot cancel paid or shipped order"
-    }, status=400)
-
-
-def check_and_cancel(order):
-    expiry_time = order.created_at + timedelta(minutes=30)
-
-    if order.status == "pending" and timezone.now() > expiry_time:
-        order.status = 'cancelled'
-        order.save()
-    return order
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def create_order(request):
-    buyer = request.user.profile
-    cart = Cart.objects.filter(buyer=buyer).first()
+    try:
+        cart = Cart.objects.get(buyer=buyer)
+    except Cart.DoesNotExist:
+        return Response({'error': 'Cart not found.'}, status=status.HTTP_404_NOT_FOUND)
     
-    print(cart)
+    cart_items = CartItem.objects.select_related('product', 'product__seller').filter(cart=cart)
     
-    if not cart or not cart.items.exists():
-        return Response(
-            {'error': 'Cart is empty'}, status=status.HTTP_400_BAD_REQUEST
-        )
+    if not cart_items.exists():
+        return Response({'error': 'Cart is empty.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    address = request.data.get('address')
-    postal_code = request.data.get('postal_code')
-    city = request.data.get('city')
-
-    if not all([address, postal_code, city]):
-        return Response({
-            'error': 'Address, Postal Code and City are required'
-        }, status=status.HTTP_400_BAD_REQUEST)
-    
-    order = Order.objects.create(
-        buyer=buyer,
-        address=address,
-        postal_code=postal_code,
-        city=city
-    )
-
-    total_price = 0
+    seller_groups = {}
     for item in cart.items.all():
-        price = item.choice_price
-        OrderItem.objects.create(
-            order=order,
-            product=item.product,
-            quantity=item.quantity,
-            price=price,
-        )
+        product = item.product
+        seller = product.seller
+        seller_groups.setdefault(seller, []).append(item)
 
-        total_price += price * item.quantity
+    created_orders = []
 
-    order.total_price = total_price
+    with transaction.atomic():
+        for seller, items in seller_groups.items():
+            order = Order.objects.create(
+                buyer=buyer,
+                seller=seller,
+                shipping_address=address,
+            )
+
+            for item in items:
+                OrderItem.objects.create(
+                    order=order,
+                    product=item.product,
+                    quantity=item.quantity,
+                    price=item.product.price
+                )
+
+            created_orders.append(order)
+
+        cart_items.delete()
+
+    serializer = OrderSerializer(created_orders, many=True, context={'request': request})
+
+    return Response(
+        {
+            "message": "Order(s) created successfully.",
+            "orders": serializer.data
+        },
+        status=status.HTTP_201_CREATED
+    )
+
+# ---------------------------
+# ORDER DETAIL VIEW - BUYER
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def my_orders(request):
+    buyer = request.user.profile
+    orders = Order.objects.filter(buyer=buyer).prefetch_related('items__product__images', 'shipping_address', 'seller__user')
+
+    serializer = OrderSerializer(orders, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# ---------------------------
+# ORDER DETAIL VIEW - SELLER
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seller_orders(request):
+    seller = request.user.sellerprofile
+    orders = Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user')
+
+    serializer = OrderSerializer(orders, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+# ---------------------------
+# ORDER UPDATE VIEW - SELLER
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def update_order_status(request, order_id):
+    seller = request.user.sellerprofile
+    status_value = request.data.get('status')
+
+    try:
+        order = Order.objects.get(id=order_id, seller=seller)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    allowed = ['processing', 'shipped', 'delivered']
+    if status_value not in allowed:
+        return Response({'error': 'Invalid status value.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    order.track_status = status_value
+
+    if status_value == "shipped":
+        order.status = OrderStatus.SHIPPED
+    elif status_value == "delivered":
+        order.status = OrderStatus.DELIVERED
     order.save()
 
-    cart.items.all().delete()
-
-    serializer = OrderSerializer(order, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def list_orders(request):
-    orders = Order.objects.filter(buyer=request.user.profile)
-    order = [check_and_cancel(order) for order in orders]
-    serializer = OrderSerializer(order, many=True, context={'request': request})
-    return Response(serializer.data, status=status.HTTP_200_OK)
-
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def order_detail(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id, buyer=request.user.profile)
-    except Order.DoesNotExist:
-        return Response({'error': 'Order does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-    
     serializer = OrderSerializer(order, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
-""" @api_view(['PATCH'])
+# ---------------------------
+# ORDER CONFIRM VIEW - BUYER
+@api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def update_order(request, order_id):
+def confirm_delivery(request, order_id):
+    buyer = request.user.profile
+
     try:
-        order = Order.objects.get(id=order_id)
+        order = Order.objects.get(id=order_id, buyer=buyer)
     except Order.DoesNotExist:
-        return Response({
-            'error': 'Order does not exist'
-        }, status=status.HTTP_404_NOT_FOUND)
+        return Response({'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
     
-    order = check_and_cancel(order)
+    if order.status != OrderStatus.PAID:
+        return Response({'error': 'Order must be paid before conforming delivery.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if order.track_status != OrderTrackingStatus.DELIVERED:
+        return Response({'error': 'Order has not been marked as delivered yet.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    if order.is_escrow_released:
+        return Response({'error': 'Escrow has already been released for this order.'}, status=status.HTTP_400_BAD_REQUEST)
+    
+    order.status = OrderStatus.COMPLETED
+    order.is_escrow_released = True
+    order.escrow_released_at = timezone.now()
 
-    if order.status == 'cancelled' and not request.user.is_staff:
-        return Response({'error': 'Order is already cancelled and cannot be updated.'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if not (request.user.is_staff or getattr(request.user.profile, "seller_profile", None) or order.buyer == request.user.profile) :
-        return Response({
-            'error': 'Not authorized to update order'
-        }, status=status.HTTP_403_FORBIDDEN)
-    
-    serializer = OrderStatusSerializer(order, data=request.data, context={'request': request}, partial=True)
-    if serializer.is_valid():
-        serializer.save()
+    order.save()
 
-        full_order = OrderSerializer(order, context={'request': request})
-        return Response(full_order.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) """
+    serializer = OrderSerializer(order, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)

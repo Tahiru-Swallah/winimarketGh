@@ -3,6 +3,7 @@ from .models import Product, ProductImage, WishList, Category
 from django.utils.text import slugify
 from uuid import uuid4
 from registration.serializers import SellerProfileSerializer, ProfileSerializer
+from cart.models import CartItem
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -78,16 +79,30 @@ class ProductSerializer(serializers.ModelSerializer):
     is_seller = serializers.BooleanField(read_only=True)
     image_count = serializers.IntegerField(read_only=True)
 
+    is_in_cart = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
             'id', 'seller', 'name', 'slug', 'description', 'price',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count'
+            'price_range', 'is_available', 'is_seller', 'image_count', 'is_in_cart'
         ]
 
         read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+
+    def get_is_in_cart(self, obj):
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        return CartItem.objects.filter(
+            cart__buyer=request.user.profile,
+            cart__status='active',
+            product=obj
+        ).exists()
 
     def validate_category_id(self, value):
         if not Category.objects.filter(id=value).exists():

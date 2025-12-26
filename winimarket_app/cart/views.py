@@ -76,8 +76,9 @@ def add_to_cart(request):
 
         serializers = CartItemSerializer(cart_item, context={'request': request})
         return Response({
-            **serializers.data,
-            "added": True if created else False
+            'items': serializers.data,
+            "is_in_cart": True,
+            'message': "Product added to cart successfully"
         }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 

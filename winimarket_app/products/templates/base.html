@@ -44,6 +44,9 @@
     <main>
         {% block content %}
         {% endblock %}
+
+        <!-- Toast notification container -->
+        <div id="toast-container"></div>
     </main>
 
     <!-- Cart Drawer -->
@@ -167,7 +170,7 @@
                 div.querySelectorAll('.qty-btn').forEach(button => {
                     button.addEventListener('click', () => {
                         const newQty = button.dataset.action === 'increase' ? item.quantity + 1 : item.quantity - 1;
-                        updateCartItem(item.id, newQty);
+                        updateCartItem(item.id, newQty, item.product.quantity);
                     });
                 });
 
@@ -180,11 +183,14 @@
             })
         }
 
-        async function updateCartItem(cartItemId, quantity) {
-            if (quantity < 1) return;
+        async function updateCartItem(cartItemId, newQty, maxQty) {
+            if (newQty < 1) {
+                showToast("Quantity cannot be less than 1", "error");
+                return;
+            };
 
             try {
-                await fetch(`/cart/api/update/${cartItemId}/`, {
+                const response = await fetch(`/cart/api/update/${cartItemId}/`, {
                     method: "PATCH",
                     headers: {
                         "Content-Type": "application/json",
@@ -192,10 +198,18 @@
                         "X-CSRFToken": getCSRFToken(),
                     },
                     credentials: "include",
-                    body: JSON.stringify({ quantity }),
+                    body: JSON.stringify({ quantity: newQty }),
                 });
 
+                const data = await response.json();
+
+                if (!response.ok) {
+                    showToast(data.error || "Failed to update cart item.", "error");
+                    return;
+                }
+
                 fetchCart();
+
             } catch (err) {
                 console.error("Update cart error:", err);
             }
@@ -203,7 +217,7 @@
 
         async function removeFromCart(cartItemId) {
             try {
-                await fetch(`/cart/api/remove/${cartItemId}/`, {
+                const response = await fetch(`/cart/api/remove/${cartItemId}/`, {
                     method: "DELETE",
                     headers: {
                         "X-Requested-With": "XMLHttpRequest",
@@ -212,7 +226,14 @@
                     credentials: "include",
                 });
 
+                if (!response.ok) {
+                    throw new Error("Failed to remove item from cart");
+                }
+
+                showToast("Item removed from cart", "success");
+
                 fetchCart();
+
             } catch (err) {
                 console.error("Remove cart item error:", err);
             }
@@ -223,37 +244,81 @@
         }
 
         const addToCartBtn = document.querySelector(".add-to-cart-btn");
-        addToCartBtn?.addEventListener('click', async () => {
-            const productId = addToCartBtn.dataset.productId
+        const cartFeedback = document.querySelector(".cart-feedback");
 
-            try{
+        addToCartBtn?.addEventListener("click", async () => {
+            const productId = addToCartBtn.dataset.productId;
 
-                const response = await fetch('/cart/api/add/', {
-                    method: 'POST',
+            addToCartBtn.disabled = true;
+
+            const originalText = addToCartBtn.textContent;
+            addToCartBtn.textContent = "Processing...";
+
+            try {
+                const response = await fetch("/cart/api/add/", {
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRFToken': getCSRFToken(),
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": getCSRFToken(),
                     },
-                    body: JSON.stringify({product_id: productId, quantity: 1})
-                })
+                    body: JSON.stringify({
+                        product_id: productId,
+                        quantity: 1
+                    }),
+                });
 
-                if (response.status === 403 || response.status === 401) {
-                    // User is not authenticated → redirect
-                    const currentUrl = window.location.pathname; // keep current location
-                    window.location.href = `/account/login/?next=${encodeURIComponent(currentUrl)}`;
+                // 🔐 Auth guard
+                if (response.status === 401 || response.status === 403) {
+                    const next = window.location.pathname;
+                    window.location.href = `/account/login/?next=${encodeURIComponent(next)}`;
                     return;
                 }
 
-                if(response.ok){
-                    openCart()
-                    
-                    addToCartBtn.textContent = "Added to Cart!";
+                const data = await response.json();
+
+                // ❌ Backend validation error
+                if (!response.ok) {
+                    showToast(data.error || "Unable to add product", "error");
+                    addToCartBtn.textContent = originalText;
+                    addToCartBtn.disabled = false;
+                    return;
                 }
 
-            } catch(error){
-                console.error("Error adding to cart:", error);
+                // ✅ Success
+                if (data.is_in_cart) {
+                    addToCartBtn.textContent = "In Cart ✓";
+                    addToCartBtn.classList.add("in-cart");
+                }
+
+                showToast(
+                    data.message || "Added to cart successfully",
+                    "success"
+                );
+
+                // 🔄 Update cart UI (drawer badge, totals)
+                openCart();
+
+            } catch (error) {
+                console.error("Add to cart error:", error);
+                showToast("Something went wrong. Try again.", "error");
+                addToCartBtn.textContent = originalText;
+            } finally {
+                addToCartBtn.disabled = false;
             }
-        })
+        });
+
+        const toastContainer = document.getElementById('toast-container');
+        function showToast(message, type = "success") {
+            const container = document.getElementById("toast-container");
+            const toast = document.createElement("div");
+            toast.className = `toast ${type}`;
+            toast.textContent = message;
+            toastContainer.appendChild(toast);
+
+            // Auto remove after animation
+            setTimeout(() => toast.remove(), 4000);
+        }
+
     </script>
 </body>
 </html>
