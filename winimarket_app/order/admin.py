@@ -1,6 +1,12 @@
 from django.contrib import admin
-from .models import Order, OrderItem
+from .models import Order, OrderItem, ShippingAddress
 
+# ---------------------------
+# SIMPLIFIED SHIPPING ADDRESS INLINE
+@admin.register(ShippingAddress)
+class ShippingAddressAdmin(admin.ModelAdmin):
+    list_display = ('buyer', 'address', 'city', 'country', 'state_region', 'phonenumber')
+    search_fields = ('user__email', 'address', 'state_region', 'city', 'country')
 
 # ---------------------------
 # ORDER ITEM INLINE

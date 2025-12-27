@@ -80,7 +80,9 @@
                 <span>Total:</span>
                 <span id="cartTotal">$0.00</span>
             </div>
-            <button id="checkoutBtn" class="checkout-btn">Proceed to Checkout</button>
+            <a href="{% url 'order:checkout-page'%}">
+                <button id="checkoutBtn" class="checkout-btn">Proceed to Checkout</button>
+            </a>
         </div>
     </div>
 
@@ -113,7 +115,7 @@
 
         async function fetchCart(){
             try{
-                const response = await fetch('/cart/api/view/')
+                const response = await fetch('/cart/api/view/', {headers: {'X-CSRFToken': getCSRFToken()}});
 
                 if (response.status === 403 || response.status === 401) {
                     // User is not authenticated → redirect

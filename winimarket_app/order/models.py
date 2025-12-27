@@ -33,7 +33,7 @@ class ShippingAddress(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.address}, {self.state_region}, {self.city} ({self.buyer.email})"
+        return f"{self.address}, {self.state_region}, {self.city} ({self.buyer.user.email})"
 
 
 class Order(models.Model):
@@ -80,7 +80,7 @@ class Order(models.Model):
         ]
 
     def __str__(self):
-        return f'Order {self.id} by {self.buyer.email}'
+        return f'Order {self.id} by {self.buyer.user.email}'
 
     @property
     def total_cost(self):
@@ -139,14 +139,25 @@ class OrderItem(models.Model):
 
         super().save(*args, **kwargs)
 
+class PaymentStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
+    SUCCESS = 'success', 'Success'
+    FAILED = 'failed', 'Failed'
+    REFUNDED = 'refunded', 'Refunded'
 
 class Payment(models.Model):
     id = models.UUIDField(primary_key=True, editable=False, default=uuid4)
+    
     buyer = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='payments')
-    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='payments')
+
+    orders = models.ManyToManyField(Order, related_name='payments')
+
     amount = models.DecimalField(max_digits=10, decimal_places=2)
+
     reference = models.CharField(max_length=100, unique=True)
-    status = models.CharField(max_length=20, default='pending')
+
+    status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.PENDING)
+
     created_at = models.DateTimeField(auto_now_add=True)
     paid_at = models.DateTimeField(blank=True, null=True)
 

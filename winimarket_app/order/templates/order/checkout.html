@@ -1,0 +1,288 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Checkout - WiniMarket{% endblock %}
+
+{% block content %}
+    <div class="checkout-container">
+
+        <!-- LEFT -->
+        <div class="checkout-left">
+            <h2>Shipping Address</h2>
+
+            <div id="address-list">
+            <!-- Loaded via AJAX -->
+            </div>
+
+            <button class="add-address-btn">
+                + Add New Address
+            </button>
+        </div>
+
+        <div id="address-modal" class="modal hidden">
+            <div class="modal-content">
+                <h3>Add Shipping Address</h3>
+
+                <input type="text" id="address" placeholder="Street Address">
+                <input type="text" id="state" placeholder="State / Region">
+                <input type="text" id="city" placeholder="City">
+                <input type="text" id="phone" placeholder="Phone Number">
+
+                <button id="save-address" class="primary-btn">Save Address</button>
+                <button id="close-address-modal" class="secondary-btn">Cancel</button>
+            </div>
+        </div>
+
+
+        <!-- RIGHT -->
+        <div class="checkout-right">
+            <h2>Order Summary</h2>
+
+            <div id="order-items">
+            <!-- Cart items via AJAX -->
+            </div>
+
+            <div class="checkout-total">
+                <span>Total</span>
+                <strong id="order-total">₵0.00</strong>
+            </div>
+
+            <button id="pay-btn" class="primary-btn">
+                Proceed to Payment
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        let selectedAddressId = null;
+        let creatingOrder = false
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+
+        async function loadAddresses(){
+            const response = await fetch('/order/api/shipping_addresses/', {headers: {'X-CSRFToken': getCSRFToken()}});
+
+            const addresses = await response.json();
+            const container = document.getElementById('address-list');
+            container.innerHTML = '';
+
+            if(addresses.length === 0){
+                container.innerHTML = '<p class="empty-text">No saved addresses. Please add one.</p>';
+                return;
+            }
+
+            addresses.forEach(addr => {
+                const div = document.createElement('div');
+                div.className = 'address-card'
+                div.dataset.id = addr.id;
+
+                div.innerHTML = `
+                    <strong>${addr.address}</strong>
+                    <p>${addr.city}, ${addr.state_region}</p>
+                    <p>${addr.phonenumber}</p>
+                `;
+
+                div.addEventListener('click', ()=> selectAddress(div, addr.id));
+                container.appendChild(div);
+            })
+        }
+
+        function selectAddress(card, id) {
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('active'));
+
+            card.classList.add('active');
+            selectedAddressId = id;
+        }
+
+        
+
+        document.querySelector('.add-address-btn').addEventListener('click', () => {
+            document.getElementById('address-modal').classList.remove('hidden');
+        });
+
+        document.getElementById('close-address-modal').addEventListener('click', () => {
+            document.getElementById('address-modal').classList.add('hidden');
+        });
+
+        document.getElementById('save-address').addEventListener('click', async () => {
+            const data = {
+                address: document.getElementById('address').value,
+                state_region: document.getElementById('state').value,
+                city: document.getElementById('city').value,
+                phonenumber: document.getElementById('phone').value
+            };
+
+            try{
+                const res = await fetch('/order/api/shipping_addresses/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                if (!res.ok) {
+                    showToast('Failed to save address', 'error');
+                    return;
+                }
+
+                showToast('Address added successfully', 'success');
+                document.getElementById('address-modal').classList.add('hidden');
+                loadAddresses();
+            }
+            catch(err){
+                console.error(err);
+                showToast('Error saving address', 'error');
+            }
+        });
+
+        async function loadCartSummary(){
+            const itemContainer = document.getElementById('order-items');
+            const totalEl = document.getElementById('order-total');
+
+            itemContainer.innerHTML = '<p>Loading...</p>';
+
+            try{
+                const response = await fetch('/cart/api/view/', {headers: {'X-CSRFToken': getCSRFToken()}});
+
+                if (response.status === 403 || response.status === 401) {
+                    // User is not authenticated → redirect
+                    const currentUrl = window.location.pathname; // keep current location
+                    window.location.href = `/account/login/?next=${encodeURIComponent(currentUrl)}`;
+                    return;
+                }
+
+                const data = await response.json();
+
+                itemContainer.innerHTML = '';
+                let total = 0;
+
+                if (!data.items || data.items.length === 0){
+                    itemContainer.innerHTML = '<p class="empty-text">Your cart is empty.</p>';
+                    itemTotal.textContent = '₵0.00';
+                    return;
+                }
+
+                data.items.forEach(item => {
+                    const itemTotal = item.quantity * parseFloat(item.choice_price);
+                    total += itemTotal;
+
+                    itemContainer.insertAdjacentHTML('beforeend', `
+                        <div class="checkout-item">
+                            <img src="${item.product.primary_image || '/static/img/placeholder.png'}" alt="${item.product.name}">
+                            <div class="checkout-item-info">
+                                <h4>${item.product.name}</h4>
+                                <p>₵${item.choice_price} × ${item.quantity}</p>
+                            </div>
+                            <div class="checkout-item-total">
+                               Total: ₵${itemTotal.toFixed(2)} <br>
+                               Seller: ${item.product.seller_name}
+                            </div>
+                        </div>
+                    `)
+
+                    totalEl.textContent = `₵${total.toFixed(2)}`;
+                })
+            } catch(err){
+                console.error(err);
+                itemContainer.innerHTML = '<p class="error-text">Failed to load cart items.</p>';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', ()=> {
+            loadCartSummary();
+            loadAddresses()
+        })
+
+        async function createOrder(){
+            if(!selectedAddressId){
+                showToast('Please select a shipping address', 'error')
+                return null;
+            }
+
+            if (creatingOrder) return null;
+
+            creatingOrder = true
+
+            try{
+
+                const response = await fetch('/order/api/checkout/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({shipping_address_id: selectedAddressId})
+                })
+
+                if (!response.ok){
+                    const err = await response.json()
+                    throw new Error(err.error || "Failed to create order");
+                }
+
+                const order = await response.json()
+                return order
+
+            } catch(error){
+                console.error("Something went wrong while creating order", error)
+                showToast(error.message, 'error')
+            } finally{
+                creatingOrder = false
+            }
+        }
+
+        async function initializePayment(orderIds){
+            try{
+
+                const response = await fetch(`/payment/initialize-payment/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({order_ids: orderIds})
+                })
+
+                if (!response.ok){
+                    const err = await response.json()
+                    throw new Error(err.error || "Payment initialization failed");
+                }
+
+                const data = await response.json()
+
+                window.location.href = data.authorization_url
+            } catch(error){
+                console.error('Unable to initalize payment', error)
+                showToast(error.message, 'error')
+            }
+        }
+
+        document.getElementById('pay-btn').addEventListener('click', async () => {
+            const btn = document.getElementById('pay-btn')
+
+            btn.disabled = true
+            btn.textContent = 'Processing...'
+
+            const result = await createOrder()
+
+            if (!result || !result.orders || result.orders.length === 0) {
+                btn.disabled = false
+                btn.textContent = 'Proceed to Payment'
+                return
+            }
+
+            const orderIds = result.orders.map(order => order.id)
+
+            await initializePayment(orderIds)
+
+            btn.disabled = false
+            btn.textContent = 'Proceed to Payment'
+        })
+
+    </script>
+
+{% endblock %}

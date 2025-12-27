@@ -6,7 +6,7 @@ from products.models import Product
 
 class CartProductMiniSerializer(serializers.ModelSerializer):
     primary_image = serializers.SerializerMethodField()
-    seller_name = serializers.CharField(read_only=True)
+    seller_name = serializers.SerializerMethodField(read_only=True)
 
     class Meta:
         model = Product
@@ -21,7 +21,9 @@ class CartProductMiniSerializer(serializers.ModelSerializer):
         return None
     
     def get_seller_name(self, obj):
-        return obj.seller.store_name
+        if obj.seller:
+            return obj.seller.store_name
+        return None
     
 class CartItemSerializer(serializers.ModelSerializer):
     product = CartProductMiniSerializer(read_only=True)

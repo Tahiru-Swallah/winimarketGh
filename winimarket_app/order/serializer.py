@@ -31,7 +31,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     def get_product_image(self, obj):
         if obj.product and obj.product.images.exists():
-            image = obj.product.images.filter(is_main=True).first()
+            image = obj.product.images.filter(is_primary=True).first()
             return image.image.url if image else obj.product.images.first().image.url
         return None
 class OrderSerializer(serializers.ModelSerializer):

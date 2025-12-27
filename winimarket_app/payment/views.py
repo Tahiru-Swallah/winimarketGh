@@ -2,102 +2,195 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required 
 from django.views.decorators.csrf import csrf_exempt
-from django.conf import settings
 
 # REST FRAMEWORK LIBRARIES
-from rest_framework.views import APIView
 from rest_framework.decorators import api_view, authentication_classes, permission_classes, parser_classes
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.parsers import MultiPartParser, FormParser
-from rest_framework_simplejwt.views import TokenObtainPairView
-from rest_framework_simplejwt.tokens import RefreshToken
 
 from django.utils import timezone
 from datetime import timedelta
 
-from order.models import Order
+from order.models import Order, Payment, OrderStatus, PaymentStatus
 
 import requests
 import hashlib
 from django.conf import settings
 
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def initialize_payment(request, order_id):
-    try:
-        order = Order.objects.get(id=order_id, buyer=request.user.profile)
-    except Order.DoesNotExist:  
-        return Response({'error': 'Order does not exist'}, status=status.HTTP_400_BAD_REQUEST)
-    
-    amount = int(order.total_price * 100)  # Convert to the smallest currency unit (e.g., cents)
-    payment_method = request.data.get('payment_method', 'card')
+def initialize_payment(request):
+    buyer = request.user.profile
+    order_ids = request.data.get('order_ids', [])
+
+    print(order_ids)
+
+    if not order_ids:
+        return Response(
+            {'error': 'No orders provided'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    orders = Order.objects.filter(
+        id__in=order_ids,
+        buyer=buyer,
+        status=OrderStatus.PENDING
+    )
+
+    if not orders.exists():
+        return Response(
+            {'error': 'No valid pending orders found'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Ensure none are already paid / cancelled
+    for order in orders:
+        if order.total_cost <= 0:
+            return Response(
+                {'error': f'Invalid order amount for order {order.id}'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+    total_amount = sum(order.total_cost for order in orders)
+    amount_kobo = int(total_amount * 100)
+
+    reference = f"multi-order-{buyer.id}-{int(timezone.now().timestamp())}"
 
     headers = {
         "Authorization": f"Bearer {settings.PAYSTACK_TESTED_SECRET_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    reference = f"order-{order.id}-{int(timezone.now().timestamp())}"
-
-    data = {
-        'email': request.user.email,
-        'amount': amount,
+    payload = {
+        "email": request.user.email,
+        "amount": amount_kobo,
         "currency": "GHS",
-        "channel": ["card", "mobile_money"],
-        'metadata': {"payment_method": payment_method},
+        "channels": ["card", "mobile_money"],
         "reference": reference,
-        "callback_url": request.build_absolute_uri(f'/order/verify_payment/{order.id}/page/'),
+        "callback_url": request.build_absolute_uri('/order/payment/verify/'),
+        "metadata": {
+            "buyer_id": str(buyer.id),
+            "order_ids": [str(o.id) for o in orders],
+            "type": "multi_order_checkout",
+        }
     }
 
-    response = requests.post('https://api.paystack.co/transaction/initialize', json=data, headers=headers)
-    res_data = response.json()
-
-    if res_data.get('status'):
-        order.payment_reference = reference
-        order.save()
-        return Response({'authorization_url': res_data['data']['authorization_url']}, status=status.HTTP_200_OK)
-    return Response({'error': 'Payment initialization failed'}, status=status.HTTP_400_BAD_REQUEST)
-
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def verify_payment(request, order_id):
-    paystack_reference = request.GET.get('reference')
-    ajax_request = request.GET.get('X-Requested-With') == 'XMLHttpRequest'
-
-    if paystack_reference is None:
-        return Response({'error': 'Reference not provided'}, status=status.HTTP_400_BAD_REQUEST)
-    
     try:
-        order = Order.objects.get(id=order_id, buyer=request.user.profile)
-    except Order.DoesNotExist:
-        return Response({'error': 'Order does not exists'}, status=status.HTTP_404_NOT_FOUND)
-    
+        response = requests.post(
+            "https://api.paystack.co/transaction/initialize",
+            json=payload,
+            headers=headers,
+            timeout=30
+        )
+    except requests.RequestException:
+        return Response(
+            {'error': 'Payment service unavailable'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
+
+    if response.status_code != 200:
+        return Response(
+            {'error': 'Failed to initialize payment'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    payment = Payment.objects.create(
+        buyer=buyer,
+        amount=total_amount,
+        reference=reference,
+        status=PaymentStatus.PENDING
+    )
+
+    payment.orders.set(orders)
+
+    return Response(response.json()['data'], status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def verify_payment(request):
+    """
+    Verify multiple payments at once for multi-order checkout.
+    Expects:
+        {
+            "order_ids": ["uuid1", "uuid2", ...],
+            "reference": "paystack_reference"
+        }
+    """
+    order_ids = request.data.get('order_ids', [])
+    paystack_reference = request.data.get('reference')
+
+    if not order_ids or not paystack_reference:
+        return Response(
+            {'error': 'Order IDs and payment reference are required.'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    buyer = request.user.profile
+    verified_orders = []
+    failed_orders = []
+
+    # Verify payment with Paystack
     headers = {
         "Authorization": f"Bearer {settings.PAYSTACK_TESTED_SECRET_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    url = f"https://api.paystack.co/transaction/verify/{paystack_reference}"
-    response = requests.get(url, headers=headers)
-    response_data = response.json()
+    verify_url = f"https://api.paystack.co/transaction/verify/{paystack_reference}"
+    try:
+        response = requests.get(verify_url, headers=headers, timeout=30)
+    except requests.RequestException:
+        return Response({'error': 'Payment service not available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
-    if response_data.get('status') and response_data['data']['status'] == 'success':
-        order.status = 'paid'
+    if response.status_code != 200:
+        return Response({'error': 'Unable to verify payment'}, status=status.HTTP_400_BAD_REQUEST)
+
+    data = response.json().get('data')
+
+    if not data or data.get('status') != 'success':
+        return Response({'error': 'Payment not successful'}, status=status.HTTP_400_BAD_REQUEST)
+
+    paid_amount = data.get('amount') / 100  # Paystack amount is in kobo
+
+    for order_id in order_ids:
+        try:
+            payment = Payment.objects.select_related('orders').get(
+                reference=paystack_reference,
+                orders__id=order_id,
+                buyer=buyer
+            )
+        except Payment.DoesNotExist:
+            failed_orders.append({'order_id': order_id, 'error': 'Payment record not found'})
+            continue
+
+        if payment.status == PaymentStatus.SUCCESS:
+            verified_orders.append({'order_id': str(order_id), 'status': 'already_verified'})
+            continue
+
+        if float(payment.amount) != paid_amount:
+            failed_orders.append({'order_id': order_id, 'error': 'Payment amount mismatch'})
+            continue
+
+        # Update payment
+        payment.status = PaymentStatus.SUCCESS
+        payment.paid_at = timezone.now()
+        payment.save()
+
+        # Update order
+        order = payment.order
+        order.status = OrderStatus.PAID
         order.paid_at = timezone.now()
-        order.payment_reference = paystack_reference
         order.save()
 
-        if ajax_request:
-            return redirect('order:payment_success')
-        else:
-            return Response({'message': 'Payment verified successfully'}, status=status.HTTP_200_OK)
-    
-    if ajax_request:
-        return redirect('order:payment_failed')
-    else:   
-        return Response({'message': 'Payment verified successfully'}, status=status.HTTP_200_OK)
+        verified_orders.append({'order_id': str(order.id), 'status': order.status})
+
+    return Response({
+        'message': 'Payment verification completed.',
+        'verified_orders': verified_orders,
+        'failed_orders': failed_orders
+    }, status=status.HTTP_200_OK)
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

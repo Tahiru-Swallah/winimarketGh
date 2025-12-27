@@ -14,7 +14,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
 from .models import Order, OrderItem, OrderStatus, OrderTrackingStatus, ShippingAddress
-from .serializer import OrderSerializer, OrderItemSerializer
+from .serializer import OrderSerializer, OrderItemSerializer, ShippingAddressSerializer
 from cart.models import Cart, CartItem
 from products.models import Product
 
@@ -22,6 +22,10 @@ from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
+
+@login_required
+def checkout_page(request):
+    return render(request, 'order/checkout.html')
 
 # ---------------------------
 # CREATE ORDER VIEW
@@ -167,3 +171,47 @@ def confirm_delivery(request, order_id):
 
     serializer = OrderSerializer(order, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+# ---------------------------
+# SHIPPING ADDRESS VIEWS
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_shipping_address(request):
+    serializer = ShippingAddressSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(buyer=request.user.profile)  # link address to the logged-in user
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_shipping_addresses(request):
+    addresses = ShippingAddress.objects.filter(buyer=request.user.profile)
+    serializer = ShippingAddressSerializer(addresses, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['PUT', 'PATCH'])
+@permission_classes([IsAuthenticated])
+def update_shipping_address(request, pk):
+    try:
+        address = ShippingAddress.objects.get(pk=pk, buyer=request.user.profile)
+    except ShippingAddress.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ShippingAddressSerializer(address, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_shipping_address(request, pk):
+    try:
+        address = ShippingAddress.objects.get(pk=pk, buyer=request.user.profile)
+    except ShippingAddress.DoesNotExist:
+        return Response({'error': 'Not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    address.delete()
+    return Response(status=status.HTTP_204_NO_CONTENT)
