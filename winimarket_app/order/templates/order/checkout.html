@@ -224,40 +224,16 @@
                     throw new Error(err.error || "Failed to create order");
                 }
 
-                const order = await response.json()
-                return order
+                const orders = await response.json()
+                localStorage.setItem('pending_order_ids', JSON.stringify(orders.orders.map(o => o.id)));
+
+                return orders
 
             } catch(error){
                 console.error("Something went wrong while creating order", error)
                 showToast(error.message, 'error')
             } finally{
                 creatingOrder = false
-            }
-        }
-
-        async function initializePayment(orderIds){
-            try{
-
-                const response = await fetch(`/payment/initialize-payment/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken(),
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({order_ids: orderIds})
-                })
-
-                if (!response.ok){
-                    const err = await response.json()
-                    throw new Error(err.error || "Payment initialization failed");
-                }
-
-                const data = await response.json()
-
-                window.location.href = data.authorization_url
-            } catch(error){
-                console.error('Unable to initalize payment', error)
-                showToast(error.message, 'error')
             }
         }
 

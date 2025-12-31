@@ -10,21 +10,17 @@ urlpatterns = [
 
     # Product API URLs
     path('products/api/products/', views.product_list_create),
-    path('products/api/products/<uuid:pk>/', views.product_detail_update_delete),
+    path('products/api/products/<uuid:pk>/', views.product_detail),
     path('product/api/search/', views.search_products),
     path('product/api/search/suggestions/', views.search_suggestions),
 
     path('product/detail/<uuid:pk>/<slug:slug>/', views.product_detail_view, name='product_detail_api'),
 
-    # WishList API URLs
-    path('products/api/wishlist/<uuid:product_id>/', views.wishlist_view),
-    path('products/api/wishlist/', views.wishlist_view),
-
     #TEMPLATE RENDERING
     path('', views.product_list_view, name='product_list'),
-    
-    path('wishlist/', TemplateView.as_view(template_name="products/product_list.html")),
-    path('products/cart/', TemplateView.as_view(template_name="products/product_list.html")),
 
-    path('products/<uuid:product_id>/', TemplateView.as_view(template_name="products/product_list.html")),
+    # Seller's VIEW APIs
+    path('api/seller/products/', views.seller_products),
+    path('api/seller/product/<uuid:product_id>/update/', views.seller_update_product),
+    path('api/seller/product/<uuid:product_id>/delete/', views.seller_delete_product),
 ]

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}My Orders | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="orders-container">
+
+  <h2 class="page-title">My Orders</h2>
+
+  <!-- Filters -->
+  <div class="orders-filters">
+    <button class="filter-btn active" data-status="all">All</button>
+    <button class="filter-btn" data-status="pending">Pending</button>
+    <button class="filter-btn" data-status="paid">Paid</button>
+    <button class="filter-btn" data-status="shipped">Shipped</button>
+    <button class="filter-btn" data-status="delivered">Delivered</button>
+  </div>
+
+  <!-- Orders List -->
+  <div id="orders-list">
+    <div class="orders-loading">Loading orders...</div>
+  </div>
+
+</div>
+
+<script>
+    const ordersList = document.getElementById('orders-list')
+    const filterButtons = document.querySelectorAll('.filter-btn')
+
+    let allOrders = []
+
+    async function loadOrders() {
+        try {
+            const res = await fetch('/order/api/orders/buyer/')
+            const orders = await res.json()
+            allOrders = orders
+            renderOrders(orders)
+        } catch (err) {
+            ordersList.innerHTML = `<p>Failed to load orders</p>`
+        }
+    }
+
+    function renderOrders(orders) {
+        if (!orders.length) {
+            ordersList.innerHTML = `<p>No orders found.</p>`
+            return
+        }
+
+        ordersList.innerHTML = orders.map(order => `
+            <a href="/order/detail/${order.id}/">
+                <div class="order-card">
+                    <div class="order-header">
+                        <div>
+                            <span class="order-id">Order #${order.id.slice(0, 8)}</span>
+                            <span class="order-date">${new Date(order.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <span class="order-status status-${order.status}">${order.status.toUpperCase()}</span>
+                    </div>
+
+                    <div class="order-items">${order.items.map(item => `
+                        <div class="order-item">
+                            <span>${item.product_name} × ${item.quantity}</span>
+                            <span>₵${item.price}</span>
+                        </div>`).join('')}
+                    </div>
+
+                    <div class="order-footer">
+                        <div class="order-total">Total: ₵${order.total_cost}</div>
+
+                        <div class="order-actions">${renderActions(order)}</div>
+                    </div>
+                </div>
+            </a>`).join('')
+            
+    }
+
+    function renderActions(order) {
+        if (order.status === 'pending') {
+            return `<button class="btn-pay" onclick="retryPayment('${order.id}')">Pay Now</button>`
+        }
+        if (order.track_status === 'delivered') {
+            return `<button class="btn-confirm" onclick="confirmDelivery('${order.id}')">Confirm Delivery</button>`
+        } if (order.status === 'completed'){
+            return `<button style="display: none">Completed</button>`
+        }
+        return `<button class="btn-track">Track</button>`
+    }
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'))
+            btn.classList.add('active')
+
+            const status = btn.dataset.status
+            if (status === 'all') {
+                renderOrders(allOrders)
+            } else {
+                renderOrders(allOrders.filter(o => o.status === status))
+            }
+        })
+    })
+
+    async function retryPayment(orderId) {
+        showToast('Redirecting to payment...', 'info')
+        await initializePayment([orderId])
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=> {
+        loadOrders()
+    })
+</script>
+{% endblock %}

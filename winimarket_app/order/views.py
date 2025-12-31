@@ -27,6 +27,19 @@ from django.db import transaction
 def checkout_page(request):
     return render(request, 'order/checkout.html')
 
+@login_required
+def orders_page(request):
+    return render(request, 'order/orders.html')
+
+@login_required
+def order_detail_page(request, order_id):
+    order = get_object_or_404(Order, id=order_id, buyer=request.user.profile)
+    return render(request, 'order/order-detail.html', context={'order': order})
+
+@login_required
+def payment_verify_template(request):
+    return render(request, 'order/verify_payment.html')
+
 # ---------------------------
 # CREATE ORDER VIEW
 @api_view(['POST'])
@@ -80,8 +93,6 @@ def checkout(request):
 
             created_orders.append(order)
 
-        cart_items.delete()
-
     serializer = OrderSerializer(created_orders, many=True, context={'request': request})
 
     return Response(
@@ -98,9 +109,20 @@ def checkout(request):
 @permission_classes([IsAuthenticated])
 def my_orders(request):
     buyer = request.user.profile
-    orders = Order.objects.filter(buyer=buyer).prefetch_related('items__product__images', 'shipping_address', 'seller__user')
+    orders = Order.objects.filter(buyer=buyer).prefetch_related('items__product__images', 'shipping_address', 'seller')
 
     serializer = OrderSerializer(orders, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def order_detail(request, order_id):
+    try:
+        order = Order.objects.get(id=order_id, buyer=request.user.profile)
+    except Order.DoesNotExist:
+        return Response({"error": "Order not found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = OrderSerializer(order, context={"request": request})
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 # ---------------------------
@@ -109,7 +131,7 @@ def my_orders(request):
 @permission_classes([IsAuthenticated])
 def seller_orders(request):
     seller = request.user.sellerprofile
-    orders = Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user')
+    orders = (Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
 
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -133,10 +155,20 @@ def update_order_status(request, order_id):
     
     order.track_status = status_value
 
+    flow_rank = {
+        'processing': 1,
+        'shipped': 2,
+        'delivered': 3
+    }
+
+    if flow_rank[status_value] < flow_rank[order.track_status]:
+        return Response({'error': 'Cannot move order backward'}, status=status.HTTP_400_BAD_REQUEST)
+
     if status_value == "shipped":
         order.status = OrderStatus.SHIPPED
     elif status_value == "delivered":
         order.status = OrderStatus.DELIVERED
+
     order.save()
 
     serializer = OrderSerializer(order, context={'request': request})
@@ -154,9 +186,6 @@ def confirm_delivery(request, order_id):
     except Order.DoesNotExist:
         return Response({'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
     
-    if order.status != OrderStatus.PAID:
-        return Response({'error': 'Order must be paid before conforming delivery.'}, status=status.HTTP_400_BAD_REQUEST)
-    
     if order.track_status != OrderTrackingStatus.DELIVERED:
         return Response({'error': 'Order has not been marked as delivered yet.'}, status=status.HTTP_400_BAD_REQUEST)
     
@@ -164,6 +193,7 @@ def confirm_delivery(request, order_id):
         return Response({'error': 'Escrow has already been released for this order.'}, status=status.HTTP_400_BAD_REQUEST)
     
     order.status = OrderStatus.COMPLETED
+    order.track_status = OrderStatus.COMPLETED
     order.is_escrow_released = True
     order.escrow_released_at = timezone.now()
 

@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order Details | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="order-detail-container">
+
+  <!-- HEADER -->
+  <div class="order-header-card">
+    <div>
+      <h2>Order #<span id="order-id" data-order-id="{{ order.id }}"></span></h2>
+      <p class="order-date" id="order-date"></p>
+    </div>
+    <span class="order-status-badge" id="order-status"></span>
+  </div>
+
+  <!-- TRACKING -->
+  <div class="tracking-card">
+    <h3>Order Tracking</h3>
+    <div class="tracking-steps">
+      <div class="step" data-step="paid">Paid</div>
+      <div class="step" data-step="processing">Processing</div>
+      <div class="step" data-step="shipped">Shipped</div>
+      <div class="step" data-step="delivered">Delivered</div>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div class="order-items-card">
+    <h3>Items</h3>
+    <div id="order-items"></div>
+  </div>
+
+  <!-- SHIPPING -->
+  <div class="shipping-card">
+    <h3>Shipping Address</h3>
+    <p id="shipping-address"></p>
+  </div>
+
+  <!-- PAYMENT -->
+  <div class="payment-card">
+    <h3>Payment & Escrow</h3>
+    <p><strong>Total:</strong> ₵<span id="order-total"></span></p>
+    <p><strong>Escrow Status:</strong>
+      <span id="escrow-status"></span>
+    </p>
+  </div>
+
+  <!-- ACTIONS -->
+  <div class="order-actions">
+    <button id="pay-now-btn" class="primary-btn hidden" onclick="initializePayment(['{{ order.id }}'])">Pay Now</button>
+    <button id="confirm-delivery-btn" class="success-btn hidden" onclick="confirmDelivery('{{ order.id }}')">
+      Confirm Delivery
+    </button>
+  </div>
+
+</div>
+
+<script>
+    async function loadOrderDetail(orderId) {
+        try {
+            const res = await fetch(`/order/api/detail/${orderId}/`);
+            const order = await res.json();
+
+            document.getElementById('order-id').textContent = order.id.slice(0, 8);
+            document.getElementById('order-date').textContent = new Date(order.created_at).toLocaleDateString();
+            document.getElementById('order-total').textContent = order.total_cost;
+
+            // Status badge
+            const statusBadge = document.getElementById('order-status');
+            statusBadge.textContent = order.status.toUpperCase();
+            statusBadge.classList.add(`status-${order.status}`);
+
+            // Tracking steps
+            document.querySelectorAll('.step').forEach(step => {
+                if (
+                    order.track_status === step.dataset.step || ['paid', 'processing', 'shipped', 'delivered'].indexOf(step.dataset.step)<= ['paid', 'processing', 'shipped', 'delivered'].indexOf(order.track_status)
+                ) {
+                    step.classList.add('active');
+                }
+            });
+
+            // Items
+            const itemsEl = document.getElementById('order-items');
+            itemsEl.innerHTML = '';
+            order.items.forEach(item => {
+                itemsEl.innerHTML += `
+                    <div class="order-item">
+                    <span>${item.product_name} × ${item.quantity}</span>
+                    <strong>₵${item.price}</strong>
+                    </div>
+                `;
+            });
+
+            // Address
+            document.getElementById('shipping-address').textContent = `${order.shipping_address.address}, ${order.shipping_address.city}`;
+
+            // Escrow
+            document.getElementById('escrow-status').textContent = order.is_escrow_released ? 'Released ✅' : 'Held in Escrow 🔒';
+
+            // Actions
+            if (order.status === 'pending') {document.getElementById('pay-now-btn').classList.remove('hidden');}
+
+            if (order.track_status === 'delivered' && !order.is_escrow_released) {
+                document.getElementById('confirm-delivery-btn').classList.remove('hidden');
+            }
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', async ()=> {
+        const orderId = document.getElementById("order-id").dataset.orderId
+        loadOrderDetail(orderId)
+    })
+
+</script>
+{% endblock %}

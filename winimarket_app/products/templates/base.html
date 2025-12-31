@@ -30,7 +30,7 @@
             <ul>
                 <li><a><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
                 <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
-                <li><a><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
+                <li><a href="/order/my-orders/"><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
             </ul>
         </div>
     </header>
@@ -50,7 +50,7 @@
     </main>
 
     <!-- Cart Drawer -->
-    <div id="cartDrawer" class="cart-drawer hidden">
+    <div id="cartDrawer" class="cart-drawer">
         <div class="cart-drawer-header">
             <h3>Your Cart</h3>
             <button id="closeCartDrawer" class="close-btn">&times;</button>
@@ -87,7 +87,7 @@
     </div>
 
     <!-- Overlay for drawer -->
-    <div id="cartOverlay" class="cart-overlay hidden"></div>
+    <div id="cartOverlay" class="cart-overlay"></div>
 
     <script>
         const cartDrawer = document.getElementById("cartDrawer");
@@ -319,6 +319,50 @@
 
             // Auto remove after animation
             setTimeout(() => toast.remove(), 4000);
+        }
+
+        async function initializePayment(orderIds){
+            try{
+
+                const response = await fetch(`/payment/initialize-payment/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({order_ids: orderIds})
+                })
+
+                if (!response.ok){
+                    const err = await response.json()
+                    throw new Error(err.error || "Payment initialization failed");
+                }
+
+                const data = await response.json()
+
+                window.location.href = data.authorization_url
+            } catch(error){
+                console.error('Unable to initalize payment', error)
+                showToast(error.message, 'error')
+            }
+        }
+
+        async function confirmDelivery(orderId) {
+            try {
+                const res = await fetch(`/order/api/confirm/${orderId}/order/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    }
+                })
+
+                if (!res.ok) throw new Error()
+                showToast('Delivery confirmed', 'success')
+                loadOrders()
+
+            } catch {
+                showToast('Unable to confirm delivery', 'error')
+            }
         }
 
     </script>

@@ -1447,6 +1447,30 @@ section{
   cursor: not-allowed;
 }
 
+.secondary-btn {
+  width: 100%;
+  margin-top: 24px;
+  padding: 14px;
+  background: var(--error-color);
+  color: #fff;
+  border: none;
+  border-radius: var(--border-radius);
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.secondary-btn:hover {
+  background: rgb(189, 31, 31);
+  transform: translateY(-2px);
+}
+
+.secondary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* ========== SUBTLE ANIMATION ========== */
 .checkout-left,
 .checkout-right {
@@ -1584,6 +1608,449 @@ section{
   background: #f2f2f2;
   border-color: #ccc;
 }
+
+.payment-verify-wrapper {
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.payment-card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  border-radius: 14px;
+  padding: 32px;
+  text-align: center;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.08);
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #eee;
+  border-top-color: var(--primary-color);
+  border-radius: 50%;
+  margin: 0 auto 20px;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+#verify-title {
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+#verify-message {
+  color: #666;
+  margin-bottom: 20px;
+}
+
+#verify-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.hidden{
+  display: none;
+}
+
+.orders-container {
+  max-width: 1100px;
+  margin: auto;
+  padding: 85px 1rem;
+}
+
+.page-title {
+  margin-bottom: 1.2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Filters */
+.orders-filters {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: 0.2s;
+}
+
+.filter-btn.active {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+/* Order Card */
+a .order-card {
+  background: #fff;
+  border-radius: var(--border-radius);
+  padding: 1.2rem;
+  color: #000;
+  margin-bottom: 1rem;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.06);
+}
+
+/* Header */
+.order-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-id {
+  font-weight: 600;
+}
+
+.order-date {
+  display: block;
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.order-status {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Status colors */
+.status-pending { background: #fff3cd; color: #856404; }
+.status-paid { background: #d4edda; color: #155724; }
+.status-shipped { background: #cce5ff; color: #004085; }
+.status-delivered { background: #e2e3e5; color: #383d41; }
+
+/* Items */
+.order-items {
+  margin-top: 1rem;
+  border-top: 1px solid #eee;
+  padding-top: 0.8rem;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+}
+
+/* Footer */
+.order-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.order-total {
+  font-weight: 600;
+}
+
+.order-actions button {
+  padding: 7px 14px;
+  border-radius: 20px;
+  border: none;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-pay {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.btn-track {
+  background: var(--accent-color);
+}
+
+.btn-confirm {
+  background: var(--success-color);
+  color: #fff;
+}
+
+.order-detail-container {
+  max-width: 900px;
+  margin: auto;
+  padding: 85px 2rem;
+  font-family: var(--font-primary);
+}
+
+.order-header-card,
+.tracking-card,
+.order-items-card,
+.shipping-card,
+.payment-card {
+  background: #fff;
+  border-radius: var(--border-radius);
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.order-header-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-status-badge {
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-pending { background: #ffe8cc; color: #d35400; }
+.status-paid { background: #d4edda; color: #155724; }
+.status-shipped { background: #cce5ff; color: #004085; }
+.status-delivered { background: #e2e3e5; color: #383d41; }
+
+.tracking-steps {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.step {
+  flex: 1;
+  text-align: center;
+  padding: 10px;
+  border-radius: 20px;
+  background: #eaeaea;
+  font-size: 0.85rem;
+}
+
+.step.active {
+  background: var(--primary-color);
+  color: white;
+}
+
+.order-item {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.order-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.success-btn {
+  background: var(--success-color);
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.seller-dashboard {
+  max-width: 1200px;
+  margin: auto;
+  padding: 85px 1.5rem;
+  font-family: var(--font-primary);
+}
+
+/* HEADER */
+.seller-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.seller-header h2 {
+  margin: 0;
+  color: var(--text-color);
+}
+
+.store-name {
+  font-size: 0.9rem;
+  opacity: 0.7;
+}
+
+.badge {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+}
+
+.badge.verified {
+  background: var(--success-color);
+  color: #fff;
+}
+
+/* STATS */
+.seller-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.stat-card h3 {
+  margin: 0;
+  font-size: 1.4rem;
+  color: var(--primary-color);
+}
+
+/* SECTIONS */
+.seller-section {
+  margin-bottom: 2.5rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  margin: 0;
+}
+
+.link {
+  font-size: 0.85rem;
+  color: var(--primary-color);
+}
+
+/* ORDERS */
+.orders-list {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 1rem;
+}
+
+.order-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9rem;
+}
+
+.order-row:last-child {
+  border-bottom: none;
+}
+
+.order-status {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+}
+
+.status-pending { background: #ffe8cc; color: #d35400; }
+.status-paid { background: #d4edda; color: #155724; }
+.status-shipped { background: #cce5ff; color: #004085; }
+
+/* PRODUCTS */
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 15px;
+}
+
+.product-card {
+  background: white;
+  border-radius: var(--border-radius);
+  padding: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+}
+
+.product-card img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  border-radius: var(--border-radius);
+}
+
+.product-card h4 {
+  font-size: 0.9rem;
+  margin: 8px 0 4px;
+}
+
+.product-actions {
+  display: flex;
+  justify-content: space-between;
+}
+
+.product-actions button {
+  border: none;
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+
+.btn-edit {
+  background: var(--primary-color);
+  color: #fff;
+}
+
+.btn-delete {
+  background: var(--error-color);
+  color: #fff;
+}
+
+/* BUTTONS */
+.primary-btn.small {
+  padding: 6px 12px;
+  font-size: 0.8rem;
+}
+
+/* FLOATING BUTTON */
+.fab {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--primary-color);
+  color: #fff;
+  font-size: 1.5rem;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  text-decoration: none;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .seller-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
 
 /* ================================
    MOBILE TWEAKS

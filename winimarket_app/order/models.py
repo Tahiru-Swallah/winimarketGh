@@ -17,6 +17,7 @@ class OrderTrackingStatus(models.TextChoices):
     SHIPPED = 'shipped', 'Shipped'
     OUT_FOR_DELIVERY = 'out_for_delivery', 'Out for Delivery'
     DELIVERED = 'delivered', 'Delivered'
+    COMPLETED = 'completed', 'Completed'
 
 class ShippingAddress(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)

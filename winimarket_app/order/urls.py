@@ -5,6 +5,7 @@ app_name = 'order'
 
 urlpatterns = [
     path('api/checkout/', views.checkout, name='checkout'),
+    path('api/detail/<uuid:order_id>/', views.order_detail),
     path('api/orders/buyer/', views.my_orders, name='buyer-order'),
     path('api/orders/seller/', views.seller_orders, name='seller-orders'),
 
@@ -15,4 +16,7 @@ urlpatterns = [
     path('api/shipping_addresses/', views.list_shipping_addresses, name='list-shipping-addresses'),
 
     path('checkout/', views.checkout_page, name='checkout-page'),
+    path('my-orders/', views.orders_page, name='orders-page'),
+    path('detail/<uuid:order_id>/', views.order_detail_page, name='order-detail'),
+    path('payment/verify/', views.payment_verify_template, name='verify-payment'),
 ]

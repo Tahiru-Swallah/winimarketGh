@@ -15,8 +15,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Product, Category, ProductImage, WishList
-from .serializers import (CategorySerializer, ProductSerializer,ProductImageSerializer, ProductImageBulkUploadSerializer,WishListSerializer)
+from .models import Product, Category
+from .serializers import (CategorySerializer, ProductSerializer)
+
+from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
 # -----------------------------
 # TEMPLATE RENDERING
@@ -136,9 +138,9 @@ def search_suggestions(request):
 # -------------------------
 # RETRIEVE + UPDATE + DELETE PRODUCT
 # -------------------------
-@api_view(['GET', 'PUT', 'DELETE'])
+@api_view(['GET'])
 @parser_classes([MultiPartParser, FormParser])
-def product_detail_update_delete(request, pk):
+def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
 
     # ------------------ GET ------------------
@@ -146,33 +148,86 @@ def product_detail_update_delete(request, pk):
         serializer = ProductSerializer(product, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    if not request.user.is_authenticated:
-            return Response({'error': "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
-        
-    if product.seller.profile.user != request.user and not request.user.is_staff:
-        return Response({"error": "Not authorized to update this product."}, status=status.HTTP_403_FORBIDDEN)
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seller_products(request):
+    seller = request.user.sellerprofile
+    products = Product.objects.filter(seller=seller)
+    serializer = ProductSerializer(products, many=True, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
-    # ------------------ PUT ------------------
-    if request.method == 'PUT':
-        serializer = ProductSerializer(
-            product,
-            data=request.data,
-            partial=True,
-            context={'request': request}
-        )
+@api_view(['PATCH'])
+@permission_classes([IsAuthenticated])
+def seller_update_product(request, product_id):
+    seller = request.user.sellerprofile
 
-        serializer.is_valid()(raise_exception=True)
+    try:
+        product = Product.objects.get(id=product_id, seller=seller)
+    except Product.DoesNotExist:
+        return Response({'error': "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = ProductSerializer(product, data=request.data, partial=True, context={'request': request})
+
+    if serializer.is_valid():
         serializer.save()
         return Response(serializer.data)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # ------------------ DELETE ------------------
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def seller_delete_product(request, product_id):
+    seller = request.user.sellerprofile
+
+    try:
+        product = Product.objects.get(id=product_id, seller=seller)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
+    
     product.delete()
-    return Response({"message": "Product deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+    return Response({'message': 'Product delete successfully'})
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seller_dashboard_stats(request):
+    seller = request.user.sellerprofile
+    
+    total_products = Product.objects.filter(seller=seller).count()
+
+    orders = Order.objects.filter(seller=seller)
+
+    stats = {
+        'total_products': total_products,
+        "total_orders": orders.count(),
+        "pending_orders": orders.filter(status=OrderStatus.PENDING).count(),
+        "paid_orders": orders.filter(status=OrderStatus.PAID).count(),
+        "shipped_orders": orders.filter(track_status=OrderTrackingStatus.SHIPPED).count(),
+        "delivered_orders": orders.filter(track_status=OrderTrackingStatus.DELIVERED).count(),
+        "total_earnings": sum(
+            o.total_cost for o in orders.filter(is_escrow_released=True)
+        )
+    }
+
+    return Response(stats, status=status.HTTP_200_OK)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # -----------------------------
 # WISHLIST CREATE, LIST, DELETE 
-@api_view(['POST', 'GET', 'DELETE'])
+""" @api_view(['POST', 'GET', 'DELETE'])
 @permission_classes([IsAuthenticated])
 def wishlist_view(request, product_id=None):
     #Add to Wishlist
@@ -214,3 +269,4 @@ def wishlist_view(request, product_id=None):
             return Response({"message": "Product removed from wishlist.", 'is_favorited': False}, status=status.HTTP_204_NO_CONTENT)
         except WishList.DoesNotExist:
             return Response({"error": "Wishlist item not found."}, status=status.HTTP_404_NOT_FOUND)
+ """

@@ -17,6 +17,8 @@ from order.models import Order, Payment, OrderStatus, PaymentStatus
 import requests
 import hashlib
 from django.conf import settings
+from decimal import Decimal
+from cart.models import Cart, CartItem
 
 
 @api_view(['POST'])
@@ -111,37 +113,50 @@ def initialize_payment(request):
 @permission_classes([IsAuthenticated])
 def verify_payment(request):
     """
-    Verify multiple payments at once for multi-order checkout.
-    Expects:
-        {
-            "order_ids": ["uuid1", "uuid2", ...],
-            "reference": "paystack_reference"
-        }
+    Verify Paystack payment for multi-order checkout
     """
     order_ids = request.data.get('order_ids', [])
-    paystack_reference = request.data.get('reference')
+    reference = request.data.get('reference')
 
-    if not order_ids or not paystack_reference:
+    if not order_ids or not reference:
         return Response(
-            {'error': 'Order IDs and payment reference are required.'},
+            {'error': 'order_ids and reference are required'},
             status=status.HTTP_400_BAD_REQUEST
         )
 
     buyer = request.user.profile
-    verified_orders = []
-    failed_orders = []
 
-    # Verify payment with Paystack
+    # Get payment
+    try:
+        payment = Payment.objects.select_related('buyer').get(
+            reference=reference,
+            buyer=buyer
+        )
+    except Payment.DoesNotExist:
+        return Response({'error': 'Payment record not found'}, status=status.HTTP_404_NOT_FOUND)
+
+    if payment.status == PaymentStatus.SUCCESS:
+        return Response({
+            'message': 'Payment already verified'
+        }, status=status.HTTP_200_OK)
+
+    # Verify with Paystack
     headers = {
         "Authorization": f"Bearer {settings.PAYSTACK_TESTED_SECRET_API_KEY}",
         "Content-Type": "application/json",
     }
 
-    verify_url = f"https://api.paystack.co/transaction/verify/{paystack_reference}"
     try:
-        response = requests.get(verify_url, headers=headers, timeout=30)
+        response = requests.get(
+            f"https://api.paystack.co/transaction/verify/{reference}",
+            headers=headers,
+            timeout=30
+        )
     except requests.RequestException:
-        return Response({'error': 'Payment service not available.'}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        return Response(
+            {'error': 'Payment service unavailable'},
+            status=status.HTTP_503_SERVICE_UNAVAILABLE
+        )
 
     if response.status_code != 200:
         return Response({'error': 'Unable to verify payment'}, status=status.HTTP_400_BAD_REQUEST)
@@ -151,45 +166,44 @@ def verify_payment(request):
     if not data or data.get('status') != 'success':
         return Response({'error': 'Payment not successful'}, status=status.HTTP_400_BAD_REQUEST)
 
-    paid_amount = data.get('amount') / 100  # Paystack amount is in kobo
+    paid_amount = Decimal(data['amount']) / 100
 
-    for order_id in order_ids:
-        try:
-            payment = Payment.objects.select_related('orders').get(
-                reference=paystack_reference,
-                orders__id=order_id,
-                buyer=buyer
-            )
-        except Payment.DoesNotExist:
-            failed_orders.append({'order_id': order_id, 'error': 'Payment record not found'})
-            continue
+    if paid_amount != payment.amount:
+        return Response({'error': 'Payment amount mismatch'}, status=status.HTTP_400_BAD_REQUEST)
 
-        if payment.status == PaymentStatus.SUCCESS:
-            verified_orders.append({'order_id': str(order_id), 'status': 'already_verified'})
-            continue
+    # ✅ Mark payment successful
+    payment.status = PaymentStatus.SUCCESS
+    payment.paid_at = timezone.now()
+    payment.save()
 
-        if float(payment.amount) != paid_amount:
-            failed_orders.append({'order_id': order_id, 'error': 'Payment amount mismatch'})
-            continue
+    # ✅ Update all orders
+    orders = Order.objects.filter(
+        id__in=order_ids,
+        buyer=buyer
+    )
 
-        # Update payment
-        payment.status = PaymentStatus.SUCCESS
-        payment.paid_at = timezone.now()
-        payment.save()
+    verified_orders = []
 
-        # Update order
-        order = payment.order
+    for order in orders:
         order.status = OrderStatus.PAID
         order.paid_at = timezone.now()
         order.save()
+        verified_orders.append(str(order.id))
 
-        verified_orders.append({'order_id': str(order.id), 'status': order.status})
-
+    try:
+        cart = Cart.objects.get(buyer=buyer)
+    except Cart.DoesNotExist:
+        return Response({'error': 'Cart not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    cart_items = CartItem.objects.select_related('product', 'product__seller').filter(cart=cart)
+    
+    cart_items.delete()
+    
     return Response({
-        'message': 'Payment verification completed.',
-        'verified_orders': verified_orders,
-        'failed_orders': failed_orders
+        'message': 'Payment verified successfully',
+        'orders': verified_orders
     }, status=status.HTTP_200_OK)
+
 
 
 @api_view(['POST'])

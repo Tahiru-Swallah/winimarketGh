@@ -1,46 +1,87 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Verifying Payment...</title>
-</head>
-<body>
-    <div id="payment-status">Verifying your payment, please wait...</div>
+{% extends "base.html" %}
+{% block title %}Payment Status{% endblock %}
+
+{% block content %}
+    <div class="payment-verify-wrapper">
+    <div class="payment-card">
+        <div class="spinner"></div>
+
+        <h2 id="verify-title">Verifying Payment</h2>
+        <p id="verify-message">
+            Please wait while we confirm your payment…
+        </p>
+
+        <div id="verify-actions" style="display: none;">
+            <button id="retry-btn" class="secondary-btn hidden">
+                Retry Payment
+            </button>
+
+            <a href="/order/my-orders/" id='viewBtn' class="primary-btn hidden">
+                View Orders
+            </a>
+        </div>
+    </div>
+    </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const reference = urlParams.get('reference');
-        const pathParts = window.location.pathname.split('/');
-        const uuidMatch = reference.match(/order-([a-f0-9\-]{36})-/);
-        const orderId = uuidMatch ? uuidMatch[1] : null;
+        document.addEventListener('DOMContentLoaded', async () => {
+            const title = document.getElementById('verify-title');
+            const message = document.getElementById('verify-message');
+            const actions = document.getElementById('verify-actions');
+            const retryBtn = document.getElementById('retry-btn');
+            const viewOrderBtn = document.getElementById('viewBtn')
 
-        console.log("Order ID:", orderId);
-        console.log("Reference:", reference);
+            const reference = new URLSearchParams(window.location.search).get('reference');
+            const orderIds = JSON.parse(localStorage.getItem('pending_order_ids') || '[]');
 
-        verifyPayment(orderId, reference);
+            if (!reference || !orderIds.length) {
+                title.textContent = 'Verification Failed';
+                message.textContent = 'Missing payment information.';
+                actions.style.display = 'flex';
+                retryBtn.classList.remove('hidden')
+                return;
+            }
 
-        async function verifyPayment(orderId, reference) {
             try {
-                const response = await fetch(`/payment/verify-payment/${orderId}/?reference=${reference}`, {
-                    method: 'GET',
+                const response = await fetch('/payment/verify-payment/', {
+                    method: 'POST',
                     headers: {
-                        "X-Requested-With": "XMLHttpRequest"
-                    }
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken(),
+                    },
+                    body: JSON.stringify({
+                        reference: reference,
+                        order_ids: orderIds
+                    })
                 });
 
                 const data = await response.json();
-                if (response.ok) {
-                    document.getElementById('payment-status').innerText = data.message;
-                    setTimeout(() => {
-                        window.location.href = '/order/payment-success/';
-                    }, 2000);
-                } else {
-                    document.getElementById('payment-status').innerText = data.error;
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Payment verification failed');
                 }
+
+                // SUCCESS
+                title.textContent = 'Payment Successful 🎉';
+                message.textContent = 'Your order has been confirmed and is now processing.';
+                document.querySelector('.spinner').remove();
+
+                localStorage.removeItem('pending_order_ids');
+                actions.style.display = 'flex';
+                viewOrderBtn.classList.remove('hidden')
+
+
             } catch (error) {
-                console.error('Error verifying payment:', error);
+                title.textContent = 'Payment Failed';
+                message.textContent = error.message;
+                document.querySelector('.spinner').remove();
+                actions.style.display = 'flex';
+                retryBtn.classList.remove('hidden')
             }
-        }
+
+            retryBtn.addEventListener('click', () => {
+                window.location.href = '/order/checkout/';
+            });
+        });
     </script>
-</body>
-</html>
+{% endblock %}
