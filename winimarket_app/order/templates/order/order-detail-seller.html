@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Order Details | Seller{% endblock %}
+
+{% block content %}
+<div class="seller-order-detail" data-order-id="{{ order.id }}">
+
+  <!-- HEADER -->
+  <div class="order-header">
+    <div>
+      <h2>Order #<span id="order-id"></span></h2>
+      <p class="order-date" id="order-date"></p>
+    </div>
+
+    <span class="order-status status-processing" id="order-status">
+      {{ order.status }}
+    </span>
+  </div>
+
+  <!-- BUYER & SHIPPING -->
+  <div class="info-grid">
+    <div class="info-card">
+      <h4>Buyer</h4>
+      <p id="buyer-name"></p><br>
+      <p id="buyer-phone"></p>
+    </div>
+
+    <div class="info-card">
+      <h4>Shipping Address</h4>
+      <p id="shipping-address"></p>
+    </div>
+  </div>
+
+  <!-- ITEMS -->
+  <div class="order-items-card">
+    <h4>Order Items</h4>
+    <div id="order-items"></div>
+  </div>
+
+  <!-- TOTAL -->
+  <div class="order-total">
+    <span>Total</span>
+    <strong id="order-total"></strong>
+  </div>
+
+  <!-- TRACKING ACTIONS -->
+  <div class="tracking-actions">
+    <h4>Update Order Status</h4>
+
+    <div class="tracking-buttons">
+      <button class="track-btn" data-status="processing">Processing</button>
+      <button class="track-btn" data-status="shipped">Shipped</button>
+      <button class="track-btn danger" data-status="delivered">
+        Mark Delivered
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+    let currentOrder = null;
+
+    document.addEventListener('DOMContentLoaded', async (e)=> {
+        await loadSellerOrder()
+    })
+
+    const orderId = document.querySelector('.seller-order-detail').dataset.orderId   // inject from template
+    const orderContainer = document.getElementById('order-detail')
+    const statusSelect = document.getElementById('order-status')
+    const updateBtn = document.getElementById('update-status-btn')
+
+    async function loadSellerOrder() {
+        try {
+            const res = await fetch(`/order/api/seller/orders/${orderId}/`)
+            if (!res.ok) throw new Error('Failed to load order')
+
+            currentOrder = await res.json()
+            renderOrder(currentOrder)
+
+        } catch (err) {
+            console.error(err)
+            showToast(err.message, 'error')
+        }
+    }
+
+    function renderOrder(order) {
+        document.getElementById('order-id').textContent = order.id.slice(0, 8)
+        document.getElementById('order-total').textContent = `₵${order.total_cost}`
+        document.getElementById('order-date').textContent = new Date(order.created_at).toLocaleDateString()
+
+        // Buyer info
+        document.getElementById('buyer-name').textContent = order.buyer.full_name
+        document.getElementById('buyer-phone').textContent = order.shipping_address.phonenumber
+
+        document.getElementById('shipping-address').textContent = `${order.shipping_address.address}, ${order.shipping_address.city}`
+
+        // Order status
+        statusSelect.value = order.track_status
+
+        // Items
+        const itemsBox = document.getElementById('order-items')
+        itemsBox.innerHTML = ''
+
+        order.items.forEach(item => {
+            const itemTotal = item.quantity * parseFloat(item.price)
+
+            itemsBox.innerHTML += `
+                <div class="order-item">
+                    <img src="${item.product_image}" />
+                    <div>
+                    <h4>${item.product_name}</h4>
+                    <p>₵${item.price} × ${item.quantity}</p>
+                    </div>
+                    <strong>₵${itemTotal.toFixed(2)}</strong>
+                </div>
+            `
+        })
+    }
+
+    function applyTrackingLock(order) {
+        const buttons = document.querySelectorAll('.track-btn');
+
+        // If order is fully completed → lock everything
+        if (order.status === 'completed') {
+            buttons.forEach(btn => {
+                btn.disabled = true;
+                btn.classList.add('disabled');
+            });
+            return;
+        }
+
+        // If already delivered → lock delivered button only
+        if (order.track_status === 'delivered') {
+            buttons.forEach(btn => {
+            if (btn.dataset.status === 'delivered') {
+                btn.disabled = true;
+                btn.textContent = 'Delivered ✓';
+                btn.classList.add('disabled');
+            }
+            });
+        }
+    }
+
+    document.querySelectorAll('.track-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const newStatus = btn.dataset.status;
+
+            // Prevent double submission
+            if (btn.disabled) return;
+
+            // Extra frontend guard
+            if (currentOrder.status === 'completed') {
+                showToast('Order already completed', 'info');
+                return;
+            }
+
+            if (
+                currentOrder.track_status === 'delivered' &&
+                newStatus === 'delivered'
+            ) {
+                showToast('Order already marked as delivered', 'info');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = 'Updating...';
+
+            try {
+                const res = await fetch(`/order/api/update/${orderId}/order/`, {
+                    method: 'PATCH',
+                    headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({ status: newStatus })
+                });
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.error || 'Failed to update order');
+                }
+
+                const updatedOrder = await res.json();
+                currentOrder = updatedOrder;
+
+                showToast('Order status updated ✅', 'success');
+
+                // Re-apply locks after update
+                applyTrackingLock(updatedOrder);
+                await loadSellerOrder()
+
+            } catch (err) {
+                console.error(err);
+                showToast(err.message, 'error');
+                btn.disabled = false;
+                btn.textContent = newStatus === 'delivered' ? 'Mark Delivered' : newStatus;
+            }
+        });
+    });
+
+
+    function updateOrderStatusUI(status) {
+        const statusBadge = document.querySelector('.order-status')
+
+        statusBadge.textContent = status
+        statusBadge.className = `order-status status-${status}`
+    }
+
+</script>
+{% endblock %}

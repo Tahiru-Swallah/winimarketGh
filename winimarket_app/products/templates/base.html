@@ -346,25 +346,6 @@
                 showToast(error.message, 'error')
             }
         }
-
-        async function confirmDelivery(orderId) {
-            try {
-                const res = await fetch(`/order/api/confirm/${orderId}/order/`, {
-                    method: 'POST',
-                    headers: {
-                        'X-CSRFToken': getCSRFToken()
-                    }
-                })
-
-                if (!res.ok) throw new Error()
-                showToast('Delivery confirmed', 'success')
-                loadOrders()
-
-            } catch {
-                showToast('Unable to confirm delivery', 'error')
-            }
-        }
-
     </script>
 </body>
 </html>

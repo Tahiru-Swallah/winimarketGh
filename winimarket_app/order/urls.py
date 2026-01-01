@@ -9,7 +9,10 @@ urlpatterns = [
     path('api/orders/buyer/', views.my_orders, name='buyer-order'),
     path('api/orders/seller/', views.seller_orders, name='seller-orders'),
 
-    path('api/orders/<uuid:order_id>/update/', views.update_order_status, name='order-update'),
+    path('seller/<uuid:order_id>/order/', views.seller_order_detail, name='order-detail-seller'),
+    path('api/seller/orders/<uuid:order_id>/', views.seller_order_detail_api, name='seller-order-detail-api'),
+
+    path('api/update/<uuid:order_id>/order/', views.update_order_status, name='order-update'),
     path('api/confirm/<uuid:order_id>/order/', views.confirm_delivery, name='confirm-order'),
 
     path('api/shipping_addresses/create/', views.create_shipping_address, name='create-shipping-address'),

@@ -18,9 +18,12 @@ urlpatterns = [
 
     #TEMPLATE RENDERING
     path('', views.product_list_view, name='product_list'),
+    path('product/upload/', views.product_upload_view, name='product_upload'),
+    path('product/seller/edit/', views.product_upload_view, name='product_upload'),
 
     # Seller's VIEW APIs
+    path('api/seller/dashboard/stats/', views.seller_dashboard_stats),
     path('api/seller/products/', views.seller_products),
-    path('api/seller/product/<uuid:product_id>/update/', views.seller_update_product),
-    path('api/seller/product/<uuid:product_id>/delete/', views.seller_delete_product),
+    path('api/seller/product/update/<uuid:product_id>/', views.seller_update_product),
+    path('api/seller/product/delete/<uuid:product_id>/', views.seller_delete_product),
 ]

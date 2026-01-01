@@ -121,6 +121,7 @@ class ProductSerializer(serializers.ModelSerializer):
             validated_data['category'] = Category.objects.get(id=category_id)
 
         validated_data['seller'] = request.user.profile.seller_profile
+        validated_data["is_active"] = True
 
         product = Product.objects.create(**validated_data)
 

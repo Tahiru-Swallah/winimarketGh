@@ -26,6 +26,10 @@ from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 def product_list_view(request):
     return render(request, 'products/index.html')
 
+@login_required
+def product_upload_view(request):
+    return render(request, 'products/product_upload.html')
+
 def product_detail_view(request, pk, slug):
     product = get_object_or_404(Product.objects.select_related('seller', 'seller__profile', 'category').prefetch_related("images"), pk=pk, slug=slug, is_active=True)
 
@@ -84,7 +88,7 @@ def product_list_create(request):
                 }, status=status.HTTP_401_UNAUTHORIZED
             )
         
-        if not request.user.profile.role != 'seller' and not request.user.is_staff:
+        if not request.user.profile.role == 'seller' and not request.user.is_staff:
             return Response(
                 {
                     "error": "Only sellers or Admins can create products."
@@ -151,7 +155,7 @@ def product_detail(request, pk):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def seller_products(request):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
     products = Product.objects.filter(seller=seller)
     serializer = ProductSerializer(products, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -159,7 +163,7 @@ def seller_products(request):
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def seller_update_product(request, product_id):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
 
     try:
         product = Product.objects.get(id=product_id, seller=seller)
@@ -177,7 +181,7 @@ def seller_update_product(request, product_id):
 @api_view(['DELETE'])
 @permission_classes([IsAuthenticated])
 def seller_delete_product(request, product_id):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
 
     try:
         product = Product.objects.get(id=product_id, seller=seller)
@@ -190,19 +194,22 @@ def seller_delete_product(request, product_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def seller_dashboard_stats(request):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
     
     total_products = Product.objects.filter(seller=seller).count()
 
     orders = Order.objects.filter(seller=seller)
 
     stats = {
+        "store_name": seller.store_name,
+        "is_verified": seller.is_verified,
         'total_products': total_products,
         "total_orders": orders.count(),
         "pending_orders": orders.filter(status=OrderStatus.PENDING).count(),
         "paid_orders": orders.filter(status=OrderStatus.PAID).count(),
         "shipped_orders": orders.filter(track_status=OrderTrackingStatus.SHIPPED).count(),
         "delivered_orders": orders.filter(track_status=OrderTrackingStatus.DELIVERED).count(),
+        "complete_orders": orders.filter(track_status=OrderTrackingStatus.COMPLETED).count(),
         "total_earnings": sum(
             o.total_cost for o in orders.filter(is_escrow_released=True)
         )

@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Add Product | Seller{% endblock %}
+
+{% block content %}
+<div class="product-create-container">
+
+  <h2 class="page-title">Add New Product</h2>
+
+  <form id="product-form" enctype="multipart/form-data">
+
+    <!-- PRODUCT NAME -->
+    <div class="form-group">
+      <label>Product Name</label>
+      <input type="text" id="name" placeholder="e.g. Nike Air Force 1" required>
+    </div>
+
+    <!-- CATEGORY -->
+    <div class="form-group">
+      <label>Category</label>
+      <select id="category" required>
+        <option value="">Select category</option>
+        <!-- Loaded via AJAX -->
+      </select>
+    </div>
+
+    <!-- CONDITION -->
+    <div class="form-group">
+      <label>Condition</label>
+      <select id="condition" required>
+        <option value="new">New</option>
+        <option value="used">Used</option>
+        <option value="refurbished">Refurbished</option>
+      </select>
+    </div>
+
+    <!-- PRICE & STOCK -->
+    <div class="form-row">
+      <div class="form-group">
+        <label>Price (₵)</label>
+        <input type="number" id="price" min="1" required>
+      </div>
+
+      <div class="form-group">
+        <label>Available Quantity</label>
+        <input type="number" id="quantity" min="1" required>
+      </div>
+    </div>
+
+    <!-- DESCRIPTION -->
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="description" rows="4" placeholder="Describe your product..."></textarea>
+    </div>
+
+    <!-- IMAGE UPLOAD -->
+    <div class="form-group">
+      <label>Product Images (Max 3)</label>
+
+      <input type="file" id="images" accept="image/*" multiple hidden>
+
+      <div class="image-upload-box" id="upload-box">
+        <span>+ Add Images</span>
+        <small>PNG, JPG • Max 3 images</small>
+      </div>
+
+      <div class="image-preview-grid" id="image-preview"></div>
+    </div>
+
+    <!-- SUBMIT -->
+    <button type="submit" class="primary-btn full">
+      Publish Product
+    </button>
+
+  </form>
+</div>
+
+<script>
+    // ----------------------------
+    // Product Form Module
+    // ----------------------------
+    const productForm = document.getElementById('product-form');
+    const submitBtn = productForm.querySelector('button[type="submit"]');
+    const uploadBox = document.getElementById('upload-box');
+    const fileInput = document.getElementById('images');
+    const previewGrid = document.getElementById('image-preview');
+    const categorySelect = document.getElementById('category');
+
+    let selectedImages = [];  // new images selected
+    let removedExistingImages = []; // track removed existing images
+    let productId = null; // null means new product, otherwise editing
+
+    // ----------------------------
+    // Load Categories
+    // ----------------------------
+    async function loadCategories(selectedId = null) {
+        try {
+            const response = await fetch('/products/api/categories/');
+            if (!response.ok) throw new Error('Failed to load categories');
+
+            const categories = await response.json();
+            categorySelect.innerHTML = '<option value="">Select category</option>';
+
+            categories.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.name;
+                if (selectedId && String(cat.id) === String(selectedId)) {
+                    option.selected = true;
+                }
+                categorySelect.appendChild(option);
+            });
+
+        } catch (error) {
+            console.error(error);
+            categorySelect.innerHTML = '<option value="">Unable to load categories</option>';
+            showToast('Failed to load categories', 'error');
+        }
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const editProductId = params.get('id');
+
+    if (editProductId) {
+        productId = editProductId;
+        loadProduct(productId);
+
+        document.querySelector('.page-title').textContent = 'Edit Product';
+        submitBtn.textContent = 'Update Product';
+    }
+
+    // ----------------------------
+    // Load product for editing
+    // ----------------------------
+    async function loadProduct(editId) {
+        productId = editId;
+        try {
+            const response = await fetch(`/products/api/products/${productId}/`);
+            if (!response.ok) throw new Error('Failed to load product');
+
+            const product = await response.json();
+
+            document.getElementById('name').value = product.name;
+            document.getElementById('price').value = product.price;
+            document.getElementById('quantity').value = product.quantity;
+            document.getElementById('description').value = product.description;
+            document.getElementById('category').value = product.category_id;
+            document.getElementById('condition').value = product.condition;
+
+            selectedImages = []; // reset
+            removedExistingImages = [];
+            previewGrid.innerHTML = '';
+
+            product.images.forEach(imgUrl => {
+                console.log(imgUrl)
+                const div = document.createElement('div');
+                div.className = 'preview-card';
+                div.innerHTML = `<img src="${imgUrl.image}" data-existing="true">
+                                <button type="button">&times;</button>`;
+
+                div.querySelector('button').onclick = () => {
+                    removedExistingImages.push(imgUrl);
+                    div.remove();
+                };
+
+                previewGrid.appendChild(div);
+            });
+
+        } catch (error) {
+            console.error(error);
+            showToast(error.message, 'error');
+        }
+    }
+
+    // ----------------------------
+    // Image Upload Handling
+    // ----------------------------
+    uploadBox.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+        const files = Array.from(fileInput.files);
+        files.forEach(file => {
+            if (selectedImages.length >= 3) return;
+
+            selectedImages.push(file);
+
+            const reader = new FileReader();
+            reader.onload = () => {
+                const div = document.createElement('div');
+                div.className = 'preview-card';
+                div.innerHTML = `<img src="${reader.result}">
+                                <button type="button">&times;</button>`;
+                div.querySelector('button').onclick = () => {
+                    const index = selectedImages.indexOf(file);
+                    selectedImages.splice(index, 1);
+                    div.remove();
+                };
+                previewGrid.appendChild(div);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        if (selectedImages.length >= 3) {
+            uploadBox.style.display = 'none';
+        }
+
+        fileInput.value = '';
+    });
+
+    // ----------------------------
+    // Submit Form (Create or Update)
+    // ----------------------------
+    productForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.textContent = productId ? 'Updating...' : 'Publishing...';
+
+        const formData = new FormData();
+        formData.append('name', document.getElementById('name').value);
+        formData.append('price', document.getElementById('price').value);
+        formData.append('quantity', document.getElementById('quantity').value);
+        formData.append('description', document.getElementById('description').value);
+        formData.append('category_id', document.getElementById('category').value);
+        formData.append('condition', document.getElementById('condition').value);
+
+        // New images
+        selectedImages.slice(0, 3).forEach(img => formData.append('images', img));
+
+        // Send removed existing images to backend if updating
+        if (removedExistingImages.length > 0) {
+            removedExistingImages.forEach((url, idx) => formData.append(`removed_images[${idx}]`, url));
+        }
+
+        try {
+            const url = productId ? `/api/seller/product/update/${productId}/` : '/products/api/products/';
+            const method = productId ? 'PATCH' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: formData
+            });
+
+            if (!response.ok) {
+                const err = await response.json();
+                throw new Error(err.error || 'Failed to save product');
+            }
+
+            showToast(productId ? 'Product updated successfully 🎉' : 'Product published successfully 🎉', 'success');
+
+            setTimeout(() => {
+                window.location.href = '/account/seller/dashboard/';
+            }, 1000);
+
+        } catch (error) {
+            console.error(error);
+            showToast(error.message, 'error');
+        } finally {
+            submitBtn.disabled = false;
+            submitBtn.textContent = productId ? 'Update Product' : 'Publish Product';
+        }
+    });
+
+    // ----------------------------
+    // Initialize
+    // ----------------------------
+    loadCategories();
+</script>
+{% endblock %}

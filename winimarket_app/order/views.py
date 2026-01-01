@@ -37,6 +37,11 @@ def order_detail_page(request, order_id):
     return render(request, 'order/order-detail.html', context={'order': order})
 
 @login_required
+def seller_order_detail(request, order_id):
+    order = get_object_or_404(Order, id=order_id, seller=request.user.profile.seller_profile)
+    return render(request, 'order/order-detail-seller.html', context={'order': order})
+
+@login_required
 def payment_verify_template(request):
     return render(request, 'order/verify_payment.html')
 
@@ -130,18 +135,35 @@ def order_detail(request, order_id):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def seller_orders(request):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
     orders = (Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
 
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def seller_order_detail_api(request, order_id):
+    seller = request.user.profile.seller_profile
+
+    try:
+        order = Order.objects.select_related(
+            'buyer__user', 'shipping_address'
+        ).prefetch_related('items__product').get(
+            id=order_id, seller=seller
+        )
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found'}, status=404)
+
+    serializer = OrderSerializer(order, context={'request': request})
+    return Response(serializer.data)
 
 # ---------------------------
 # ORDER UPDATE VIEW - SELLER
 @api_view(['PATCH'])
 @permission_classes([IsAuthenticated])
 def update_order_status(request, order_id):
-    seller = request.user.sellerprofile
+    seller = request.user.profile.seller_profile
     status_value = request.data.get('status')
 
     try:

@@ -104,6 +104,8 @@
 
             if (order.track_status === 'delivered' && !order.is_escrow_released) {
                 document.getElementById('confirm-delivery-btn').classList.remove('hidden');
+            } else{
+              document.getElementById('confirm-delivery-btn').classList.add('hidden');
             }
 
         } catch (err) {
@@ -115,6 +117,24 @@
         const orderId = document.getElementById("order-id").dataset.orderId
         loadOrderDetail(orderId)
     })
+
+    async function confirmDelivery(orderId) {
+        try {
+            const res = await fetch(`/order/api/confirm/${orderId}/order/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCSRFToken()
+                }
+            })
+
+            if (!res.ok) throw new Error()
+            showToast('Delivery confirmed', 'success')
+            loadOrderDetail(orderId)
+
+        } catch {
+            showToast('Unable to confirm delivery', 'error')
+        }
+    }
 
 </script>
 {% endblock %}
