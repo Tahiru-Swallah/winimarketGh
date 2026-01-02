@@ -23,11 +23,12 @@
     <div class="info-card">
       <h4>Buyer</h4>
       <p id="buyer-name"></p><br>
-      <p id="buyer-phone"></p>
+      <p id="buyer-phone"></p><br>
+      <a id="call-buyer" class="call-btn">Call Buyer</a>
     </div>
 
     <div class="info-card">
-      <h4>Shipping Address</h4>
+      <h4>Delivery Address</h4>
       <p id="shipping-address"></p>
     </div>
   </div>
@@ -49,8 +50,8 @@
     <h4>Update Order Status</h4>
 
     <div class="tracking-buttons">
-      <button class="track-btn" data-status="processing">Processing</button>
-      <button class="track-btn" data-status="shipped">Shipped</button>
+      <!-- <button class="track-btn" data-status="processing">Processing</button>
+      <button class="track-btn" data-status="shipped">Shipped</button> -->
       <button class="track-btn danger" data-status="delivered">
         Mark Delivered
       </button>
@@ -88,11 +89,15 @@
     function renderOrder(order) {
         document.getElementById('order-id').textContent = order.id.slice(0, 8)
         document.getElementById('order-total').textContent = `₵${order.total_cost}`
-        document.getElementById('order-date').textContent = new Date(order.created_at).toLocaleDateString()
+        document.getElementById('order-date').textContent = order.created_at ? new Date(order.created_at).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        }) : "N/A";
 
         // Buyer info
         document.getElementById('buyer-name').textContent = order.buyer.full_name
         document.getElementById('buyer-phone').textContent = order.shipping_address.phonenumber
+        document.getElementById('call-buyer').href =`tel:${order.shipping_address.phonenumber}`
 
         document.getElementById('shipping-address').textContent = `${order.shipping_address.address}, ${order.shipping_address.city}`
 
@@ -120,35 +125,31 @@
     }
 
     function applyTrackingLock(order) {
-        const buttons = document.querySelectorAll('.track-btn');
+        const button = document.querySelector('.track-btn');
 
         // If order is fully completed → lock everything
         if (order.status === 'completed') {
-            buttons.forEach(btn => {
-                btn.disabled = true;
-                btn.classList.add('disabled');
-            });
+              button.disabled = true;
+              button.classList.add('disabled');
             return;
         }
 
         // If already delivered → lock delivered button only
         if (order.track_status === 'delivered') {
-            buttons.forEach(btn => {
-            if (btn.dataset.status === 'delivered') {
-                btn.disabled = true;
-                btn.textContent = 'Delivered ✓';
-                btn.classList.add('disabled');
+            if (button.dataset.status === 'delivered') {
+                button.disabled = true;
+                button.textContent = 'Delivered ✓';
+                button.classList.add('disabled');
             }
-            });
-        }
+          };
     }
 
-    document.querySelectorAll('.track-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const newStatus = btn.dataset.status;
+    const trackButton = document.querySelector('.track-btn')
+    document.querySelector('.track-btn').addEventListener('click', async () => {
+            const newStatus = trackButton.dataset.status;
 
             // Prevent double submission
-            if (btn.disabled) return;
+            if (trackButton.disabled) return;
 
             // Extra frontend guard
             if (currentOrder.status === 'completed') {
@@ -164,8 +165,8 @@
                 return;
             }
 
-            btn.disabled = true;
-            btn.textContent = 'Updating...';
+            trackButton.disabled = true;
+            trackButton.textContent = 'Updating...';
 
             try {
                 const res = await fetch(`/order/api/update/${orderId}/order/`, {
@@ -194,19 +195,10 @@
             } catch (err) {
                 console.error(err);
                 showToast(err.message, 'error');
-                btn.disabled = false;
-                btn.textContent = newStatus === 'delivered' ? 'Mark Delivered' : newStatus;
+                trackButton.disabled = false;
+                trackButton.textContent = newStatus === 'delivered' ? 'Mark Delivered' : newStatus;
             }
-        });
     });
-
-
-    function updateOrderStatusUI(status) {
-        const statusBadge = document.querySelector('.order-status')
-
-        statusBadge.textContent = status
-        statusBadge.className = `order-status status-${status}`
-    }
 
 </script>
 {% endblock %}

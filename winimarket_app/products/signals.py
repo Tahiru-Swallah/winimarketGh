@@ -32,7 +32,7 @@ def auto_assign_new_primary(sender, instance, **kwargs):
         next_image = ProductImage.objects.filter(product=product).first()
         if next_image:
             next_image.is_primary = True
-            next_image.save(update_fields=['is_primary'])
+            next_image.save()
 
 
             

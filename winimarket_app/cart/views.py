@@ -72,7 +72,7 @@ def add_to_cart(request):
             
             cart_item.quantity = new_quantity
             cart_item.choice_price = choice_price
-            cart_item.save(updated_fields=['quantity', 'choice_price'])
+            cart_item.save()
 
         serializers = CartItemSerializer(cart_item, context={'request': request})
         return Response({
@@ -106,7 +106,7 @@ def update_cart_item(request, cart_item_id):
         return Response({"error": "Requested quantity exceeds available stock."}, status=status.HTTP_400_BAD_REQUEST)
     
     cart_item.quantity = quantity
-    cart_item.save(updated_fields=['quantity'])
+    cart_item.save()
 
     serializer = CartItemSerializer(cart_item, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)

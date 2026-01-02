@@ -43,6 +43,8 @@ urlpatterns = [
 
     path('seller/dashboard/', views.seller_dashboard, name='seller_dashboard'),
 
+    path('seller/profile/<uuid:seller_id>/', views.seller_profile, name='seller_profile'),
+
     path('verify-email/<uuid:token>/', views.verify_email, name='verify_email'),
     
     path('resend-verification/', views.resend_verification_email, name='resend_verification_email'),

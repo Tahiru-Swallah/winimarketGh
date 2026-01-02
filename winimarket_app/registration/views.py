@@ -23,6 +23,8 @@ from django.utils import timezone
 from .utils import generate_verification_token, regenerate_verification_token
 from .emails import send_verification_email
 
+from order.models import OrderStatus, OrderItem, Order, OrderTrackingStatus
+from products.models import Product
 # -----------------------------
 # Template Views
 # -----------------------------
@@ -45,6 +47,15 @@ def seller_onboarding(request):
 def seller_dashboard(request):
     # Render the seller dashboard page
     return render(request, 'seller/dashboard.html')
+
+@login_required
+def seller_profile(request, seller_id):
+    seller = get_object_or_404(SellerProfile, id=seller_id)
+    products = Product.objects.filter(seller=seller,is_active=True).select_related('category').order_by('-created_at')[:12]
+    total_products = products.count()
+    completed_orders = Order.objects.filter(seller=seller, status=OrderStatus.COMPLETED).count()
+
+    return render(request, 'seller/seller_profile.html', context={"seller": seller, "products": products, "total_products": total_products, "completed_orders": completed_orders})
 
 # -----------------------------
 # API Views for Authentication

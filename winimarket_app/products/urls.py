@@ -10,11 +10,11 @@ urlpatterns = [
 
     # Product API URLs
     path('products/api/products/', views.product_list_create),
-    path('products/api/products/<uuid:pk>/', views.product_detail),
+    path('products/api/products/<uuid:pk>/', views.product_detail, name="product_detai_api"),
     path('product/api/search/', views.search_products),
     path('product/api/search/suggestions/', views.search_suggestions),
 
-    path('product/detail/<uuid:pk>/<slug:slug>/', views.product_detail_view, name='product_detail_api'),
+    path('product/detail/<uuid:pk>/<slug:slug>/', views.product_detail_view, name='product_detail'),
 
     #TEMPLATE RENDERING
     path('', views.product_list_view, name='product_list'),

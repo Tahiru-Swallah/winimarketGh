@@ -175,13 +175,18 @@
         grid.innerHTML = ''
 
         if (!products.length) {
-            grid.innerHTML = `<p class="empty">No products uploaded yet</p>`
-            return
+            grid.innerHTML = `
+                <div class="empty-state">
+                    <p>You haven’t uploaded any products yet.</p>
+                    <a href="/product/upload/" class="primary-btn small">Add Product</a>
+                </div>
+            `;
+            return;
         }
 
         products.forEach(product => {
             grid.innerHTML += `
-                <div class="product-card-seller" data-id=${product.id}>
+                <div class="product-card-sell" data-id=${product.id}>
                     <img src="${product.images[0]?.image}" alt="${product.name}">
 
                     <div class="product-card-content">
@@ -209,14 +214,14 @@
 
         if (deleteBtn) {
             const productId = deleteBtn.dataset.id;
-            confirmDeleteProduct(productId);
+            confirmDeleteProduct(productId, deleteBtn);
         }
     });
 
-    async function confirmDeleteProduct(productId){
-        const productCard = document.querySelector('.product-card-seller');
-
+    async function confirmDeleteProduct(productId, buttonEl){
         if (!productId) return;
+
+        const productCard = buttonEl.closest('.product-card-sell');
 
         const confirmed = confirm(
             'Are you sure you want to delete this product?\nThis action cannot be undone.'
@@ -247,6 +252,8 @@
             // Optional: update product count
             updateProductStats(-1);
 
+            await fetchSellerProducts()
+
         } catch (error) {
             console.error(error);
 
@@ -265,8 +272,5 @@
         totalProducts.textContent =
             Math.max(0, parseInt(totalProducts.textContent) + change);
     }
-
-
 </script>
-
 {% endblock %}

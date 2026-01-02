@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Seller Profile | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="seller-profile-container">
+
+  <!-- HEADER -->
+  <div class="seller-profile-header">
+    <div class="seller-avatar">
+      <img id="seller-avatar" src="{% if seller.store_logo %} {{ seller.store_logo.url }} {% else %} {% static 'images/profile1.jfif' %} {% endif%}" alt="Seller Avatar">
+    </div>
+
+    <div class="seller-info">
+      <h2 id="seller-name">{{ seller.store_name }}</h2>
+
+      <span class="seller-badge {% if seller.is_verified %} verified {% endif %}">
+        {% if seller.is_verified %} ✔ Verified Seller {% else %} Not verified {% endif %}
+      </span>
+
+      <p id="seller-location">
+        📍 {{ seller.address.city }}, {{ seller.address.region }}
+      </p>
+
+      <p id="seller-contact">
+        📞 <a href="tel:{{ seller.profile.user.phonenumber }}">{{ seller.profile.user.phonenumber }}</a>
+      </p>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div class="seller-stats">
+    <div class="stat-box">
+      <h3 id="seller-products-count">{{ total_products }}</h3>
+      <p>Products</p>
+    </div>
+
+    <div class="stat-box">
+      <h3 id="seller-orders-count">{{ completed_orders}}</h3>
+      <p>Orders</p>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <section class="seller-products-section">
+    <h3>Products by Seller</h3>
+
+    <div id="seller-products" class="products-grid-seller">
+
+    {% if products %}
+        {% for product in products %}
+            <div class="seller-product-card">
+
+                <!-- IMAGE -->
+                <div class="product-image">
+                    {% if product.images.first %}
+                        <img src="{{ product.images.first.image.url }}" alt="{{ product.name }}">
+                    {% else %}
+                        <img src="{% static 'images/placeholder.png' %}" alt="No image">
+                    {% endif %}
+                </div>
+
+                <!-- INFO -->
+                <div class="product-info">
+                    <h4 class="product-name">{{ product.name|truncatechars:40 }}</h4>
+
+                    <p class="product-category">
+                        {{ product.category.name }}
+                    </p>
+
+                    <p class="product-price">
+                        ₵{{ product.price }}
+                    </p>
+                </div>
+
+                <!-- ACTION -->
+                <a href="{% url 'products:product_detail' product.id product.slug  %}" class="view-btn">
+                    View Product
+                </a>
+
+            </div>
+        {% endfor %}
+
+    {% else %}
+        <div class="empty-products">
+            <p>This seller has no active products yet.</p>
+        </div>
+    {% endif %}
+    </div>
+
+  </section>
+
+</div>
+{% endblock %}
