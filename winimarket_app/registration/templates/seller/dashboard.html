@@ -35,6 +35,18 @@
     </div>
   </div>
 
+  <!-- SELLER ADDRESS -->
+    <section class="seller-section">
+    <div class="section-header">
+        <h3>Store Location</h3>
+        <a href="#" id="openEditAddress" class="edit-link">Edit</a>
+    </div>
+
+    <div class="seller-address-card" id="seller-address">
+        <p class="muted">Loading address…</p>
+    </div>
+    </section>
+
   <!-- ORDERS -->
   <section class="seller-section">
     <div class="section-header">
@@ -62,11 +74,69 @@
 <!-- Floating Button (Mobile) -->
 <a href="/product/upload/" class="fab">+</a>
 
+<!-- EDIT ADDRESS MODAL -->
+<div id="editAddressModal" class="modal hidden">
+  <div class="modal-overlay" id="closeAddressModal"></div>
+
+  <div class="modal-content">
+    <h3>Edit Store Address</h3>
+
+    <form id="editAddressForm">
+
+      <div class="form-group">
+        <label>Region</label>
+        <input type="text" id="editRegion" required>
+      </div>
+
+      <div class="form-group">
+        <label>City</label>
+        <input type="text" id="editCity" required>
+      </div>
+
+      <div class="form-group">
+        <label>Campus</label>
+        <input type="text" id="editCampus" placeholder="UEW - Winneba">
+      </div>
+
+      <div class="form-group">
+        <label>Campus Area</label>
+        <select id="editCampusArea">
+          <option value="North Campus">North Campus</option>
+          <option value="South Campus">South Campus</option>
+          <option value="Central Campus">Central Campus</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Hall / Hostel</label>
+        <input type="text" id="editHall">
+      </div>
+
+      <div class="form-group">
+        <label>Landmark</label>
+        <input type="text" id="editLandmark">
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelAddressEdit">
+          Cancel
+        </button>
+        <button type="submit" class="primary-btn">
+          Save Address
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+
+
 <script>
     document.addEventListener('DOMContentLoaded', async ()=> {
         await fetchSellerStats()
         await fetchSellerOrders()
         await fetchSellerProducts()
+        await fetchSellerAddress()
     })
 
     async function fetchSellerStats(){
@@ -161,7 +231,6 @@
             if (!res.ok) throw new Error('Failed to load products')
 
             const products = await res.json()
-            console.log(products)
             renderProducts(products)
 
         } catch (error) {
@@ -272,5 +341,111 @@
         totalProducts.textContent =
             Math.max(0, parseInt(totalProducts.textContent) + change);
     }
+
+    async function fetchSellerAddress() {
+        try {
+            const res = await fetch('/account/api/get/seller-address/');
+            if (!res.ok) throw new Error('Failed to load address');
+
+            const address = await res.json();
+            renderSellerAddress(address);
+
+        } catch (err) {
+            console.error(err);
+            document.getElementById('seller-address').innerHTML =
+                `<p class="muted">Address not set</p>`;
+        }
+    }
+
+    function renderSellerAddress(address) {
+        const container = document.getElementById('seller-address');
+
+        container.innerHTML = `
+            <div class="address-row">
+                <span>📍</span>
+                <strong>${address.city}, ${address.region}</strong>
+            </div>
+
+            <div class="address-row">
+                <span>🏫</span>
+                ${address.campus} – ${address.campus_area}
+            </div>
+
+            ${address.hall_or_hostel ? `
+            <div class="address-row">
+                <span>🏠</span>
+                ${address.hall_or_hostel}
+            </div>` : ''}
+
+            ${address.landmark ? `
+            <div class="address-row">
+                <span>🧭</span>
+                ${address.landmark}
+            </div>` : ''}
+        `;
+    }
+
+    const editAddressModal = document.getElementById('editAddressModal');
+
+    document.getElementById('openEditAddress').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await loadAddressIntoForm();
+        editAddressModal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeAddressModal').onclick =
+    document.getElementById('cancelAddressEdit').onclick = () => {
+        editAddressModal.classList.add('hidden');
+    };
+
+    async function loadAddressIntoForm() {
+        const res = await fetch('/account/api/get/seller-address/');
+        if (!res.ok) return;
+
+        const a = await res.json();
+
+        document.getElementById('editRegion').value = a.region || '';
+        document.getElementById('editCity').value = a.city || '';
+        document.getElementById('editCampus').value = a.campus || '';
+        document.getElementById('editCampusArea').value = a.campus_area || 'North Campus';
+        document.getElementById('editHall').value = a.hall_or_hostel || '';
+        document.getElementById('editLandmark').value = a.landmark || '';
+    }
+
+    document.getElementById('editAddressForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const payload = {
+            country: 'Ghana',
+            region: editRegion.value.trim(),
+            city: editCity.value.trim(),
+            campus: editCampus.value.trim(),
+            campus_area: editCampusArea.value,
+            hall_or_hostel: editHall.value.trim(),
+            landmark: editLandmark.value.trim(),
+        };
+
+        try {
+            const res = await fetch('/account/api/seller-address/', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw await res.json();
+
+            showToast('Address updated successfully ✅', 'success');
+            editAddressModal.classList.add('hidden');
+            fetchSellerAddress(); // refresh card
+
+        } catch (err) {
+            console.error(err);
+            showToast(err.detail || 'Failed to update address', 'error');
+        }
+    });
+
 </script>
 {% endblock %}

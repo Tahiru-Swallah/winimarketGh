@@ -138,21 +138,29 @@ async function submitStoreInfo() {
 async function submitAddressInfo() {
     const region = document.getElementById('region').value.trim();
     const city = document.getElementById('city').value.trim();
+    const campus = document.getElementById('campus').value.trim()
+    const campus_area = document.getElementById('campusArea').value
+    const hall_or_hostel = document.getElementById('hallOrHostel').value.trim()
+    const landmark = document.getElementById('landmark').value.trim()
 
     if (!region || !city) {
         throw { detail: "Region and city are required." };
     }
 
-    const data = new FormData();
-    data.append('country', 'Ghana');
-    data.append('region', region);
-    data.append('city', city);
-    data.append('address', document.getElementById('address').value.trim());
+    const addressData = {
+        country: 'Ghana',
+        region: region,
+        city: city,
+        campus: campus,
+        campus_area: campus_area,
+        hall_or_hostel: hall_or_hostel,
+        landmark: landmark,
+    }
 
     const res = await fetch('/account/api/seller-address/', {
         method: 'PUT',
-        headers: { 'X-CSRFToken': getCSRFToken() },
-        body: data
+        headers: { 'X-CSRFToken': getCSRFToken(), "Content-Type": 'application/json' },
+        body: JSON.stringify(addressData) 
     });
 
     if (!res.ok) throw await res.json();

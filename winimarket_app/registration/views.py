@@ -46,9 +46,9 @@ def seller_onboarding(request):
 @login_required
 def seller_dashboard(request):
     # Render the seller dashboard page
-    return render(request, 'seller/dashboard.html')
+    seller = request.user.profile.seller_profile
+    return render(request, 'seller/dashboard.html', context={'seller': seller})
 
-@login_required
 def seller_profile(request, seller_id):
     seller = get_object_or_404(SellerProfile, id=seller_id)
     products = Product.objects.filter(seller=seller,is_active=True).select_related('category').order_by('-created_at')[:12]
@@ -56,6 +56,15 @@ def seller_profile(request, seller_id):
     completed_orders = Order.objects.filter(seller=seller, status=OrderStatus.COMPLETED).count()
 
     return render(request, 'seller/seller_profile.html', context={"seller": seller, "products": products, "total_products": total_products, "completed_orders": completed_orders})
+
+@login_required
+def set_profile_role(request):
+    return render(request, 'authentication/role-setting.html')
+
+@login_required
+def buyer_profile(request):
+    profile = request.user.profile
+    return render(request, 'authentication/buyer_profile.html', context={'profile': profile})
 
 # -----------------------------
 # API Views for Authentication
@@ -197,7 +206,7 @@ class ChangePasswordView(APIView):
 # -----------------------------
 # Profile API Views
 # -----------------------------
-@api_view(['GET', 'PUT'])
+@api_view(['GET', 'PATCH'])
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def profile_view(request):
@@ -211,7 +220,7 @@ def profile_view(request):
         serializer = ProfileSerializer(user.profile)
         return Response(serializer.data, status=status.HTTP_200_OK)
     
-    elif request.method == "PUT":
+    elif request.method == "PATCH":
         serializer = ProfileSerializer(user.profile, data=request.data, context={'request': request}, partial=True)
         if serializer.is_valid():
             profile = serializer.save()
@@ -315,6 +324,17 @@ def seller_address_view(request):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_seller_address(request):
+    try:
+        address = SellerAddress.objects.get(seller=request.user.profile.seller_profile)
+    except SellerAddress.DoesNotExist:
+        return Response({"error": "Seller Address Not Found"}, status=status.HTTP_404_NOT_FOUND)
+    
+    serializer = SellerAddressSerializer(address)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['PUT'])
 @permission_classes([IsAuthenticated])

@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
     <header>
@@ -24,13 +25,21 @@
             </div>
         </div>
 
-        <div class="menu-icon"><span class="material-icons-outlined">menu</span></div>
+        <div class="mobile-icons">
+            <div class="filter-icon on-dark" id="searchMb"><span class="material-icons-outlined">search</span></div>
+        </div>
 
         <div class="navbar">
             <ul>
-                <li><a href="/"><span class="material-icons-outlined active" id="nav-icon-1">home</span></a></li>
-                <li><a><span class="material-icons-outlined" id="nav-icon-3">shopping_cart</span></a></li>
-                <li><a href="/order/my-orders/"><span class="material-icons-outlined" id="nav-icon-4">local_shipping</span></a></li>
+                <li><a href="/"><span class="material-icons-outlined active" title="home">home</span></a></li>
+                <li><a><span class="material-icons-outlined" id="cart" title="cart">shopping_cart</span></a></li>
+                <li><a href="/order/my-orders/"><span class="material-icons-outlined" title="orders">local_shipping</span></a></li>
+                {% if user.profile.role == 'seller' %}
+                    <li><a href="{% url 'registration:seller_dashboard' %}" title="seller dashboard"><span class="material-icons-outlined">dashboard</span></a></li>
+                    <li><a href="{% url 'products:product_upload' %}" title="seller dashboard"><span class="material-icons-outlined">add</span></a></li>
+                {% else %}
+                    <li><a title="buyer profile"><span class="material-icons-outlined">person</span></a></li>
+                {% endif %}
             </ul>
         </div>
     </header>
@@ -40,6 +49,15 @@
         <!-- search list here -->
         <div class="search_grid" id="search-grid"></div>
     </div>
+
+    <nav class="bottom-nav" id="mobile-nav">
+        <!-- Injected by JS -->
+        <a href="/"><span class="material-icons-outlined">home</span></a>
+        <a id="cart"><span class="material-icons-outlined">shopping_cart</span></a>
+        <a href="/order/my-orders/"><span class="material-icons-outlined">local_shipping</span></a>
+        <a href="/account/profile/"><span class="material-icons-outlined">person</span></a>
+    </nav>
+
 
     <main>
         {% block content %}
@@ -96,7 +114,7 @@
         const cartItemsContainer = document.getElementById("cartItemsContainer");
         const cartTotalEl = document.getElementById("cartTotal");
 
-        const cartIcon = document.getElementById("nav-icon-3");
+        const cartIcon = document.querySelectorAll("#cart");
 
         function openCart(){
             cartDrawer.classList.add("open");
@@ -109,7 +127,9 @@
             cartOverlay.classList.remove("open");
         }
 
-        cartIcon?.addEventListener("click", openCart);
+        cartIcon.forEach(btn=> {
+            btn?.addEventListener("click", openCart);
+        })
         closeCartBtn?.addEventListener("click", closeCart);
         cartOverlay?.addEventListener("click", closeCart);
 

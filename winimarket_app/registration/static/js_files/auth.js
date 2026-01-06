@@ -12,33 +12,6 @@ document.querySelectorAll('.toggle-link').forEach(link=> {
     })
 })
 
-const client_id = document.querySelector('meta[name="google-client-id"]').getAttribute('content')
-
-// Google Sign In
-window.onload = function () {
-    google.accounts.id.initialize({
-    client_id: client_id,
-    callback: "",
-    auto_select: false, // ✅ force show account chooser
-    cancel_on_tap_outside: false,
-    context: 'signin'
-    });
-
-    document.querySelectorAll('#g_id_signin').forEach(function(signin) {
-        google.accounts.id.renderButton(
-            signin, {
-                theme: "outline",
-                size: "large",
-                type: "standard",
-                text: "continue_with",
-                shape: "rectangular"
-            }
-        );
-    });
-
-    google.accounts.id.prompt();
-};
-
 function showLoginMessage() {
     const loginMessage = document.querySelector('.login-message-mobile');
     loginMessage.classList.add('show');
@@ -201,7 +174,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
             } 
 
             setTimeout(() => {
-                handleRoleCheck();
+                window.location.href = "/account/profile/set-role/"
             }, 1500);
 
         } else if(data.errors){
@@ -237,7 +210,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     }
 })
 
-async function handleRoleCheck(){
+/* async function handleRoleCheck(){
     const profile =  await fetchUserProfile();
 
     if (!profile){
@@ -356,4 +329,4 @@ function showToast(message, type = "success") {
 
     // Auto remove after animation
     setTimeout(() => toast.remove(), 4000);
-}
+} */

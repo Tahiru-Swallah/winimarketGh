@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Choose Role | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="role-page">
+
+  <h2>How would you like to use WiniMarket?</h2>
+  <p class="subtitle">You can change this later in settings</p>
+
+  <div class="role-cards">
+
+    <!-- BUYER -->
+    <div class="role-card" data-role="buyer">
+      <i class="bx bxs-shopping-bag"></i>
+      <h3>Buy Products</h3>
+      <p>Shop from trusted sellers</p>
+    </div>
+
+    <!-- SELLER -->
+    <div class="role-card" data-role="seller">
+      <i class="bx bxs-store-alt"></i>
+      <h3>Sell Products</h3>
+      <p>Open a store and start selling</p>
+    </div>
+
+  </div>
+
+  <button id="continueBtn" class="primary-btn disabled">
+    Continue
+  </button>
+
+</div>
+
+<script>
+  let selectedRole = null
+  const cards = document.querySelectorAll('.role-card')
+  const btn = document.getElementById('continueBtn')
+
+  cards.forEach(card => {
+    card.addEventListener('click', () => {
+      cards.forEach(c => c.classList.remove('active'))
+      card.classList.add('active')
+      selectedRole = card.dataset.role
+      btn.classList.remove('disabled')
+    })
+  })
+
+  btn.addEventListener('click', async () => {
+    if (!selectedRole) return
+
+    try {
+      const res = await fetch('/account/api/profile/set-role/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCSRFToken()
+        },
+        body: JSON.stringify({ role: selectedRole })
+      })
+
+      if (!res.ok) throw new Error()
+
+      if (selectedRole === 'buyer') {
+        window.location.href = '/account/buyer/profile/form/'
+      } else {
+        window.location.href = '/account/seller/onboarding/'
+      }
+
+    } catch {
+      showToast('Unable to set role', 'error')
+    }
+  })
+</script>
+{% endblock %}

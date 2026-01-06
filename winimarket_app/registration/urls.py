@@ -22,6 +22,8 @@ urlpatterns = [
     #LOGIN VIEWS
     path('login/', views.login_view, name='login'),
 
+    path('buyer/profile/form/', views.buyer_profile, name='buyer_profile'),
+
     # CHANGE PASSWORD API
     path('api/change-password/', views.ChangePasswordView.as_view()),
 
@@ -31,9 +33,13 @@ urlpatterns = [
     #SELLER PROFILE API
     path('api/profile/set-role/', views.set_role),
 
+    path('profile/set-role/', views.set_profile_role, name='set-profile-role'),
+
     path('api/seller-profile/', views.seller_store_view),
 
     path('api/seller-address/', views.seller_address_view),
+
+    path('api/get/seller-address/', views.get_seller_address),
 
     path('api/seller-payment-info/', views.seller_payment_view),
 

@@ -41,14 +41,5 @@ def create_seller_data(sender, instance, created, **kwargs):
         SellerPayment.objects.get_or_create(seller=seller)
 
         # Create empty Address row
-        SellerAddress.objects.get_or_create(
-            seller=seller,
-            defaults={
-                'region': 'Not set',
-                'city': 'Not set',
-                'address': 'Not set',
-                'country': 'Ghana'
-            }
-        )
-
+        SellerAddress.objects.get_or_create(seller=seller)
     return

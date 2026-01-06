@@ -26,16 +26,41 @@ class ShippingAddress(models.Model):
         on_delete=models.CASCADE,
         related_name='shipping_addresses'
     )
-    address = models.CharField(max_length=250)
     state_region = models.CharField(max_length=20)
     city = models.CharField(max_length=100)
     country = models.CharField(max_length=100, default='Ghana')
+
+    # Campus-specific fields (VERY IMPORTANT)
+    campus = models.CharField(
+        max_length=100,
+        default="UEW - Winneba"
+    )
+
+    campus_area = models.CharField(
+        max_length=100,
+        help_text="North Campus / South Campus / Central Campus",
+        default='North Campus'
+    )
+
+    hall_or_hostel = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    # Optional but useful
+    landmark = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Near SRC, Opposite Library, etc."
+    )
+
     phonenumber = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.address}, {self.state_region}, {self.city} ({self.buyer.user.email})"
-
+        return f"{self.campus}, {self.state_region}, {self.city} ({self.buyer.user.email})"
 
 class Order(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
@@ -163,4 +188,4 @@ class Payment(models.Model):
     paid_at = models.DateTimeField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.order.id} - {self.status}"
+        return f"{self.id} - {self.status}"

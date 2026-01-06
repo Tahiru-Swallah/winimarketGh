@@ -221,7 +221,7 @@ class SellerPaymentAdmin(admin.ModelAdmin):
 
 @admin.register(SellerAddress)
 class SellerAddressAdmin(admin.ModelAdmin):
-    list_display = ('seller', 'country', 'region', 'city', 'address')
+    list_display = ('seller', 'country', 'region', 'city', 'campus', 'campus_area', 'hall_or_hostel', 'landmark')
     search_fields = ('seller__store_name', 'city', 'region')
     list_filter = ('country', 'region')
 

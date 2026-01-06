@@ -172,7 +172,32 @@ class SellerAddress(models.Model):
     country = models.CharField(max_length=100, default="Ghana")
     city = models.CharField(max_length=100)
     region = models.CharField(max_length=100, blank=True, null=True)
-    address = models.TextField()
+    
+    # Campus-specific fields (VERY IMPORTANT)
+    campus = models.CharField(
+        max_length=100,
+        default="UEW - Winneba"
+    )
+
+    campus_area = models.CharField(
+        max_length=100,
+        help_text="North Campus / South Campus / Central Campus",
+        default='North Campus'
+    )
+
+    hall_or_hostel = models.CharField(
+        max_length=100,
+        blank=True,
+        null=True
+    )
+
+    # Optional but useful
+    landmark = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        help_text="Near SRC, Opposite Library, etc."
+    )
 
     def __str__(self):
         return f"{self.city} - {self.seller.store_name}"

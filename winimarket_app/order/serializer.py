@@ -7,7 +7,7 @@ from cart.models import Cart, CartItem
 class ShippingAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = ShippingAddress
-        fields = ["id", "address", "state_region", "city", "country", "phonenumber"]
+        fields = ["id", "state_region", "city", "country", "campus", "campus_area", "hall_or_hostel", "landmark", "phonenumber"]
 
 
 class OrderItemSerializer(serializers.ModelSerializer):

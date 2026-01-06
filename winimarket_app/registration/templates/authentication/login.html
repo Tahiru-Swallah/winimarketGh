@@ -61,8 +61,8 @@
                 <h2 class="form-title">Welcome Back</h2>
                 <p class="form-subtitle">Login in to your account</p>
 
-                <div id="g_id_signin"></div>
-                <div class="divider">Or</div>
+                <!-- <div id="g_id_signin"></div>
+                <div class="divider">Or</div> -->
 
                 <div class="error"></div>
 
@@ -89,8 +89,8 @@
                 <h2 class="form-title">Create Account</h2>
                 <p class="form-subtitle">Join us and Start Shopping</p>
 
-                <div id="g_id_signin"></div>
-                <div class="divider">Or</div>
+                <!-- <div id="g_id_signin"></div>
+                <div class="divider">Or</div> -->
 
                 <div class="error"></div>
 
@@ -112,86 +112,11 @@
              </form>
         </section>
 
-        <section class="role-selection-section">
-            <!-- ROLE SELECTION MODAL -->
-            <div id="roleSelectionModal" class="modal hidden">
-                <div class="modal-overlay"></div>
-                <div class="modal-content">
-                    <h2 class="modal-title">Welcome to WinimarketGh!</h2>
-                    <p class="modal-subtitle">Choose how you want to use the platform</p>
-
-                    <div class="role-options">
-                        <!-- Buyer Card -->
-                        <div class="role-card" id="buyerRole">
-                            <i class='bx bxs-shopping-bag role-icon'></i>
-                            <h3>Buy Products</h3>
-                            <p>Explore products and start shopping.</p>
-                        </div>
-
-                        <!-- Seller Card -->
-                        <div class="role-card" id="sellerRole">
-                            <i class='bx bxs-store-alt role-icon'></i>
-                            <h3>Sell Products</h3>
-                            <p>Create your store and reach thousands of customers.</p>
-                        </div>
-                    </div>
-
-                    <!-- <button class="modal-close" id="closeRoleModal">×</button> -->
-                </div>
-            </div>
-        </section>
-
         <!-- Toast notification container -->
         <div id="toast-container"></div>
     </main>
-
-    <!-- BUYER PROFILE MODAL -->
-    <div id="buyerProfileModal" class="modal hidden">
-        <div class="modal-overlay"></div>
-
-        <div class="modal-content buyer-profile">
-            <h2 class="modal-title">Complete Your Profile</h2>
-            <p class="modal-subtitle">
-                Just one more step to get started
-            </p>
-
-            <form id="buyerProfileForm" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="buyerFullName">Full Name</label>
-                    <input
-                        type="text"
-                        id="buyerFullName"
-                        name="full_name"
-                        class="input-field"
-                        placeholder="e.g. John Doe"
-                        required
-                    />
-                </div>
-
-                <div class="form-group">
-                    <label for="buyerProfilePicture">
-                        Profile Picture <span class="optional">(optional)</span>
-                    </label>
-                    <input
-                        type="file"
-                        id="buyerProfilePicture"
-                        name="profile_picture"
-                        accept="image/*"
-                        class="input-field"
-                    />
-                </div>
-
-                <div class="error-message" id="buyerProfileError"></div>
-
-                <button type="submit" class="submit-btn">
-                    Save & Continue
-                </button>
-            </form>
-        </div>
-    </div>
-
     
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- <script src="https://accounts.google.com/gsi/client" async defer></script> -->
     <script type="module" src="{% static 'js_files/auth.js'%}"></script>
     <!-- <script src="{% static 'js_files/dark.js'%}"></script> -->
     <script>

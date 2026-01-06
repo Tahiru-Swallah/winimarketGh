@@ -21,18 +21,53 @@
 
         <div id="address-modal" class="modal hidden">
             <div class="modal-content">
-                <h3>Add Shipping Address</h3>
+                <h3>Add Delivery Address</h3>
 
-                <input type="text" id="address" placeholder="Street Address">
-                <input type="text" id="state" placeholder="State / Region">
-                <input type="text" id="city" placeholder="City">
-                <input type="text" id="phone" placeholder="Phone Number">
+                <!-- Campus -->
+                <input type="text"
+                    id="campus"
+                    placeholder="Campus (e.g. UEW - Winneba)"
+                    value="UEW - Winneba">
 
+                <!-- Campus Area -->
+                <select id="campus_area" class="input-field">
+                    <option value="">Select Campus Area</option>
+                    <option value="North Campus">North Campus</option>
+                    <option value="South Campus">South Campus</option>
+                    <option value="Central Campus">Central Campus</option>
+                </select>
+
+                <!-- Hall / Hostel -->
+                <input type="text"
+                    id="hall_or_hostel"
+                    placeholder="Hall or Hostel" required>
+
+                <!-- Landmark -->
+                <input type="text"
+                    id="landmark"
+                    placeholder="Nearby landmark (optional)">
+
+                <!-- Region -->
+                <input type="text"
+                    id="state_region"
+                    placeholder="State / Region" required>
+
+                <!-- City -->
+                <input type="text"
+                    id="city"
+                    placeholder="City" required>
+
+                <!-- Phone -->
+                <input type="tel"
+                    id="phonenumber"
+                    placeholder="Phone Number" required>
+
+                <div class="modal-actions">
                 <button id="save-address" class="primary-btn">Save Address</button>
                 <button id="close-address-modal" class="secondary-btn">Cancel</button>
+                </div>
             </div>
         </div>
-
 
         <!-- RIGHT -->
         <div class="checkout-right">
@@ -80,9 +115,9 @@
                 div.dataset.id = addr.id;
 
                 div.innerHTML = `
-                    <strong>${addr.address}</strong>
-                    <p>${addr.city}, ${addr.state_region}</p>
-                    <p>${addr.phonenumber}</p>
+                    <strong>${addr?.campus}</strong>
+                    <p>${addr?.campus_area}, ${addr?.hall_or_hostel}</p>
+                    <p>${addr?.phonenumber}</p>
                 `;
 
                 div.addEventListener('click', ()=> selectAddress(div, addr.id));
@@ -108,12 +143,22 @@
         });
 
         document.getElementById('save-address').addEventListener('click', async () => {
+            const campus_area = document.getElementById('campus_area').value.trim()
+
             const data = {
-                address: document.getElementById('address').value,
-                state_region: document.getElementById('state').value,
-                city: document.getElementById('city').value,
-                phonenumber: document.getElementById('phone').value
+                state_region: document.getElementById('state_region').value.trim(),
+                city: document.getElementById('city').value.trim(),
+                hall_or_hostel: document.getElementById('hall_or_hostel').value.trim(),
+                landmark: document.getElementById('landmark').value.trim(),
+                campus: document.getElementById('campus').value.trim(),
+                campus_area: campus_area,
+                phonenumber: document.getElementById('phonenumber').value.trim()
             };
+
+            if (!campus_area){
+                showToast("Select Campus Area", 'error')
+                return
+            }
 
             try{
                 const res = await fetch('/order/api/shipping_addresses/create/', {
@@ -126,6 +171,7 @@
                 });
 
                 if (!res.ok) {
+                    const errorData = await res.json()
                     showToast('Failed to save address', 'error');
                     return;
                 }

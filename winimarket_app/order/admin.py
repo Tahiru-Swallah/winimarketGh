@@ -5,7 +5,7 @@ from .models import Order, OrderItem, ShippingAddress
 # SIMPLIFIED SHIPPING ADDRESS INLINE
 @admin.register(ShippingAddress)
 class ShippingAddressAdmin(admin.ModelAdmin):
-    list_display = ('buyer', 'address', 'city', 'country', 'state_region', 'phonenumber')
+    list_display = ('buyer', 'city', 'country', 'state_region', 'campus', 'campus_area', 'hall_or_hostel', 'landmark', 'phonenumber')
     search_fields = ('user__email', 'address', 'state_region', 'city', 'country')
 
 # ---------------------------

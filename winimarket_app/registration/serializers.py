@@ -112,15 +112,15 @@ class ProfileSerializer(serializers.ModelSerializer):
 class SellerAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerAddress
-        fields = ("id", "region", "city", "country", "address",)
+        fields = ("id", "region", "city", "country", "campus", "campus_area", "hall_or_hostel", "landmark")
         read_only_fields = ('id',)
 
     def validate(self, attrs):
         # Basic validation
-        if not attrs.get('city'):
-            raise serializers.ValidationError({"city": "City is required."})
-        if not attrs.get('address'):
-            raise serializers.ValidationError({"address": "Address line is required."})
+        if not attrs.get('campus'):
+            raise serializers.ValidationError({"campus": "Campus is required."})
+        if not attrs.get('campus_area'):
+            raise serializers.ValidationError({"campus_area": "Campus area is required."})
         return attrs
 class SellerPaymentSerializer(serializers.ModelSerializer):
     class Meta:

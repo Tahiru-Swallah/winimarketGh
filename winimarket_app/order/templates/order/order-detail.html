@@ -94,7 +94,7 @@
             });
 
             // Address
-            document.getElementById('shipping-address').textContent = `${order.shipping_address.address}, ${order.shipping_address.city}`;
+            document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`;
 
             // Escrow
             document.getElementById('escrow-status').textContent = order.is_escrow_released ? 'Released ✅' : 'Held in Escrow 🔒';
