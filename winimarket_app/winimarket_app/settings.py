@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
 from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -52,8 +53,16 @@ INSTALLED_APPS = [
 
     #Third party 
     'rest_framework_simplejwt.token_blacklist',
-    'django_q',
 ]
+
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = 465
+EMAIL_USE_SSL = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 Q_CLUSTER = {
     "name": "DjangoQ",
@@ -65,6 +74,12 @@ Q_CLUSTER = {
     "bulk": 10,
     "orm": "default",
 }
+
+CELERY_BROKER_URL = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:6379/0"
+CELERY_RESULT_BACKEND = CELERY_BROKER_URL  # using django-celery-results
+CELERY_ACCEPT_CONTENT = ['json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
 
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY')
 

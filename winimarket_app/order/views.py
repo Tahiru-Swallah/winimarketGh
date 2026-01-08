@@ -23,6 +23,10 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 
+from order.models import OrderEmailLog
+from order.constants.email_event import OrderEmailEvent
+from order.emails.dispatcher import OrderEmailDispatcher
+
 @login_required
 def checkout_page(request):
     return render(request, 'order/checkout.html')
@@ -191,6 +195,11 @@ def update_order_status(request, order_id):
     elif status_value == "delivered":
         order.status = OrderStatus.DELIVERED
 
+        OrderEmailDispatcher.dispatcher(
+            order=order,
+            event=OrderEmailEvent.ORDER_DELIVERED
+        )
+
     order.save()
 
     serializer = OrderSerializer(order, context={'request': request})
@@ -218,6 +227,11 @@ def confirm_delivery(request, order_id):
     order.track_status = OrderStatus.COMPLETED
     order.is_escrow_released = True
     order.escrow_released_at = timezone.now()
+
+    OrderEmailDispatcher.dispatcher(
+        order=order,
+        event=OrderEmailEvent.ORDER_COMPLETED
+    )
 
     order.save()
 

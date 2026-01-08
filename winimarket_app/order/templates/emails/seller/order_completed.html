@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="background:#f8fafc;padding:30px;font-family:Arial">
+
+<table width="600" align="center" style="background:#fff;border-radius:8px;padding:24px">
+<tr><td>
+
+<h2>✅ Order Completed</h2>
+
+<p>
+Order <strong>#{{ order.id|slice:":8" }}</strong> has been successfully completed.
+</p>
+
+<p>
+Great job delivering to your customer 👏
+</p>
+
+<a href="{{ cta_url }}"
+   style="display:inline-block;margin-top:20px;
+          background:#2563eb;color:#fff;
+          padding:12px 20px;border-radius:6px;
+          text-decoration:none;font-weight:bold;">
+Seller Dashboard
+</a>
+
+</td></tr>
+</table>
+
+</body>
+</html>

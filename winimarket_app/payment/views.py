@@ -20,6 +20,9 @@ from django.conf import settings
 from decimal import Decimal
 from cart.models import Cart, CartItem
 
+from order.emails.dispatcher import OrderEmailDispatcher
+from order.constants.email_event import OrderEmailEvent
+
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -189,6 +192,11 @@ def verify_payment(request):
         order.paid_at = timezone.now()
         order.save()
         verified_orders.append(str(order.id))
+
+        OrderEmailDispatcher.dispatcher(
+            order=order,
+            event=OrderEmailEvent.ORDER_PAID
+        )
 
     try:
         cart = Cart.objects.get(buyer=buyer)

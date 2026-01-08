@@ -99,7 +99,7 @@
         document.getElementById('buyer-phone').textContent = order.shipping_address.phonenumber
         document.getElementById('call-buyer').href =`tel:${order.shipping_address.phonenumber}`
 
-        document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`
+        document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.campus_area}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`
 
         // Order status
         statusSelect.value = order.track_status

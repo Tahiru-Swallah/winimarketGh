@@ -189,3 +189,67 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"{self.id} - {self.status}"
+    
+from django.db import models
+from uuid import uuid4
+
+class OrderEmailLog(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="email_logs"
+    )
+
+    event = models.CharField(
+        max_length=50,
+        help_text="Email event type e.g. order_paid, order_shipped"
+    )
+
+    recipient_role = models.CharField(
+        max_length=10,
+        choices=(
+            ("buyer", "Buyer"),
+            ("seller", "Seller"),
+        )
+    )
+
+    recipient_email = models.EmailField()
+
+    subject = models.CharField(max_length=255)
+
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            ("pending", "Pending"),
+            ("sent", "Sent"),
+            ("failed", "Failed"),
+        ),
+        default="pending"
+    )
+
+    sent_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = "Order Email Log"
+        verbose_name_plural = "Order Email Logs"
+
+        indexes = [
+            models.Index(fields=["order", "event", "recipient_email"]),
+        ]
+
+    def __str__(self):
+        return f"{self.order.id} | {self.event} → {self.recipient_email}"
+
+    def mark_sent(self):
+        self.status = "sent"
+        self.sent_at = timezone.now()
+        self.save(update_fields=["status", "sent_at"])
+
+    def mark_failed(self):
+        self.status = "failed"
+        self.save(update_fields=["status"])
+
