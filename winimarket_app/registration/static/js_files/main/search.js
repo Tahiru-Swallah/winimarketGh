@@ -1,5 +1,13 @@
 import { showSkeletons } from './products.js'
-import { toggleWishList, bindFavoriteIcon } from './wishlist.js'
+
+function debounce(fn, delay = 300) {
+    let timer;
+    return (...args) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => fn(...args), delay);
+    };
+}
+
 
 async function fetchSuggestion(query){
     try{
@@ -54,7 +62,8 @@ let hasMore = true
 let lastQuery = ''
 
 async function renderSearchResults(query, searchGrid, append=false){
-    if (loading || !hasMore) return;
+    if (loading || !hasMore || query !== lastQuery) return;
+
     loading = true;
 
     if (!append) {
@@ -78,7 +87,13 @@ async function renderSearchResults(query, searchGrid, append=false){
         searchGrid.querySelectorAll('.skeleton-card').forEach(el => el.remove());
 
         if (data.results.length === 0 && currentPage === 1) {
-            searchGrid.innerHTML = `<p>No results found for "${query}"</p>`;
+            searchGrid.innerHTML = `
+                                    <div class="search-empty">
+                                        <span class="material-icons-outlined">search_off</span>
+                                        <p>No results found for "<strong>${query}</strong>"</p>
+                                    </div>
+                                `;
+
             hasMore = false;
             loading = false;
             return;
@@ -88,24 +103,16 @@ async function renderSearchResults(query, searchGrid, append=false){
             let item = document.createElement('div');
             item.classList.add('search-list-item');
             item.innerHTML = `
-                <div class="search-item-thumbnail">
-                    <img src="${product.images[0]?.image}" alt="${product.name}">
-                </div>
-                <div class="search-item-info">
-                    <h3>${product.name}</h3>
-                    <p>$${product.min_price}</p>
-                </div>
-                <span class="material-icons-outlined favorite-icon" data-product-id="${product.id}">favorite_border</span>
+                <a href="/product/detail/${product.id}/${product.slug}/" class="product-link">
+                    <div class="search-item-thumbnail">
+                        <img src="${product.images[0]?.image}" alt="${product.name}">
+                    </div>
+                    <div class="search-item-info">
+                        <h3>${product.name}</h3>
+                        <p>$${product.price}</p>
+                    </div>
+                </a>
             `;
-
-            item.addEventListener('click', async (e) => {
-                if (e.target.classList.contains('favorite-icon')) return;
-                const currentURL = window.location.href;
-                await renderProductDetail(product.id, currentURL);
-            });
-
-            const favIcon = item.querySelector('.favorite-icon')
-            bindFavoriteIcon(favIcon, product.id)
 
             searchGrid.appendChild(item);
         });
@@ -130,30 +137,31 @@ export function initSearchInfiniteScroll(searchList, searchGrid) {
     });
 }
 
+function openSearchUI(searchList) {
+    searchList.classList.add('opening');
+    searchList.style.display = 'flex';
+    document.body.style.overflow = "hidden";
+}
+
+async function performSearch(query, searchGrid) {
+    currentPage = 1;
+    hasMore = true;
+    lastQuery = query;
+    await renderSearchResults(query, searchGrid);
+}
+
 async function runSearch(query, searchSuggestions, searchList, searchGrid){
     if (!query) return;
 
     searchSuggestions.style.display = 'none'
 
-    searchList.classList.add('opening')
-    searchList.style.display = 'flex'
-
-    // 🔥 hide scrollbar
-    document.body.style.overflow = "hidden";
-
-    currentPage = 1
-    hasMore = true
-    lastQuery = query
-
-    await renderSearchResults(query, searchGrid)
+    openSearchUI(searchList)
+    updateSearchURL(query)
+    
+    await performSearch(query, searchGrid)
 
     const searchInput = document.querySelector('.search-input');
-    const closeBtn = document.querySelector('.icon');
     if (searchInput) searchInput.value = query
-
-    if (searchInput.value.length > 0) closeBtn.style.display = 'flex';
-
-    updateSearchURL(query)
 }
 
 function updateSearchURL(query) {
@@ -162,6 +170,7 @@ function updateSearchURL(query) {
     window.history.pushState({ search: query }, "", url)
 }
 
+const SEARCH_ANIMATION_DURATION = 400
 
 function closeSearchOverlay(searchList, skipHistory=false){
     searchList.classList.remove('opening')
@@ -174,7 +183,7 @@ function closeSearchOverlay(searchList, skipHistory=false){
 
         const searchInput = document.querySelector('.search-input');
         if (searchInput) searchInput.value = '';
-    }, 3000)
+    }, SEARCH_ANIMATION_DURATION)
 
     if(!skipHistory){
         const url = new URL(window.location)
@@ -183,6 +192,7 @@ function closeSearchOverlay(searchList, skipHistory=false){
     }
 }
 
+
 export function initSearch(){
     const searchInput = document.querySelector('.search-input')
     const searchSuggestions = document.getElementById('search-suggestion')
@@ -190,6 +200,13 @@ export function initSearch(){
     const closeSearch = document.getElementById('close_search')
     const searchGrid = document.getElementById('search-grid')
     const closeBtn = document.querySelector('.icon')
+
+    const debouncedSuggestions = debounce(async (query) => {
+    const suggestions = await fetchSuggestion(query);
+    renderSuggestions(suggestions, searchSuggestions, (q) => {
+        runSearch(q, searchSuggestions, searchList, searchGrid);
+    });
+}, 300);
 
     searchInput.addEventListener('input', async (e) => {
         const query = e.target.value.trim()
@@ -203,10 +220,7 @@ export function initSearch(){
             closeBtn.style.display = 'flex'
         }
 
-        const suggestions = await fetchSuggestion(query)
-        renderSuggestions(suggestions, searchSuggestions, (q) => {
-            runSearch(q, searchSuggestions, searchList, searchGrid)
-        });
+        debouncedSuggestions(query)
     })
 
     searchInput.addEventListener('keydown', (e) => {

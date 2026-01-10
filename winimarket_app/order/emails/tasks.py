@@ -34,6 +34,7 @@ def send_email_task(self, *, email_log_id, to_email, subject, template, context)
             "order": order,
             "user": user,
             "cta_url": context["cta_url"],
+            "site_url": settings.SITE_URL,
             "event": context["event"],
         }
 
@@ -52,12 +53,12 @@ def send_email_task(self, *, email_log_id, to_email, subject, template, context)
         sent = msg.send()
         logger.info("Email sent count=%s", sent)
 
-        email_log.status = "sent"
+        email_log.mark_sent()
         email_log.sent_at = timezone.now()
         email_log.save(update_fields=["status", "sent_at"])
 
     except Exception as exc:
         logger.exception("Email sending failed")
-        email_log.status = "failed"
+        email_log.mark_failed()
         email_log.save(update_fields=["status"])
         raise self.retry(exc=exc, countdown=30)

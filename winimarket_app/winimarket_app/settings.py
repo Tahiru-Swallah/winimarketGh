@@ -64,6 +64,8 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
+SITE_URL = "http://127.0.0.1:8000"
+
 Q_CLUSTER = {
     "name": "DjangoQ",
     "workers": 4,

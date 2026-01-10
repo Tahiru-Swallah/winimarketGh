@@ -13,9 +13,7 @@
       <p class="order-date" id="order-date"></p>
     </div>
 
-    <span class="order-status status-processing" id="order-status">
-      {{ order.status }}
-    </span>
+    <span class="order-status status-processing" id="order-status"></span>
   </div>
 
   <!-- BUYER & SHIPPING -->
@@ -79,6 +77,7 @@
 
             currentOrder = await res.json()
             renderOrder(currentOrder)
+            applyTrackingLock(currentOrder)
 
         } catch (err) {
             console.error(err)
@@ -102,7 +101,7 @@
         document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.campus_area}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`
 
         // Order status
-        statusSelect.value = order.track_status
+        statusSelect.textContent = order.track_status
 
         // Items
         const itemsBox = document.getElementById('order-items')
@@ -186,11 +185,13 @@
                 const updatedOrder = await res.json();
                 currentOrder = updatedOrder;
 
+                console.log(currentOrder)
+
                 showToast('Order status updated ✅', 'success');
 
                 // Re-apply locks after update
+                await renderOrder(currentOrder)
                 applyTrackingLock(updatedOrder);
-                await loadSellerOrder()
 
             } catch (err) {
                 console.error(err);

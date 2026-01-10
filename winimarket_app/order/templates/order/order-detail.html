@@ -21,8 +21,8 @@
     <div class="tracking-steps">
       <div class="step" data-step="paid">Paid</div>
       <div class="step" data-step="processing">Processing</div>
-      <div class="step" data-step="shipped">Shipped</div>
       <div class="step" data-step="delivered">Delivered</div>
+      <div class="step" data-step="completed">Completed</div>
     </div>
   </div>
 
@@ -75,7 +75,7 @@
             // Tracking steps
             document.querySelectorAll('.step').forEach(step => {
                 if (
-                    order.track_status === step.dataset.step || ['paid', 'processing', 'shipped', 'delivered'].indexOf(step.dataset.step)<= ['paid', 'processing', 'shipped', 'delivered'].indexOf(order.track_status)
+                    order.track_status === step.dataset.step || ['paid', 'processing', 'delivered', 'completed'].indexOf(step.dataset.step)<= ['paid', 'processing', 'delivered', 'completed'].indexOf(order.track_status)
                 ) {
                     step.classList.add('active');
                 }

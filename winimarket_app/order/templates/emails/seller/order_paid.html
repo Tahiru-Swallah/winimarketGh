@@ -4,54 +4,92 @@
   <meta charset="UTF-8">
   <title>New Order Received</title>
 </head>
+
 <body style="margin:0;padding:0;background:#f8fafc;font-family:Arial,sans-serif;">
 
 <table width="100%" cellpadding="0" cellspacing="0">
-<tr>
-<td align="center" style="padding:30px">
+  <tr>
+    <td align="center" style="padding:30px">
 
-<table width="600" style="background:#ffffff;border-radius:8px;padding:24px">
-<tr>
-<td>
+      <table width="600" cellpadding="0" cellspacing="0"
+             style="background:#ffffff;border-radius:8px;padding:24px;">
 
-<h2 style="color:#111827">📦 New Order Paid</h2>
+        <tr>
+          <td>
 
-<p style="color:#374151">
-You’ve received a new paid order!
-</p>
+            <h2 style="margin:0 0 10px;color:#111827;">
+              📦 New Order Paid
+            </h2>
 
-<p>
-<strong>Order ID:</strong> #{{ order.id|slice:":8" }}<br>
-<strong>Buyer:</strong> {{ order.buyer.user.email }}
-</p>
+            <p style="color:#374151;font-size:14px;line-height:1.6;">
+              You’ve received a new paid order. Please prepare it for delivery.
+            </p>
 
-<h4>🛍 Order Items</h4>
-<ul style="padding-left:18px">
-{% for item in order.items.all %}
-<li>{{ item.product.name }} × {{ item.quantity }}</li>
-{% endfor %}
-</ul>
+            <p style="font-size:14px;color:#374151;">
+              <strong>Order ID:</strong> #{{ order.id|slice:":8" }}<br>
+              <strong>Buyer:</strong>
+              {{ order.buyer.user.full_name|default:order.buyer.user.email }}
+            </p>
 
-<p><strong>Total:</strong> ₵{{ order.total_cost }}</p>
+            <h4 style="margin-top:24px;margin-bottom:12px;color:#111827;">
+              🛍 Order Items
+            </h4>
 
-<a href="{{ cta_url }}"
-   style="display:inline-block;margin-top:20px;
-          background:#2563eb;color:#fff;
-          padding:12px 20px;border-radius:6px;
-          text-decoration:none;font-weight:bold;">
-Go to Seller Dashboard
-</a>
+            <table width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+              {% for item in order.items.all %}
+              <tr style="border-bottom:1px solid #e5e7eb;">
+                <td width="80" style="padding:10px 0;">
+                  {% if item.product.images %}
+                    <img
+                      src="{{ site_url }}{{ item.product.images.image.url }}"
+                      alt="{{ item.product.name }}"
+                      width="64"
+                      height="64"
+                      style="border-radius:6px;object-fit:cover;display:block;"
+                    >
+                  {% else %}
+                    <img
+                      src="{{ site_url }}/static/images/product-placeholder.png"
+                      alt="Product image"
+                      width="64"
+                      height="64"
+                      style="border-radius:6px;object-fit:cover;display:block;"
+                    >
+                  {% endif %}
+                </td>
 
-<p style="margin-top:30px;font-size:13px;color:#6b7280">
-Please prepare this order for delivery.
-</p>
+                <td style="padding:10px 0 10px 12px;color:#374151;font-size:14px;">
+                  <strong>{{ item.product.name }}</strong><br>
+                  Qty: {{ item.quantity }}
+                </td>
+              </tr>
+              {% endfor %}
+            </table>
 
-</td>
-</tr>
-</table>
+            <p style="margin-top:16px;font-size:15px;color:#111827;">
+              <strong>Total:</strong> ₵{{ order.total_cost }}
+            </p>
 
-</td>
-</tr>
+            <a href="{{ site_url }}{{ cta_url }}"
+               style="display:inline-block;margin-top:20px;
+                      background:#2563eb;color:#ffffff;
+                      padding:12px 20px;border-radius:6px;
+                      text-decoration:none;font-weight:bold;font-size:14px;">
+              Go to Seller Dashboard
+            </a>
+
+            <p style="margin-top:30px;font-size:13px;color:#6b7280;">
+              Ensure timely delivery to maintain a good seller rating on
+              <strong>WinimarketGh</strong>.
+            </p>
+
+          </td>
+        </tr>
+
+      </table>
+
+    </td>
+  </tr>
 </table>
 
 </body>

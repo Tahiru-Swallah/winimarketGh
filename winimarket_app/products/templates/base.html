@@ -31,12 +31,12 @@
 
         <div class="navbar">
             <ul>
-                <li><a href="/"><span class="material-icons-outlined active" title="home">home</span></a></li>
+                <li><a href="/"><span class="material-icons-outlined {% if request.path == '/'%} active {%endif%}" title="home">home</span></a></li>
                 <li><a><span class="material-icons-outlined" id="cart" title="cart">shopping_cart</span></a></li>
-                <li><a href="/order/my-orders/"><span class="material-icons-outlined" title="orders">local_shipping</span></a></li>
+                <li><a href="/order/my-orders/"><span class="material-icons-outlined {% if '/order' in request.path %}active{%endif%}" title="orders">local_shipping</span></a></li>
                 {% if user.profile.role == 'seller' %}
-                    <li><a href="{% url 'registration:seller_dashboard' %}" title="seller dashboard"><span class="material-icons-outlined">dashboard</span></a></li>
-                    <li><a href="{% url 'products:product_upload' %}" title="seller dashboard"><span class="material-icons-outlined">add</span></a></li>
+                    <li><a href="{% url 'registration:seller_dashboard' %}" title="seller dashboard"><span class="material-icons-outlined {% if '/dashboard' in request.path %}active{% endif %}">dashboard</span></a></li>
+                    <li><a href="{% url 'products:product_upload' %}" title="Add Products"><span class="material-icons-outlined {% if '/product/seller/edit' in request.path %}active{% endif %}">add</span></a></li>
                 {% else %}
                     <li><a title="buyer profile"><span class="material-icons-outlined">person</span></a></li>
                 {% endif %}
@@ -50,14 +50,42 @@
         <div class="search_grid" id="search-grid"></div>
     </div>
 
-    <nav class="bottom-nav" id="mobile-nav">
-        <!-- Injected by JS -->
-        <a href="/"><span class="material-icons-outlined">home</span></a>
-        <a id="cart"><span class="material-icons-outlined">shopping_cart</span></a>
-        <a href="/order/my-orders/"><span class="material-icons-outlined">local_shipping</span></a>
-        <a href="/account/profile/"><span class="material-icons-outlined">person</span></a>
-    </nav>
+    <nav class="mobile-bottom-nav">
 
+        <a href="/" class="nav-item {% if request.path == '/' %} active {% endif %}">
+            <span class="material-icons-outlined">home</span>
+            <small>Home</small>
+        </a>
+
+        <a id="cart" class="nav-item">
+            <span class="material-icons-outlined">shopping_cart</span>
+            <small>Cart</small>
+        </a>
+
+        {% if user.profile.role == 'seller' %}
+            <a href="{% url 'products:product_upload' %}" class="nav-item {% if '/product/seller/edit' in request.path %} active {% endif %}">
+                <span class="material-icons-outlined">add</span>
+                <small>Add</small>
+            </a>
+        {% endif %}
+
+        <a href="/order/my-orders/" class="nav-item {% if '/order' in request.path %} active {% endif %}">
+            <span class="material-icons-outlined">local_shipping</span>
+            <small>Orders</small>
+        </a>
+
+        {% if user.profile.role == 'seller' %}
+            <a href="{% url 'registration:seller_dashboard' %}" class="nav-item {% if '/dashboard' in request.path %} active {% endif %}">
+                <span class="material-icons-outlined">dashboard</span>
+                <small>Dashboard</small>
+            </a>
+        {% else %}
+            <a href="" class="nav-item">
+            <span class="material-icons-outlined">person</span>
+            <small>Account</small>
+            </a>
+        {% endif %}
+    </nav>
 
     <main>
         {% block content %}
@@ -365,6 +393,32 @@
                 console.error('Unable to initalize payment', error)
                 showToast(error.message, 'error')
             }
+        }
+
+        function isMobileDevice(){
+            return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+        }
+
+        const closeBtn = document.querySelector('.icon')
+        const searchBtn = document.getElementById('searchMb')
+        const searchBar = document.querySelector('.search-bar')
+
+        if (isMobileDevice()){
+            searchBtn.addEventListener('click', ()=> {
+                searchBar.classList.add('opening')
+                searchBar.classList.remove('closing')
+                searchBar.style.display = 'block'
+
+                closeBtn.style.display = 'block'
+            })
+
+            closeBtn.addEventListener('click', ()=> {
+                searchBar.classList.add('closing')
+                searchBar.classList.remove('opening')
+                searchBar.style.display = 'none'
+
+                closeBtn.style.display = 'none'
+            })
         }
     </script>
 </body>

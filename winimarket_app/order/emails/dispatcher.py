@@ -3,6 +3,7 @@ from .recipients import resolve_recipient
 from .tasks import send_email_task
 from order.constants.email_event import OrderEmailEvent
 from order.models import OrderEmailLog
+from django.conf import settings
 
 class OrderEmailDispatcher:
 
@@ -50,6 +51,7 @@ class OrderEmailDispatcher:
             "order_id": order.id,
             "user_id": recipient.get("user_id"),
             "cta_url": config["cta"].format(order_id=order.id),
+            "site_url": settings.SITE_URL,
             "event": event,
         }
 
@@ -60,5 +62,3 @@ class OrderEmailDispatcher:
             template=config["template"],
             context=context
         )
-
-        email_log.mark_sent()
