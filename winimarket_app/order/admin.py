@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Order, OrderItem, ShippingAddress
+from .models import Order, OrderItem, ShippingAddress, OrderEmailLog, PushSubscription  
 
 # ---------------------------
 # SIMPLIFIED SHIPPING ADDRESS INLINE
@@ -100,3 +100,24 @@ class OrderItemAdmin(admin.ModelAdmin):
     )
 
     ordering = ('-order__created_at',)
+
+@admin.register(OrderEmailLog)
+class OrderEmailLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "order",
+        "event",
+        "recipient_role",
+        "recipient_email",
+        "status",
+        "sent_at",
+        "created_at",
+    )
+    list_filter = ("event", "recipient_role", "status", "created_at")
+    search_fields = ("recipient_email", "order__id")
+    readonly_fields = ("created_at", "sent_at", "status")
+
+@admin.register(PushSubscription)
+class PushSubscriptionAdmin(admin.ModelAdmin):
+    list_display = ("user", "device_name", "user_agent", "created_at", "last_used_at")
+    search_fields = ("user__email", "device_name")
+    list_filter = ("created_at",)

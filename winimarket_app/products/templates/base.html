@@ -10,6 +10,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png'%}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-16x16.png'%}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-32x32.png'%}">
+    <link rel="manifest" href="{% static 'pwa/manifest.json' %}">
 </head>
 <body>
     <header>
@@ -103,22 +108,6 @@
         </div>
 
         <div class="cart-drawer-items" id="cartItemsContainer">
-            <!-- Cart items injected dynamically -->
-            <!-- Example item structure:
-            <div class="cart-item">
-                <img src="product-image.jpg" alt="Product Name">
-                <div class="cart-item-info">
-                    <p class="cart-item-name">Product Name</p>
-                    <p class="cart-item-price">$29.99</p>
-                    <div class="cart-item-quantity">
-                        <button class="decrease-qty">-</button>
-                        <span>1</span>
-                        <button class="increase-qty">+</button>
-                    </div>
-                </div>
-                <button class="remove-cart-item">&times;</button>
-            </div>
-            -->
         </div>
 
         <div class="cart-drawer-footer">
@@ -135,7 +124,87 @@
     <!-- Overlay for drawer -->
     <div id="cartOverlay" class="cart-overlay"></div>
 
+    <!-- iOS Install Banner -->
+    <div id="iosInstallBanner" class="ios-install-banner">
+        <div class="ios-banner-content">
+            <div>
+                <span class="material-icons-outlined">ios_share</span>
+            </div>
+            <div class="ios-banner-text">
+            <h3>Install Winimarket</h3>
+            <p>
+                Tap the <strong>Share</strong> button in Safari<br>
+                then select <strong>Add to Home Screen</strong>
+            </p>
+            </div>
+            <button id="iosBannerClose" class="ios-banner-close">&times;</button>
+        </div>
+    </div>
+
+    <script src="{% static 'pwa/pushsubscription.js'%}"></script>
     <script>
+        (async () => {
+            if (!("serviceWorker" in navigator)) return;
+
+            try {
+                const registration = await navigator.serviceWorker.register(
+                "/service-worker.js",
+                { scope: "/" }
+                );
+                console.log("Service Worker registered:", registration.scope);
+            } catch (error) {
+                console.error("Service Worker failed:", error);
+            }
+        })();
+
+        let deferredPrompt;
+        const installBtn = document.getElementById("installBtn");
+        const iosInstallBanner = document.getElementById("iosInstallBanner");
+        const iosBannerClose = document.getElementById("iosBannerClose");
+
+        // Detect Android/Chrome install prompt
+        window.addEventListener("beforeinstallprompt", (e) => {
+            // Prevent Chrome from showing the default prompt
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show the install button
+            installBtn.style.display = "inline-block";
+        });
+
+        // Handle click for both Android and iOS
+        installBtn?.addEventListener("click", async () => {
+            const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+            const isInStandaloneMode = window.navigator.standalone === true;
+
+            if (isIos && !isInStandaloneMode) {
+                // iOS → Show the custom banner
+                iosInstallBanner.classList.add("show");
+            } else if (deferredPrompt) {
+                // Android → Show native install prompt
+                deferredPrompt.prompt();
+                const choiceResult = await deferredPrompt.userChoice;
+                if (choiceResult.outcome === "accepted") {
+                    console.log("User accepted the install prompt");
+                } else {
+                    console.log("User dismissed the install prompt");
+                }
+                deferredPrompt = null;
+                installBtn.style.display = "none";
+            }
+        });
+
+        // Handle iOS banner close button
+        iosBannerClose.addEventListener("click", () => {
+            iosInstallBanner.classList.add("hide");
+        });
+
+        // Optional: auto-hide iOS banner after 12 seconds
+        setTimeout(() => {
+            iosInstallBanner.classList.add("hide");
+        }, 12000);
+
+
         const cartDrawer = document.getElementById("cartDrawer");
         const cartOverlay = document.getElementById("cartOverlay");
         const closeCartBtn = document.getElementById("closeCartDrawer");
@@ -403,23 +472,21 @@
         const searchBtn = document.getElementById('searchMb')
         const searchBar = document.querySelector('.search-bar')
 
-        if (isMobileDevice()){
-            searchBtn.addEventListener('click', ()=> {
-                searchBar.classList.add('opening')
-                searchBar.classList.remove('closing')
-                searchBar.style.display = 'block'
+        searchBtn.addEventListener('click', ()=> {
+            searchBar.classList.add('opening')
+            searchBar.classList.remove('closing')
+            searchBar.style.display = 'block'
 
-                closeBtn.style.display = 'block'
-            })
+            closeBtn.style.display = 'block'
+        })
 
-            closeBtn.addEventListener('click', ()=> {
-                searchBar.classList.add('closing')
-                searchBar.classList.remove('opening')
-                searchBar.style.display = 'none'
+        closeBtn.addEventListener('click', ()=> {
+            searchBar.classList.add('closing')
+            searchBar.classList.remove('opening')
+            searchBar.style.display = 'none'
 
-                closeBtn.style.display = 'none'
-            })
-        }
+            closeBtn.style.display = 'none'
+        })
     </script>
 </body>
 </html>

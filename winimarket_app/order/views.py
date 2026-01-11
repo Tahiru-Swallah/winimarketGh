@@ -23,9 +23,49 @@ from datetime import timedelta
 from django.conf import settings
 from django.db import transaction
 
-from order.models import OrderEmailLog
+from order.models import PushSubscription
 from order.constants.email_event import OrderEmailEvent
 from order.emails.dispatcher import OrderEmailDispatcher
+
+import json
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+
+@require_POST
+@login_required
+def subscribe_push(request):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "Invalid JSON"}, status=400)
+
+    endpoint = data.get("endpoint")
+    keys = data.get("keys", {})
+
+    if not endpoint or not keys.get("p256dh") or not keys.get("auth"):
+        return JsonResponse({"error": "Invalid subscription"}, status=400)
+
+    device_name = data.get("device_name")  # optional (from frontend)
+
+    subscription, created = PushSubscription.objects.update_or_create(
+        endpoint=endpoint,
+        defaults={
+            "user": request.user,
+            "p256dh": keys["p256dh"],
+            "auth": keys["auth"],
+            "device_name": device_name,
+            "user_agent": request.META.get("HTTP_USER_AGENT", ""),
+        }
+    )
+
+    # Update last_used_at safely
+    subscription.touch()
+
+    return JsonResponse({
+        "status": "ok",
+        "created": created,
+    })
+
 
 @login_required
 def checkout_page(request):

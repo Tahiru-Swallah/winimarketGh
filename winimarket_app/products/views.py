@@ -20,6 +20,8 @@ from .serializers import (CategorySerializer, ProductSerializer)
 
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
+def offline_view(request):
+    return render(request, 'offline.html')
 # -----------------------------
 # TEMPLATE RENDERING
 

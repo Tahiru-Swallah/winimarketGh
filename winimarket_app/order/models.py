@@ -2,6 +2,7 @@ from django.db import models
 from uuid import uuid4
 from django.utils import timezone
 from registration.models import Profile, SellerProfile
+from django.contrib.auth import get_user_model
 
 class OrderStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -190,9 +191,6 @@ class Payment(models.Model):
     def __str__(self):
         return f"{self.id} - {self.status}"
     
-from django.db import models
-from uuid import uuid4
-
 class OrderEmailLog(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
 
@@ -253,3 +251,41 @@ class OrderEmailLog(models.Model):
         self.status = "failed"
         self.save(update_fields=["status"])
 
+User = get_user_model()
+class PushSubscription(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="push_subscriptions")
+    
+    # The push endpoint URL
+    endpoint = models.URLField(unique=True)
+    
+    # Public key used to encrypt messages
+    p256dh = models.CharField(max_length=255)
+    
+    # Auth secret
+    auth = models.CharField(max_length=255)
+    
+    # Optional: browser/device info for identification
+    device_name = models.CharField(max_length=100, blank=True, null=True)
+    user_agent = models.TextField(blank=True, null=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_used_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Push Subscription"
+        verbose_name_plural = "Push Subscriptions"
+        indexes = [
+            models.Index(fields=["user"]),
+            models.Index(fields=["endpoint"]),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.device_name or 'Unknown Device'}"
+
+    def touch(self):
+        """Update last_used_at timestamp"""
+        self.last_used_at = timezone.now()
+        self.save(update_fields=["last_used_at"])

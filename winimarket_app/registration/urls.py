@@ -1,6 +1,7 @@
 from django.urls import path
 from .views import CustomTokenObtainPairView, registration, logOutView
 from . import views
+from django.views.generic import TemplateView
 from rest_framework_simplejwt.views import TokenRefreshView
 
 app_name = 'registration'

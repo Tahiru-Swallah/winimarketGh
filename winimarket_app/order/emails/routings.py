@@ -35,3 +35,39 @@ ORDER_EMAIL_ROUTING = {
         }
     },
 }
+
+ORDER_PUSH_ROUTING = {
+    OrderEmailEvent.ORDER_PAID: {
+        "buyer": {
+            "title": "Order confirmed ✅",
+            "body": "Your payment was successful",
+            "url": "/order/my-orders/"
+        },
+        "seller": {
+            "title": "New order received 🛒",
+            "body": "An order has been paid and is ready",
+            "url": "/account/seller/dashboard/"
+        }
+    },
+
+    OrderEmailEvent.ORDER_DELIVERED: {
+        "buyer": {
+            "title": "Order delivered 🚚",
+            "body": "Your order has been delivered",
+            "url": "/order/my-orders/"
+        }
+    },
+
+    OrderEmailEvent.ORDER_COMPLETED: {
+        "buyer": {
+            "title": "Order completed 🎉",
+            "body": "Thanks for shopping on Winimarket",
+            "url": "/order/my-orders/"
+        },
+        "seller": {
+            "title": "Order completed",
+            "body": "An order has been completed successfully",
+            "url": "/account/seller/dashboard/"
+        }
+    }
+}

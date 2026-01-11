@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-oa_bed5^che@uld&l)npkb0m-pb*urzc$j2v==u$6%eo@wek-b
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.53.199']
+ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.189.199']
 
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition
@@ -53,6 +53,7 @@ INSTALLED_APPS = [
 
     #Third party 
     'rest_framework_simplejwt.token_blacklist',
+    'django_extensions',
 ]
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -65,6 +66,9 @@ EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
 
 SITE_URL = "http://127.0.0.1:8000"
+
+WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY")
+WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
 
 Q_CLUSTER = {
     "name": "DjangoQ",

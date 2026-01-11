@@ -22,4 +22,6 @@ urlpatterns = [
     path('my-orders/', views.orders_page, name='orders-page'),
     path('detail/<uuid:order_id>/', views.order_detail_page, name='order-detail'),
     path('payment/verify/', views.payment_verify_template, name='verify-payment'),
+
+    path('notifications/subscribe/', views.subscribe_push, name='subscribe_push'),
 ]

@@ -2719,6 +2719,91 @@ select.input-field {
     cursor: pointer;
 }
 
+/* Banner container */
+.ios-install-banner {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: var(--border-radius);
+  padding: 16px;
+  font-family: var(--font-primary);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  z-index: 9999;
+
+  /* Start hidden below screen */
+  transform: translateY(100%);
+  opacity: 0;
+  pointer-events: none;
+
+  /* Animation transition */
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+@keyframes slideInBounce {
+  0% { transform: translateY(120%); opacity: 0; }
+  60% { transform: translateY(-10%); opacity: 1; }
+  80% { transform: translateY(5%); }
+  100% { transform: translateY(0); }
+}
+
+.ios-install-banner.show {
+  animation: slideInBounce 0.6s ease forwards;
+}
+
+.ios-install-banner.hide {
+  transform: translateY(100%);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+/* Banner content */
+.ios-banner-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 12px;
+}
+
+/* Share icon */
+.ios-share-icon {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+/* Text styling */
+.ios-banner-text h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.ios-banner-text p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.2;
+}
+
+/* Close button */
+.ios-banner-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+
+
 /* TABLET */
 @media (min-width: 600px) {
   .products-grid-seller {

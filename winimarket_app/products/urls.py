@@ -26,4 +26,14 @@ urlpatterns = [
     path('api/seller/products/', views.seller_products),
     path('api/seller/product/update/<uuid:product_id>/', views.seller_update_product),
     path('api/seller/product/delete/<uuid:product_id>/', views.seller_delete_product),
+
+    path('offline/', views.offline_view, name='offline'),
+
+    path(
+        "service-worker.js",
+        TemplateView.as_view(
+            template_name="service-worker.js",
+            content_type="text/javascript",
+        ),
+    ),
 ]

@@ -1,6 +1,6 @@
-from .routings import ORDER_EMAIL_ROUTING
+from .routings import ORDER_EMAIL_ROUTING, ORDER_PUSH_ROUTING
 from .recipients import resolve_recipient
-from .tasks import send_email_task
+from .tasks import send_email_task, send_push_task
 from order.constants.email_event import OrderEmailEvent
 from order.models import OrderEmailLog
 from django.conf import settings
@@ -28,6 +28,13 @@ class OrderEmailDispatcher:
                     role=role,
                     recipient=recipient,
                     config=config
+                )
+
+                OrderEmailDispatcher._send_push(
+                    order=order,
+                    event=event,
+                    role=role,
+                    recipient=recipient
                 )
 
     @staticmethod
@@ -61,4 +68,31 @@ class OrderEmailDispatcher:
             subject=config["subject"],
             template=config["template"],
             context=context
+        )
+
+    @staticmethod
+    def _send_push(*, order, event, role, recipient):
+        routes = ORDER_PUSH_ROUTING.get(event)
+
+        if not routes:
+            return
+        
+        config = routes.get(role)
+        if not config:
+            return
+        
+        user_id = recipient.get("user_id")
+        if not user_id:
+            return
+        
+        payload = {
+            "title": config["title"],
+            "body": config["body"],
+            "url": config["url"],
+            "order_id": str(order.id),
+        }
+
+        send_push_task.delay(
+            user_id=user_id,
+            payload=payload
         )

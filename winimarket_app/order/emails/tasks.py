@@ -5,8 +5,10 @@ from django.template.loader import render_to_string
 from django.utils import timezone
 from django.conf import settings
 from django.contrib.auth import get_user_model
+import json
 
-from order.models import Order, OrderEmailLog
+from order.models import Order, OrderEmailLog, PushSubscription
+from pywebpush import webpush, WebPushException
 
 from celery.utils.log import get_task_logger
 logger = get_task_logger(__name__)
@@ -62,3 +64,50 @@ def send_email_task(self, *, email_log_id, to_email, subject, template, context)
         email_log.mark_failed()
         email_log.save(update_fields=["status"])
         raise self.retry(exc=exc, countdown=30)
+
+@shared_task(bind=True, max_retries=3)
+def send_push_task(self, *, user_id, payload):
+    """
+    Sends a web push notification to all subscriptions for a given user.
+    
+    payload = {
+        "title": "Order Paid ✅",
+        "body": "Your order #1234 has been confirmed",
+        "url": "/order/my-orders/"
+    }
+    """
+    subscriptions = PushSubscription.objects.filter(user_id=user_id)
+
+    if not subscriptions.exists():
+        logger.info("No push subscriptions found for user %s", user_id)
+        return
+    
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub.endpoint,
+                    "keys": {
+                        "p256dh": sub.p256dh,
+                        "auth": sub.auth
+                    }
+                },
+                data=json.dumps(payload),
+                vapid_private_key=settings.WEBPUSH_PRIVATE_KEY,
+                vapid_claims={
+                    "sub": f"mailto:{settings.DEFAULT_FROM_EMAIL}"
+                }
+            )
+
+            logger.info("Push sent to %s (%s)", user_id, sub.device_name or "unknown device")
+            sub.touch()
+
+        except WebPushException as exc:
+            logger.warning("Push failed for subscription %s: %s", sub.endpoint, exc)
+            # Optional: delete invalid subscriptions
+            if exc.response and exc.response.status_code == 410:
+                sub.delete()
+                logger.info("Deleted expired subscription %s", sub.endpoint)
+            
+            # Retry
+            raise self.retry(exc=exc, countdown=30)
