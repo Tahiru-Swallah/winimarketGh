@@ -103,11 +103,14 @@ def send_push_task(self, *, user_id, payload):
             sub.touch()
 
         except WebPushException as exc:
-            logger.warning("Push failed for subscription %s: %s", sub.endpoint, exc)
-            # Optional: delete invalid subscriptions
-            if exc.response and exc.response.status_code == 410:
+            status_code = getattr(exc.response, "status_code", None)
+            logger.warning("Push failed for subscription %s (status: %s): %s", sub.endpoint, status_code, exc)
+
+            # Delete expired/invalid subscriptions (410 Gone or 400 Bad Request)
+            if status_code in [400, 410]:
                 sub.delete()
-                logger.info("Deleted expired subscription %s", sub.endpoint)
-            
-            # Retry
+                logger.info("Deleted invalid/expired subscription %s", sub.endpoint)
+                continue  # Continue to other subscriptions
+
+            # Retry only for temporary server/network errors
             raise self.retry(exc=exc, countdown=30)

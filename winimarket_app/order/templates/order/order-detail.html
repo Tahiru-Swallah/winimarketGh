@@ -26,6 +26,12 @@
     </div>
   </div>
 
+  <!-- SELLER INFO -->
+  <div class="seller-card">
+    <h3>Seller</h3>
+    <strong id="seller-name"></strong>
+  </div>
+
   <!-- ITEMS -->
   <div class="order-items-card">
     <h3>Items</h3>
@@ -67,6 +73,10 @@
             document.getElementById('order-date').textContent = new Date(order.created_at).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric',hour: '2-digit', minute: '2-digit', hour12: true});
             document.getElementById('order-total').textContent = order.total_cost;
 
+            document.getElementById('seller-name').textContent = order.seller
+
+            console.log(order)
+
             // Status badge
             const statusBadge = document.getElementById('order-status');
             statusBadge.textContent = order.status.toUpperCase();
@@ -85,12 +95,18 @@
             const itemsEl = document.getElementById('order-items');
             itemsEl.innerHTML = '';
             order.items.forEach(item => {
-                itemsEl.innerHTML += `
-                    <div class="order-item">
-                    <span>${item.product_name} × ${item.quantity}</span>
-                    <strong>₵${item.price}</strong>
+            itemsEl.innerHTML += `
+                <div class="order-item">
+                  <div class="order-item-left">
+                    <img src="${item.product_image}" alt="${item.product_name}">
+                    <div>
+                      <p class="item-name">${item.product_name}</p>
+                      <span class="item-qty">Qty: ${item.quantity}</span>
                     </div>
-                `;
+                  </div>
+                  <strong class="item-price">₵${item.price}</strong>
+                </div>
+              `;
             });
 
             // Address

@@ -32,6 +32,9 @@
 
         <div class="mobile-icons">
             <div class="filter-icon on-dark" id="searchMb"><span class="material-icons-outlined">search</span></div>
+            {% if user.profile.role == 'seller' %}
+                <div class="filter-icon on-dark" id="accountBtn"><span class="material-icons-outlined">arrow_drop_down</span></div>
+            {% endif %}
         </div>
 
         <div class="navbar">
@@ -41,9 +44,12 @@
                 <li><a href="/order/my-orders/"><span class="material-icons-outlined {% if '/order' in request.path %}active{%endif%}" title="orders">local_shipping</span></a></li>
                 {% if user.profile.role == 'seller' %}
                     <li><a href="{% url 'registration:seller_dashboard' %}" title="seller dashboard"><span class="material-icons-outlined {% if '/dashboard' in request.path %}active{% endif %}">dashboard</span></a></li>
+
                     <li><a href="{% url 'products:product_upload' %}" title="Add Products"><span class="material-icons-outlined {% if '/product/seller/edit' in request.path %}active{% endif %}">add</span></a></li>
+
+                    <li><a title="Accounts"><span class="material-icons-outlined" id="accountBtn">arrow_drop_down</span></a></li>
                 {% else %}
-                    <li><a title="buyer profile"><span class="material-icons-outlined">person</span></a></li>
+                    <li><a title="buyer profile"><span class="material-icons-outlined" id="accountBtn">person</span></a></li>
                 {% endif %}
             </ul>
         </div>
@@ -85,9 +91,9 @@
                 <small>Dashboard</small>
             </a>
         {% else %}
-            <a href="" class="nav-item">
-            <span class="material-icons-outlined">person</span>
-            <small>Account</small>
+            <a class="nav-item">
+                <span class="material-icons-outlined" id="accountBtn">person</span>
+                <small>Account</small>
             </a>
         {% endif %}
     </nav>
@@ -140,6 +146,90 @@
             <button id="iosBannerClose" class="ios-banner-close">&times;</button>
         </div>
     </div>
+
+    <div class="account-modal-overlay" id="accountModal">
+        <div class="account-modal">
+
+            <!-- User Info -->
+            <div class="account-user">
+            <div class="avatar">
+                <span class="material-icons-outlined">person</span>
+            </div>
+            <div class="user-info">
+                <h4>Hello, {{ user.first_name|default:"User" }}</h4>
+                <p>{{ user.email }}</p>
+            </div>
+            </div>
+
+            <ul class="account-links">
+            {% if user.profile.role == "seller" %}
+            <li>
+                <a href="{% url 'registration:seller_dashboard' %}">
+                <span class="material-icons-outlined">dashboard</span>
+                Seller Dashboard
+                </a>
+            </li>
+            {% else %}
+            <li>
+                <a href="/account/profile/">
+                <span class="material-icons-outlined">person</span>
+                My Profile
+                </a>
+            </li>
+            {% endif %}
+            <li>
+                <a href="/order/my-orders/">
+                <span class="material-icons-outlined">local_shipping</span>
+                My Orders
+                </a>
+            </li>
+            </ul>
+
+            <div class="account-divider"></div>
+
+            <ul class="account-links">
+            <li>
+                <a href="/support/">
+                    <span class="material-icons-outlined">support_agent</span>
+                    Support
+                </a>
+            </li>
+            <li>
+                <a href="/terms/">
+                    <span class="material-icons-outlined">description</span>
+                    Terms & Conditions
+                </a>
+            </li>
+            <li>
+                <a href="/privacy/">
+                    <span class="material-icons-outlined">policy</span>
+                    Privacy Policy
+                </a>
+            </li>
+            <li>
+                <a href="/privacy/" id="changePasswordBtn">
+                    <span class="material-icons-outlined">lock</span>
+                    Change Password
+                </a>
+            </li>
+            </ul>
+
+            <div class="account-divider"></div>
+
+            {% if request.user.is_authenticated %}
+                <a class="logout-btn" onclick="logOutUser()">
+                    <span class="material-icons-outlined">logout</span>
+                    Logout
+                </a>
+            {% else %}
+                <a href="/account/login" class="logout-btn" onclick="logOutUser()">
+                    <span class="material-icons-outlined">logout</span>
+                    Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
 
     <script src="{% static 'pwa/pushsubscription.js'%}"></script>
     <script>
@@ -487,6 +577,56 @@
 
             closeBtn.style.display = 'none'
         })
+
+
+        const accountModal = document.getElementById("accountModal");
+        const accountBtn = document.querySelectorAll("#accountBtn");
+
+        accountBtn.forEach(btn => {
+            btn.addEventListener("click", () => {
+                accountModal.style.display = "flex";
+            });
+        })
+
+        accountModal.addEventListener("click", (e) => {
+            if (e.target === accountModal) {
+                accountModal.style.display = "none";
+            }
+        });
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                accountModal.style.display = "none";
+            }
+        });
+
+        async function logOutUser(){
+            try{
+
+                const response = await fetch('/account/api/logout/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    credentials: "include"
+                })
+
+                if (!response.ok) throw new Error('Failed to logout.')
+
+                const data = await response.json()
+
+                showToast('✅ Logout successful!', 'success')
+
+                setTimeout(() => {
+                    window.location.href = '/account/login/';
+                }, 1500);
+
+            } catch(error){
+                console.error('Error Loggin out: ' + error)
+                showToast('⚠️ Failed to log out. Try again.', 'error')
+            }
+        }
+
     </script>
 </body>
 </html>

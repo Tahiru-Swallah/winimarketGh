@@ -110,7 +110,7 @@ class SellerProfile(models.Model):
     
 
 class SellerVerification(models.Model):
-
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     VERIFY_TYPE = (
         ('student_id', 'Student ID'),
         ('ghana_card', 'Ghana Card'),
