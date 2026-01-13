@@ -3,6 +3,7 @@ from uuid import uuid4
 from django.utils import timezone
 from registration.models import Profile, SellerProfile
 from django.contrib.auth import get_user_model
+from django.db.models import Q
 
 class OrderStatus(models.TextChoices):
     PENDING = 'pending', 'Pending'
@@ -103,7 +104,14 @@ class Order(models.Model):
     class Meta:
         ordering = ['-created_at']
         indexes = [
-            models.Index(fields=['-created_at']),
+            models.Index(fields=['created_at']),
+        ]
+        constraints = [
+            models.UniqueConstraint(
+                fields=['buyer', 'seller'],
+                condition=Q(status=OrderStatus.PENDING),
+                name='one_pending_order_per_buyer_seller'
+            )
         ]
 
     def __str__(self):

@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Seller Verification Update</title>
+  <style>
+    body {
+      font-family: var(--font-primary, 'Poppins', sans-serif);
+      background-color: var(--bg-color, #f8f9fa);
+      color: var(--text-color, #2c3e50);
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      padding: 30px;
+      border-radius: var(--border-radius, 12px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: var(--error-color, #FF4D4D);
+      font-size: 24px;
+      margin-bottom: 20px;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.5;
+      margin-bottom: 30px;
+    }
+    a.cta-btn {
+      display: inline-block;
+      background-color: var(--error-color, #FF4D4D);
+      color: #fff;
+      text-decoration: none;
+      padding: 12px 20px;
+      border-radius: var(--border-radius, 12px);
+      font-weight: 600;
+    }
+    a.cta-btn:hover {
+      background-color: #e03b3b;
+    }
+    footer {
+      font-size: 12px;
+      color: #777;
+      margin-top: 30px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>⚠️ Verification Not Approved</h1>
+    <p>Hello {{ user.first_name|default:user.email }}, your seller verification has not been approved. Please review your submitted information and resubmit for approval.</p>
+    <a href="{{ site_url }}{{ cta_url }}" class="cta-btn">Review Verification</a>
+    <footer>
+      © {{ site_url }} • Winimarket
+    </footer>
+  </div>
+</body>
+</html>

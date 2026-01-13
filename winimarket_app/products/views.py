@@ -22,6 +22,15 @@ from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
 def offline_view(request):
     return render(request, 'offline.html')
+
+def support_view(request):
+    return render(request, 'products/support.html')
+
+def terms_view(request):
+    return render(request, 'products/terms_condition.html')
+
+def policy_view(request):
+    return render(request, 'products/policy.html')
 # -----------------------------
 # TEMPLATE RENDERING
 

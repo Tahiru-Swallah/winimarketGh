@@ -30,8 +30,6 @@ def initialize_payment(request):
     buyer = request.user.profile
     order_ids = request.data.get('order_ids', [])
 
-    print(order_ids)
-
     if not order_ids:
         return Response(
             {'error': 'No orders provided'},
@@ -91,7 +89,7 @@ def initialize_payment(request):
         )
     except requests.RequestException:
         return Response(
-            {'error': 'Payment service unavailable'},
+            {'error': 'Payment service unavailable. Please check your connection.'},
             status=status.HTTP_503_SERVICE_UNAVAILABLE
         )
 
@@ -182,7 +180,8 @@ def verify_payment(request):
     # ✅ Update all orders
     orders = Order.objects.filter(
         id__in=order_ids,
-        buyer=buyer
+        buyer=buyer,
+        status=OrderStatus.PENDING
     )
 
     verified_orders = []

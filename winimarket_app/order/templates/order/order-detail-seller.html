@@ -94,7 +94,7 @@
         }) : "N/A";
 
         // Buyer info
-        document.getElementById('buyer-name').textContent = order.buyer.full_name || order.buyer.user.email
+        document.getElementById('buyer-name').textContent = order.buyer.full_name || order.buyer.user_email
         document.getElementById('buyer-phone').textContent = order.shipping_address.phonenumber
         document.getElementById('call-buyer').href =`tel:${order.shipping_address.phonenumber}`
 

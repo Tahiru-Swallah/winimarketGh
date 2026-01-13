@@ -126,12 +126,26 @@ def checkout(request):
 
     with transaction.atomic():
         for seller, items in seller_groups.items():
-            order = Order.objects.create(
+            order, created = Order.objects.get_or_create(
                 buyer=buyer,
                 seller=seller,
-                shipping_address=address,
+                status=OrderStatus.PENDING,
+                defaults = {
+                    "shipping_address": address,
+                    "track_status": OrderTrackingStatus.PROCESSING
+                }
             )
 
+            # If order already existed → refresh it
+            if not created:
+                order.shipping_address = address
+                order.updated_at = timezone.now()
+                order.save()
+
+                # Remove old items to prevent duplicates
+                order.items.all().delete()
+
+            # Re-add cart items
             for item in items:
                 OrderItem.objects.create(
                     order=order,

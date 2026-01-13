@@ -33,6 +33,22 @@
     list-style: none;
 }
 
+/* Allow text selection only for input and textarea fields */
+input, textarea {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
+/* Prevent iOS zoom on focus while staying compatible with older devices */
+input,
+select,
+textarea {
+  font-size: 16px !important;                /* prevents iPhone zoom */
+  -webkit-text-size-adjust: 100%; /* ensures normal text scaling */
+  line-height: 1.4;               /* keeps spacing tidy */
+  box-sizing: border-box;         /* predictable sizing */
+}
+
 body{
   font-family: var(--font-primary);
   background: var(--bg-color);

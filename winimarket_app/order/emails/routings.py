@@ -1,4 +1,4 @@
-from order.constants.email_event import OrderEmailEvent
+from order.constants.email_event import OrderEmailEvent, SellerNotificationEvent
 
 ORDER_EMAIL_ROUTING = {
     OrderEmailEvent.ORDER_PAID: {
@@ -70,4 +70,32 @@ ORDER_PUSH_ROUTING = {
             "url": "/account/seller/dashboard/"
         }
     }
+}
+
+SELLER_NOTIFICATION_ROUTING = {
+    SellerNotificationEvent.SELLER_VERIFIED: {
+        "email": {
+            "template": "emails/seller/seller_verified.html",
+            "subject": "Your seller account has been verified 🎉",
+            "cta": "/account/seller/dashboard/",
+        },
+        "push": {
+            "title": "You’re verified! 🎉",
+            "body": "Your seller account is approved. You can now start selling on Winimarket.",
+            "url": "/account/seller/dashboard/",
+        },
+    },
+
+    SellerNotificationEvent.SELLER_VERIFICATION_REJECTED: {
+        "email": {
+            "template": "emails/seller/seller_verification_rejected.html",
+            "subject": "Seller verification update",
+            "cta": "/account/seller/dashboard/",
+        },
+        "push": {
+            "title": "Verification update",
+            "body": "Your seller verification was not approved. Please review and resubmit.",
+            "url": "/account/seller/dashboard/",
+        },
+    },
 }

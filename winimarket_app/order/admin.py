@@ -26,6 +26,7 @@ class OrderAdmin(admin.ModelAdmin):
     list_display = (
         'id',
         'buyer',
+        'seller',
         'status',
         'track_status',
         'total_cost',

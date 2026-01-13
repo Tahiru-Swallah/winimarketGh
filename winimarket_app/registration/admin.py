@@ -1,5 +1,7 @@
 from django.contrib import admin
 from django.utils import timezone
+from order.emails.dispatcher import SellerNotificationDispatcher
+from order.constants.email_event import SellerNotificationEvent
 
 from .models import (
     CustomUser,
@@ -9,7 +11,55 @@ from .models import (
     SellerVerification,
     SellerAddress,
     SellerAuditLog,
+    SellerNotificationLog
 )
+
+@admin.register(SellerNotificationLog)
+class SellerNotificationLogAdmin(admin.ModelAdmin):
+    list_display = (
+        "seller",
+        "user",
+        "event",
+        "channel",
+        "status",
+        "created_at",
+        "sent_at",
+    )
+
+    list_filter = (
+        "event",
+        "channel",
+        "status",
+        "created_at",
+    )
+
+    search_fields = (
+        "seller__store_name",
+        "user__email",
+        "event",
+    )
+
+    readonly_fields = (
+        "id",
+        "seller",
+        "user",
+        "event",
+        "channel",
+        "subject",
+        "payload",
+        "status",
+        "created_at",
+        "sent_at",
+    )
+
+    ordering = ("-created_at",)
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
 
 # =====================================================
 # Custom User Admin
@@ -128,10 +178,6 @@ class SellerVerificationAdmin(admin.ModelAdmin):
 
     actions = ['approve_verification', 'reject_verification']
 
-    """ def changelist_view(self, request, extra_context=None):
-        print("🔥 SellerVerificationAdmin is ACTIVE")
-        return super().changelist_view(request, extra_context)
- """
     def masked_id_number(self, obj):
         if obj.id_number:
             return f"****{obj.id_number[-4:]}"
@@ -142,7 +188,6 @@ class SellerVerificationAdmin(admin.ModelAdmin):
         approved = 0
 
         for verification in queryset:
-            print(verification.seller)
             if verification.status == 'approved':
                 continue  # Skip already approved verifications
 
@@ -153,6 +198,11 @@ class SellerVerificationAdmin(admin.ModelAdmin):
             seller = verification.seller
             seller.is_verified = True
             seller.save()
+
+            SellerNotificationDispatcher.dispatch(
+                seller_id=seller.id,
+                event=SellerNotificationEvent.SELLER_VERIFIED
+            )
 
             SellerAuditLog.objects.create(
                 seller=seller,
@@ -178,6 +228,11 @@ class SellerVerificationAdmin(admin.ModelAdmin):
             seller = verification.seller
             seller.is_verified = False
             seller.save()
+
+            SellerNotificationDispatcher.dispatch(
+                seller_id=seller.id,
+                event=SellerNotificationEvent.SELLER_VERIFICATION_REJECTED
+            )
 
             SellerAuditLog.objects.create(
                 seller=seller,

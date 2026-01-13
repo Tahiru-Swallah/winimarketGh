@@ -28,6 +28,9 @@ urlpatterns = [
     path('api/seller/product/delete/<uuid:product_id>/', views.seller_delete_product),
 
     path('offline/', views.offline_view, name='offline'),
+    path('support/', views.support_view, name='support'),
+    path('terms/', views.terms_view, name='terms'),
+    path('privacy/', views.policy_view, name='policy'),
 
     path(
         "service-worker.js",

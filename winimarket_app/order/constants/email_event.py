@@ -23,3 +23,17 @@ class OrderEmailEvent:
     # CANCELLATION & REFUNDS
     ORDER_CANCELLED = "order_cancelled"
     ORDER_REFUNDED = "order_refunded"
+
+class SellerNotificationEvent:
+    """
+    Canonical seller notification events.
+    Used for email + push notifications related to seller lifecycle.
+    """
+
+    # VERIFICATION
+    SELLER_VERIFIED = "seller_verified"
+    SELLER_VERIFICATION_REJECTED = "seller_verification_rejected"
+
+    # (Future-ready)
+    SELLER_SUSPENDED = "seller_suspended"
+    SELLER_REACTIVATED = "seller_reactivated"

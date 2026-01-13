@@ -1,9 +1,10 @@
-from .routings import ORDER_EMAIL_ROUTING, ORDER_PUSH_ROUTING
+from .routings import ORDER_EMAIL_ROUTING, ORDER_PUSH_ROUTING, SELLER_NOTIFICATION_ROUTING
 from .recipients import resolve_recipient
-from .tasks import send_email_task, send_push_task
-from order.constants.email_event import OrderEmailEvent
+from .tasks import send_email_task, send_push_task, send_seller_email_task
 from order.models import OrderEmailLog
 from django.conf import settings
+from registration.models import SellerNotificationLog, SellerProfile
+from django.contrib.auth import get_user_model
 
 class OrderEmailDispatcher:
 
@@ -96,3 +97,67 @@ class OrderEmailDispatcher:
             user_id=user_id,
             payload=payload
         )
+
+User = get_user_model()
+class SellerNotificationDispatcher:
+
+    @staticmethod
+    def dispatch(*, seller_id, event):
+        """
+        Dispatch email + push notifications to a seller for a given event
+        """
+
+        routes = SELLER_NOTIFICATION_ROUTING.get(event)
+
+        if not routes:
+            return
+        
+        seller = SellerProfile.objects.get(id=seller_id)
+        user = seller.profile.user
+
+        if not user:
+            return
+    
+        email_cfg = routes.get('email')
+        print(f"Printing User: {email_cfg}")
+        if email_cfg:
+            log = SellerNotificationLog.objects.create(
+                seller=seller,
+                user=user,
+                event=event,
+                channel='email',
+                subject=email_cfg['subject']
+            )
+
+            context = {
+                "seller_id": seller.id,
+                "user_id": user.id,
+                "event": event,
+                "cta_url": email_cfg["cta"],
+                "site_url": settings.SITE_URL,
+            }
+
+            send_seller_email_task.delay(
+                notification_log_id=log.id,
+                to_email=user.email,
+                subject=email_cfg["subject"],
+                template=email_cfg["template"],
+                context=context
+            )
+
+        push_cfg = routes.get('push')
+        if push_cfg:
+            log = SellerNotificationLog.objects.create(
+                seller=seller,
+                user=user,
+                event=event,
+                channel='push',
+                payload=push_cfg
+            )
+
+            send_push_task.delay(
+                user_id=user.id,
+                payload=push_cfg
+            )
+
+            log.mark_sent()

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin
 from uuid import uuid4
 from phonenumber_field.modelfields import PhoneNumberField
+from django.utils import timezone
 
 # -----------------------------
 # Custom User Manager
@@ -250,3 +251,64 @@ class EmailVerification(models.Model):
         self.is_verified = True
         self.verified_at = timezone.now()
         self.save()
+
+class SellerNotificationLog(models.Model):
+    """
+    Tracks email & push notifications sent to sellers
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+
+    seller = models.ForeignKey(
+        SellerProfile,
+        on_delete=models.CASCADE,
+        related_name="notification_logs"
+    )
+
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name="seller_notification_logs"
+    )
+
+    event = models.CharField(max_length=50)
+
+    channel = models.CharField(
+        max_length=10,
+        choices=(
+            ("email", "Email"),
+            ("push", "Push"),
+        )
+    )
+
+    subject = models.CharField(max_length=255, blank=True)
+    payload = models.JSONField(blank=True, null=True)
+
+    status = models.CharField(
+        max_length=20,
+        choices=(
+            ("pending", "Pending"),
+            ("sent", "Sent"),
+            ("failed", "Failed"),
+        ),
+        default="pending"
+    )
+
+    sent_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [
+            models.Index(fields=["seller", "event"]),
+            models.Index(fields=["user"]),
+        ]
+
+    def mark_sent(self):
+        self.status = "sent"
+        self.sent_at = timezone.now()
+        self.save(update_fields=["status", "sent_at"])
+
+    def mark_failed(self):
+        self.status = "failed"
+        self.save(update_fields=["status"])

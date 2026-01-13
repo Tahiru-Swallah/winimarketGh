@@ -22,8 +22,8 @@ def send_email_task(self, *, email_log_id, to_email, subject, template, context)
 
     email_log = OrderEmailLog.objects.select_related("order").get(id=email_log_id)
 
-    """ if email_log.status == "sent":
-        return """
+    if email_log.status == "sent":
+        return
 
     try:
         order = Order.objects.get(id=context["order_id"])
@@ -114,3 +114,49 @@ def send_push_task(self, *, user_id, payload):
 
             # Retry only for temporary server/network errors
             raise self.retry(exc=exc, countdown=30)
+
+@shared_task(bind=True, max_retries=3)
+def send_seller_email_task(self, *, notification_log_id, to_email, subject, template, context):
+    logger.warning("Sending seller email for log %s", notification_log_id)
+
+    from registration.models import SellerNotificationLog, SellerProfile
+
+    log = SellerNotificationLog.objects.select_related(
+        "seller", "user"
+    ).get(id=notification_log_id)
+
+    if log.status == "sent":
+        return
+
+    try:
+        seller = SellerProfile.objects.get(id=context["seller_id"])
+        user = None
+
+        if context.get("user_id"):
+            user = User.objects.get(id=context["user_id"])
+
+        email_context = {
+            "seller": seller,
+            "user": user,
+            "cta_url": context["cta_url"],
+            "site_url": settings.SITE_URL,
+            "event": context["event"],
+        }
+
+        html_content = render_to_string(template, email_context)
+
+        msg = EmailMultiAlternatives(
+            subject=subject,
+            body="",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[to_email],
+        )
+        msg.attach_alternative(html_content, "text/html")
+        msg.send()
+
+        log.mark_sent()
+
+    except Exception as exc:
+        logger.exception("Seller email sending failed")
+        log.mark_failed()
+        raise self.retry(exc=exc, countdown=30)

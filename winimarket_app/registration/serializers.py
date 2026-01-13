@@ -91,9 +91,10 @@ class RegisterSerializer(serializers.ModelSerializer):
     
 class ProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)
+    user_email = serializers.EmailField(source='user.email', read_only=True)
     class Meta:
         model = Profile
-        fields = ('id', 'user', 'role', "role_confirmed", 'full_name', 'profile_picture', 'created_at')
+        fields = ('id', 'user', 'role', "role_confirmed", 'full_name', "user_email", 'profile_picture', 'created_at')
         read_only_fields = ('id', 'user', 'role', 'created_at')
 
     def validate_profile_picture(self, value):

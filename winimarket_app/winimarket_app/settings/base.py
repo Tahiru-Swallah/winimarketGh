@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-oa_bed5^che@uld&l)npkb0m-pb*urzc$j2v==u$6%eo@wek-b
 # SECURITY WARNING: don't run with debug turned on in production!
 """ DEBUG = True """
 
-ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.189.199', 'www.winimarketgh.com', 'winimarketgh.com']
+ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.189.199', 'www.winimarketgh.com', 'winimarketgh.com', '172.20.10.10']
 
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition

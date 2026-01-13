@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Terms and Conditions | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="legal-page-wrapper">
+
+  <div class="legal-a4">
+
+    <!-- HEADER -->
+    <header class="legal-header">
+      <h1>Terms and Conditions</h1>
+      <p class="legal-subtitle">
+        Effective Date: {{ now|date:"F d, Y" }}
+      </p>
+    </header>
+
+    <hr>
+
+    <!-- INTRO -->
+    <section class="legal-section">
+      <p>
+        These Terms and Conditions ("Terms") govern your access to and use of
+        <strong>WiniMarket</strong>, including all services, features, content,
+        and transactions offered through the platform.
+      </p>
+      <p>
+        By accessing or using WiniMarket, you agree to be legally bound by these
+        Terms. If you do not agree, you must not use the platform.
+      </p>
+    </section>
+
+    <!-- DEFINITIONS -->
+    <section class="legal-section">
+      <h2>1. Definitions</h2>
+      <ul>
+        <li><strong>"Platform"</strong> refers to WiniMarket.</li>
+        <li><strong>"Buyer"</strong> refers to a registered user purchasing goods.</li>
+        <li><strong>"Seller"</strong> refers to a registered merchant offering goods for sale.</li>
+        <li><strong>"Order"</strong> refers to a confirmed purchase created on the platform.</li>
+        <li><strong>"Escrow"</strong> refers to the secure holding of buyer funds until delivery is confirmed.</li>
+      </ul>
+    </section>
+
+    <!-- PLATFORM ROLE -->
+    <section class="legal-section">
+      <h2>2. Role of WiniMarket</h2>
+      <p>
+        WiniMarket acts as a neutral digital marketplace connecting buyers and sellers.
+        WiniMarket is <strong>not the seller of products</strong> unless explicitly stated.
+      </p>
+      <p>
+        The platform facilitates order creation, payment processing, escrow protection,
+        and communication between buyers and sellers.
+      </p>
+    </section>
+
+    <!-- ORDER CREATION -->
+    <section class="legal-section">
+      <h2>3. Order Creation</h2>
+      <p>
+        An order is created when a buyer proceeds to checkout and confirms a shipping
+        address. Orders may be created for multiple sellers based on cart contents.
+      </p>
+      <p>
+        Once an order is created, it is assigned a unique identifier and recorded
+        in the buyer’s order history.
+      </p>
+    </section>
+
+    <!-- PAYMENTS -->
+    <section class="legal-section">
+      <h2>4. Payments</h2>
+      <p>
+        Payments are initiated by the buyer after order creation. A payment is considered
+        successful only when confirmed by the payment provider.
+      </p>
+      <p>
+        Failed or incomplete payment attempts do not transfer funds to sellers.
+        Buyers are not charged twice for the same order.
+      </p>
+    </section>
+
+    <!-- ESCROW -->
+    <section class="legal-section">
+      <h2>5. Escrow System</h2>
+      <p>
+        WiniMarket operates an escrow-based payment system to protect both buyers and sellers.
+      </p>
+
+      <ul>
+        <li>Buyer funds are held securely in escrow after successful payment.</li>
+        <li>Sellers are notified only after payment is confirmed.</li>
+        <li>Funds remain in escrow until delivery is confirmed by the buyer.</li>
+        <li>Upon confirmation of delivery, escrow funds are released to the seller.</li>
+      </ul>
+
+      <p>
+        If delivery is not confirmed, escrow funds remain protected while disputes
+        are reviewed.
+      </p>
+    </section>
+
+    <!-- DELIVERY -->
+    <section class="legal-section">
+      <h2>6. Delivery & Confirmation</h2>
+      <p>
+        Sellers are responsible for fulfilling orders accurately and within a reasonable time.
+      </p>
+      <p>
+        Buyers must confirm delivery once the order is received. Confirmation triggers
+        the release of escrow funds.
+      </p>
+    </section>
+
+    <!-- DISPUTES -->
+    <section class="legal-section">
+      <h2>7. Disputes & Cancellations</h2>
+      <p>
+        Buyers may report issues related to non-delivery, incorrect items, or damaged goods.
+      </p>
+      <p>
+        WiniMarket reserves the right to investigate disputes and determine appropriate
+        resolutions, including refunds or escrow release decisions.
+      </p>
+    </section>
+
+    <!-- USER RESPONSIBILITIES -->
+    <section class="legal-section">
+      <h2>8. User Responsibilities</h2>
+      <ul>
+        <li>Provide accurate account and shipping information.</li>
+        <li>Maintain confidentiality of login credentials.</li>
+        <li>Comply with all applicable laws and platform policies.</li>
+      </ul>
+    </section>
+
+    <!-- LIMITATION -->
+    <section class="legal-section">
+      <h2>9. Limitation of Liability</h2>
+      <p>
+        WiniMarket shall not be liable for indirect, incidental, or consequential damages
+        arising from the use of the platform.
+      </p>
+    </section>
+
+    <!-- MODIFICATIONS -->
+    <section class="legal-section">
+      <h2>10. Modifications to Terms</h2>
+      <p>
+        WiniMarket reserves the right to update these Terms at any time.
+        Continued use of the platform constitutes acceptance of the updated Terms.
+      </p>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="legal-section">
+      <h2>11. Contact Information</h2>
+      <p>
+        For questions regarding these Terms, please contact:
+      </p>
+      <p><strong>Email:</strong> winimarketgh@gmail.com</p>
+      <p><strong>Phone Number:</strong> 0595467122</p>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="legal-footer">
+      <p>© {{ now|date:"Y" }} WiniMarket. All rights reserved.</p>
+    </footer>
+
+  </div>
+</div>
+{% endblock %}

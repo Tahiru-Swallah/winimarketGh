@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Support | WiniMarket{% endblock %}
+
+{% block content %}
+<div class="support-page-wrapper">
+
+  <div class="support-a4">
+
+    <!-- HEADER -->
+    <header class="support-header">
+      <h1>WiniMarket Support</h1>
+      <p class="support-subtitle">
+        We’re here to help you resolve issues quickly and safely.
+      </p>
+    </header>
+
+    <hr>
+
+    <!-- INTRO -->
+    <section class="support-section">
+      <p>
+        At <strong>WiniMarket</strong>, we are committed to providing reliable support
+        for buyers and sellers. If you experience any issues related to orders,
+        payments, deliveries, or your account, please follow the guidance below.
+      </p>
+    </section>
+
+    <!-- WHAT WE HELP WITH -->
+    <section class="support-section">
+      <h2>How We Can Assist You</h2>
+      <ul>
+        <li>Order and payment issues</li>
+        <li>Delayed or missing deliveries</li>
+        <li>Account access or security concerns</li>
+        <li>Seller or product disputes</li>
+        <li>Refunds and escrow-related questions</li>
+      </ul>
+    </section>
+
+    <!-- HOW TO GET HELP -->
+    <section class="support-section">
+      <h2>How to Get Support</h2>
+
+      <div class="support-steps">
+        <div class="support-step">
+          <span class="step-number">1</span>
+          <div>
+            <h4>Check Your Orders</h4>
+            <p>
+              Visit your <strong>Orders</strong> page and review the order status.
+              Many issues can be resolved directly from the order details page.
+            </p>
+          </div>
+        </div>
+
+        <div class="support-step">
+          <span class="step-number">2</span>
+          <div>
+            <h4>Contact Support</h4>
+            <p>
+              If your issue persists, send us an email with your order ID
+              and a brief description of the problem.
+            </p>
+            <p class="support-contact">
+              📧 <strong>Email:</strong> winimarketgh@gmai.com
+              ☎️ <strong>Phone:</strong> 0595467122
+            </p>
+          </div>
+        </div>
+
+        <div class="support-step">
+          <span class="step-number">3</span>
+          <div>
+            <h4>Resolution & Follow-up</h4>
+            <p>
+              Our support team will review your request and respond within
+              <strong>24–48 hours</strong>.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- IMPORTANT NOTES -->
+    <section class="support-section support-note">
+      <h2>Important Notes</h2>
+      <ul>
+        <li>Please always include your <strong>Order ID</strong> when contacting support.</li>
+        <li>Payments are protected through our escrow system.</li>
+        <li>Do not share your password or verification codes with anyone.</li>
+      </ul>
+    </section>
+
+    <!-- FOOTER -->
+    <footer class="support-footer">
+      <p>
+        © {{ now|date:"Y" }} WiniMarket. All rights reserved.
+      </p>
+      <p class="footer-muted">
+        This document is intended to guide users seeking assistance on the platform.
+      </p>
+    </footer>
+
+  </div>
+</div>
+{% endblock %}
