@@ -10,6 +10,9 @@ urlpatterns = [
     #HOME PAGE
     path('', views.home, name='home'),
 
+    # urls.py
+    path("test-email/", views.test_email),
+
     #LOGIN APIs URLs
     path('api/login/', CustomTokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/login/refresh/', TokenRefreshView.as_view(), name='token_refresh'),

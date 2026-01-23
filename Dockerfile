@@ -26,7 +26,19 @@ RUN pip install --no-cache-dir -r requirements.txt
 # ---------- Copy Project Files ----------
 COPY . .
 
+# Ensure wait-for-it script is executable
+RUN chmod +x /code/wait-for-it.sh
+
+# ---------- Permissions & Runtime ----------
+# Create a non-root user (good practice)
+RUN useradd --create-home appuser && chown -R appuser:appuser /code
+USER appuser
+
+# Expose Cloud Run default port (optional informational)
+EXPOSE 8080
+
 # ---------- Default Command ----------
 # uWSGI will pick Cloud Run's port automatically (http=:$(PORT)) 
 # or use socket for Docker Compose based on env detection
 #CMD ["uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]
+CMD ["uwsgi", "--ini", "/code/config/uwsgi/uwsgi.ini"]

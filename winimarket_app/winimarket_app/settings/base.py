@@ -26,9 +26,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent
 SECRET_KEY = 'django-insecure-oa_bed5^che@uld&l)npkb0m-pb*urzc$j2v==u$6%eo@wek-b'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-""" DEBUG = True """
 
-ALLOWED_HOSTS = ['192.168.120.199', '127.0.0.1', '192.168.189.199', 'www.winimarketgh.com', 'winimarketgh.com', '172.20.10.10']
+ALLOWED_HOSTS = ['127.0.0.1', 'www.winimarketgh.com', 'winimarketgh.com', "winimarket-27948306085.us-east1.run.app", ".run.app"]
 
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition
@@ -61,33 +60,17 @@ INSTALLED_APPS = [
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default="")
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default="")
 EMAIL_PORT = 465
 EMAIL_USE_SSL = True
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL')
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default="")
 
 SITE_URL = "http://127.0.0.1:8000"
 
 WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY")
 WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
 
-Q_CLUSTER = {
-    "name": "DjangoQ",
-    "workers": 4,
-    "recycle": 500,
-    "timeout": 60,
-    "retry": 120,
-    "queue_limit": 50,
-    "bulk": 10,
-    "orm": "default",
-}
-
-""" CELERY_BROKER_URL = f"redis://{os.getenv('REDIS_HOST', 'localhost')}:6379/0"
-CELERY_RESULT_BACKEND = CELERY_BROKER_URL  # using django-celery-results
-CELERY_ACCEPT_CONTENT = ['json']
-CELERY_TASK_SERIALIZER = 'json'
-CELERY_RESULT_SERIALIZER = 'json' """
 
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY')
 
@@ -142,7 +125,7 @@ REST_FRAMEWORK = {
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),

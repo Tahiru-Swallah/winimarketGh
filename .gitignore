@@ -33,5 +33,5 @@ ENV/
 *.pid
 *.tar
 docker-compose.override.yml
-
+docker-compose.yml
 winimarket_app/uwsgi_app.sock

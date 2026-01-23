@@ -207,10 +207,12 @@
                 </a>
             </li>
             <li>
-                <a href="/privacy/" id="changePasswordBtn">
-                    <span class="material-icons-outlined">lock</span>
-                    Change Password
-                </a>
+                {% if request.user.is_authenticated %}
+                    <a id="changePasswordBtn" onclick="openChangePassowrdModal()" style="cursor: pointer;">
+                        <span class="material-icons-outlined">lock</span>
+                        Change Password
+                    </a>
+                {% endif %}
             </li>
             </ul>
 
@@ -230,6 +232,50 @@
         </div>
     </div>
 
+    <!-- Change Password Modal -->
+    <div class="modal-overlay hidden" id="changePasswordOverlay">
+        <div class="modal-card">
+
+            <div class="modal-header">
+            <h3>Change Password</h3>
+            <span class="material-icons-outlined close-modal" id="closeChangePassword">
+                close
+            </span>
+            </div>
+
+            <p class="modal-subtext">
+            For your security, please enter your current password before setting a new one.
+            </p>
+
+            <form id="changePasswordForm">
+
+            <div class="form-group">
+                <label>Current Password</label>
+                <input type="password" id="currentPassword" required>
+            </div>
+
+            <div class="form-group">
+                <label>New Password</label>
+                <input type="password" id="newPassword" required>
+                <small class="hint">
+                Must be at least 8 characters.
+                </small>
+            </div>
+
+            <div class="modal-error hidden" id="passwordError"></div>
+
+            <div class="modal-actions">
+                <button type="button" class="btn-secondary" id="cancelChangePassword">
+                Cancel
+                </button>
+                <button type="submit" class="btn-primary" id="updatePasswordBtn">
+                Update Password
+                </button>
+            </div>
+
+            </form>
+        </div>
+    </div>
 
     <script src="{% static 'pwa/pushsubscription.js'%}"></script>
     <script>
@@ -294,7 +340,84 @@
             iosInstallBanner.classList.add("hide");
         }, 12000);
 
+        //CHANGE PASSOWRD FUNCTIONS
+        const changePasswordOverlay = document.getElementById('changePasswordOverlay');
+        const closeChangePassword = document.getElementById('closeChangePassword');
+        const cancelChangePassword = document.getElementById('cancelChangePassword');
+        const changePasswordForm = document.getElementById('changePasswordForm');
+        const passwordError = document.getElementById('passwordError');
 
+        const currentPassword = document.getElementById("currentPassword")
+        const newPassword = document.getElementById("newPassword")
+
+        function openChangePassowrdModal(){
+            changePasswordOverlay.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+            console.log("get it")
+        }
+
+        function closeChangePasswordModal(){
+            changePasswordOverlay.classList.add('hidden');
+            document.body.style.overflow = 'auto';
+            passwordError.classList.add('hidden');
+            changePasswordForm.reset();
+        }
+
+        closeChangePassword.addEventListener('click', closeChangePasswordModal)
+        cancelChangePassword.addEventListener('click', closeChangePasswordModal)
+
+        changePasswordForm.addEventListener("submit", async (e)=> {
+            e.preventDefault()
+
+            const current = currentPassword.value
+            console.log(current)
+            const newPass = newPassword.value
+            console.log(newPass)
+
+            if (newPass.length < 8) {
+                passwordError.textContent = "Password must be at least 8 characters.";
+                passwordError.classList.remove('hidden');
+                return;
+            }
+
+            passwordError.classList.add("hidden")
+
+            try{
+
+                const response = await fetch('/account/api/change-password/', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCSRFToken(),
+                        'content-type': 'application/json'
+                    },
+                    credentials: "include",
+                    body: JSON.stringify({
+                        current_password: current,
+                        new_password: newPass   
+                    })
+                })
+
+                const data = await response.json()
+
+                if (!response.ok){
+                    showToast("Failed to change password: " + JSON.stringify(data.message), "error")
+                    return
+                }
+
+                showToast("✅Password updated successfully", "success")
+                closeChangePasswordModal()
+
+                setTimeout(() => {
+                    window.location.href = '/account/login/';
+                }, 1500);
+
+            } catch(err){
+                console.error("Something went wrong while updating password", error)
+                showToast("Error updating password", "error")
+            }
+        })
+
+        // CART FUNCTIONS
         const cartDrawer = document.getElementById("cartDrawer");
         const cartOverlay = document.getElementById("cartOverlay");
         const closeCartBtn = document.getElementById("closeCartDrawer");
@@ -528,6 +651,8 @@
             setTimeout(() => toast.remove(), 4000);
         }
 
+
+        //PAYMENT FUNCTIONS
         async function initializePayment(orderIds){
             try{
 
@@ -554,10 +679,8 @@
             }
         }
 
-        function isMobileDevice(){
-            return /Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
 
+        //SEARCH FUNCTIONS
         const closeBtn = document.querySelector('.icon')
         const searchBtn = document.getElementById('searchMb')
         const searchBar = document.querySelector('.search-bar')
@@ -578,7 +701,7 @@
             closeBtn.style.display = 'none'
         })
 
-
+        //ACCOUNT FUNCTIONS
         const accountModal = document.getElementById("accountModal");
         const accountBtn = document.querySelectorAll("#accountBtn");
 
@@ -600,6 +723,8 @@
             }
         });
 
+
+        //LOGOUT FUNCTIONS
         async function logOutUser(){
             try{
 

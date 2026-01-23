@@ -29,6 +29,27 @@ from products.models import Product
 # Template Views
 # -----------------------------
 
+# views.py
+from django.core.mail import send_mail
+from django.http import JsonResponse
+
+def test_email(request):
+    try:
+        send_mail(
+            "Test Email",
+            "Hello from Cloud Run",
+            "suwagh724@gmail.com",
+            ["winimarketgh@gmail.com"],
+            fail_silently=False
+        )
+
+        print("Test email sent successfully.")
+        return JsonResponse({"status": "sent"})
+    except Exception as e:
+        print("Error sending test email:", str(e))
+        return JsonResponse({"status": "error", "error": str(e)})
+    
+
 @login_required
 def home(request):
     # Render the home page for logged-in users
@@ -178,6 +199,9 @@ class ChangePasswordView(APIView):
         user = request.user
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
+
+        print("Current Password: ", current_password)
+        print("New Passowrd: ", new_password)
 
         if not user.check_password(current_password):
             return Response({

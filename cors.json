@@ -1,0 +1,8 @@
+[
+  {
+    "origin": ["https://winimarket-27948306085.us-east1.run.app"],
+    "method": ["GET", "HEAD", "OPTIONS"],
+    "responseHeader": ["Content-Type", "Access-Control-Allow-Origin","Access-Control-Allow-Methods"],
+    "maxAgeSeconds": 3600
+  }
+]
