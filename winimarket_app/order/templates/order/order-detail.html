@@ -28,8 +28,14 @@
 
   <!-- SELLER INFO -->
   <div class="seller-card">
-    <h3>Seller</h3>
+    <h3>Seller:</h3>
     <strong id="seller-name"></strong>
+  </div>
+
+  <!-- SELLER INFO -->
+  <div class="seller-card">
+    <h3>Paid At:</h3>
+    <strong id="paidAt"></strong>
   </div>
 
   <!-- ITEMS -->
@@ -56,6 +62,7 @@
   <!-- ACTIONS -->
   <div class="order-actions">
     <button id="pay-now-btn" class="primary-btn hidden" onclick="initializePayment(['{{ order.id }}'])">Pay Now</button>
+    <button id="btn-delete" class="primary-btn hidden" style="background: rgba(255, 77, 77, 0.1); color: var(--error-color);" onclick="deleteOrder('{{ order.id }}')">Delete Order</button>
     <button id="confirm-delivery-btn" class="success-btn hidden" onclick="confirmDelivery('{{ order.id }}')">
       Confirm Delivery
     </button>
@@ -74,6 +81,7 @@
             document.getElementById('order-total').textContent = order.total_cost;
 
             document.getElementById('seller-name').textContent = order.seller
+            document.getElementById('paidAt').textContent = order.paid_at ? new Date(order.paid_at).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric',hour: '2-digit', minute: '2-digit', hour12: true}) : 'Not Paid Yet'
 
             console.log(order)
 
@@ -117,6 +125,7 @@
 
             // Actions
             if (order.status === 'pending') {document.getElementById('pay-now-btn').classList.remove('hidden');}
+            if (order.status === 'pending') {document.getElementById('btn-delete').classList.remove('hidden');}
 
             if (order.track_status === 'delivered' && !order.is_escrow_released) {
                 document.getElementById('confirm-delivery-btn').classList.remove('hidden');
@@ -150,6 +159,29 @@
         } catch {
             showToast('Unable to confirm delivery', 'error')
         }
+    }
+
+    async function deleteOrder(orderId){
+      try{
+        const res = await fetch(`/order/api/order/${orderId}/delete/`, {
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': getCSRFToken()
+            }
+        })
+
+        if (!res.ok) throw new Error()
+        
+        showToast('Order deleted successfully', 'success')
+
+        setTimeout(() => {
+          window.location.href = "/order/my-orders/"
+        }, 1500);
+
+      } catch (error){
+        console.error("Something went wrong while deleting order", error)
+          showToast('Unable to delete order', 'error')
+      }
     }
 
 </script>

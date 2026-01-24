@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from django.utils import timezone
 from datetime import timedelta
 
-from order.models import Order, Payment, OrderStatus, PaymentStatus
+from order.models import Order, Payment, OrderStatus, PaymentStatus, OrderTrackingStatus
 
 import requests
 import hashlib
@@ -22,10 +22,11 @@ from cart.models import Cart, CartItem
 
 from order.emails.dispatcher import OrderEmailDispatcher
 from order.constants.email_event import OrderEmailEvent
-
+from django.db import transaction
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+@transaction.atomic
 def initialize_payment(request):
     buyer = request.user.profile
     order_ids = request.data.get('order_ids', [])
@@ -55,6 +56,13 @@ def initialize_payment(request):
                 {'error': f'Invalid order amount for order {order.id}'},
                 status=status.HTTP_400_BAD_REQUEST
             )
+        
+        for item in order.items.all():
+            if item.product is None:
+                return Response(
+                    {'error': f'Order {order.id} contains deleted products.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
 
     total_amount = sum(order.total_cost for order in orders)
     amount_kobo = int(total_amount * 100)
@@ -188,6 +196,7 @@ def verify_payment(request):
 
     for order in orders:
         order.status = OrderStatus.PAID
+        order.track_status = OrderTrackingStatus.PROCESSING
         order.paid_at = timezone.now()
         order.save()
         verified_orders.append(str(order.id))

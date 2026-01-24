@@ -5,16 +5,58 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token }}">
-    <title>{% block title %}{% endblock %}</title>  
-    <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
-    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 
-    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png'%}">
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-16x16.png'%}">
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-32x32.png'%}">
+    <!-- ========================= -->
+    <!-- SEO BASIC META -->
+    <!-- ========================= -->
+    <title>{% block title %}WinimarketGh – Buy & Sell Easily on Campus{% endblock %}</title>
+
+    <meta name="description" content="{% block meta_description %}WinimarketGh is a trusted campus marketplace in Ghana where students buy and sell products safely with escrow protection.{% endblock %}">
+    <meta name="keywords" content="Winimarket, WinimarketGh, campus marketplace Ghana, student marketplace, buy and sell online Ghana, escrow marketplace">
+    <meta name="author" content="WinimarketGh">
+    <meta name="robots" content="index, follow">
+
+    <!-- ========================= -->
+    <!-- OPEN GRAPH (Facebook, WhatsApp) -->
+    <!-- ========================= -->
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="WinimarketGh">
+    <meta property="og:title" content="{% block og_title %}WinimarketGh – Buy & Sell Safely on Campus{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}A trusted student marketplace with escrow-secured payments and verified sellers.{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:image" content="{% static 'images/seo-banner.jpg' %}">
+    <meta property="og:image:alt" content="WinimarketGh campus marketplace">
+
+    <!-- ========================= -->
+    <!-- TWITTER / X CARD -->
+    <!-- ========================= -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="WinimarketGh – Campus Marketplace">
+    <meta name="twitter:description" content="Buy and sell products securely with escrow protection on WinimarketGh.">
+    <meta name="twitter:image" content="{% static 'images/seo-banner.png' %}">
+
+    <!-- ========================= -->
+    <!-- STYLES & FONTS -->
+    <!-- ========================= -->
+    <link rel="stylesheet" href="{% static 'css/main/index.css' %}">
+
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&family=Montserrat:wght@400;600&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <!-- ========================= -->
+    <!-- ICONS & PWA -->
+    <!-- ========================= -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{% static 'images/apple-touch-icon.png' %}">
+    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'images/favicon-32x32.png' %}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'images/favicon-16x16.png' %}">
     <link rel="manifest" href="{% static 'pwa/manifest.json' %}">
+
+    <!-- ========================= -->
+    <!-- THEME COLOR (MOBILE BROWSERS) -->
+    <!-- ========================= -->
+    <meta name="theme-color" content="#2563eb">
 </head>
 <body>
     <header>
@@ -171,9 +213,9 @@
             </li>
             {% else %}
             <li>
-                <a href="/account/profile/">
+                <a href="/account/profile/set-role/">
                 <span class="material-icons-outlined">person</span>
-                My Profile
+                    Become a Seller
                 </a>
             </li>
             {% endif %}
@@ -224,8 +266,8 @@
                     Logout
                 </a>
             {% else %}
-                <a href="/account/login" class="logout-btn" onclick="logOutUser()">
-                    <span class="material-icons-outlined">logout</span>
+                <a href="/account/login" class="logout-btn">
+                    <span class="material-icons-outlined">login</span>
                     Login
                 </a>
             {% endif %}

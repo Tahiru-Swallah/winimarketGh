@@ -2702,7 +2702,7 @@ a .order-card {
   display: none;
 }
 
-.modal-overlay {
+.modal-overlay-address {
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.4);

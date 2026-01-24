@@ -15,6 +15,7 @@ class OrderStatus(models.TextChoices):
     CANCELLED = 'cancelled', 'Cancelled'
 
 class OrderTrackingStatus(models.TextChoices):
+    PENDING = 'pending', 'Pending'
     PROCESSING = 'processing', 'Processing'
     SHIPPED = 'shipped', 'Shipped'
     OUT_FOR_DELIVERY = 'out_for_delivery', 'Out for Delivery'
@@ -95,7 +96,7 @@ class Order(models.Model):
     track_status = models.CharField(
         max_length=20,
         choices=OrderTrackingStatus.choices,
-        default=OrderTrackingStatus.PROCESSING
+        default=OrderTrackingStatus.PENDING
     )
 
     cancelled_at = models.DateTimeField(null=True, blank=True)

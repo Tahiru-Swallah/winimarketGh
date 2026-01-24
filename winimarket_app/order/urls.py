@@ -15,6 +15,8 @@ urlpatterns = [
     path('api/update/<uuid:order_id>/order/', views.update_order_status, name='order-update'),
     path('api/confirm/<uuid:order_id>/order/', views.confirm_delivery, name='confirm-order'),
 
+    path('api/order/<uuid:order_id>/delete/', views.delete_order),
+
     path('api/shipping_addresses/create/', views.create_shipping_address, name='create-shipping-address'),
     path('api/shipping_addresses/', views.list_shipping_addresses, name='list-shipping-addresses'),
 

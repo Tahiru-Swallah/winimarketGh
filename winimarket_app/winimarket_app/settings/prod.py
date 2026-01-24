@@ -22,6 +22,8 @@ DATABASES = {
     }
 }
 
+SITE_URL = "https://winimarket-27948306085.us-east1.run.app"
+
 # Max size (in bytes)
 # Example: 50 MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 * 1024 * 1024
@@ -32,7 +34,7 @@ FILE_UPLOAD_MAX_MEMORY_SIZE = 52428800  # 50 MB
 SECURE_COOKIE = config('SECURE_COOKIE', default=True, cast=bool)
 
 CORS_ALLOW_CREDENTIALS = True
-CSRF_COOKIE_HTTPONLY = False
+CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 SESSION_COOKIE_SECURE = True  
 SECURE_SSL_REDIRECT = True
@@ -40,6 +42,12 @@ SECURE_SSL_REDIRECT = True
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+
+# Keep session alive for 6 months
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 180  # 6 months
+
+SESSION_SAVE_EVERY_REQUEST = True  # refresh session expiry on activity
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 # --------------------------------------------------------------------
 # 📦 Static & Media Files via Google Cloud Storage

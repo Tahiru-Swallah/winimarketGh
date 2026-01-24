@@ -66,8 +66,6 @@ EMAIL_PORT = 465
 EMAIL_USE_SSL = True
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default="")
 
-SITE_URL = "http://127.0.0.1:8000"
-
 WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY")
 WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
 
@@ -75,6 +73,8 @@ WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY')
 
 SECURE_COOKIE = config('SECURE_COOKIE', default=False, cast=bool)
+
+SITE_URL = "http://127.0.0.1:8000"
 
 PAYSTACK_TESTED_PUBLIC_API_KEY = config('PAYSTACK_TESTED_PUBLIC_API_KEY')
 PAYSTACK_TESTED_SECRET_API_KEY = config('PAYSTACK_TESTED_SECRET_API_KEY')
@@ -124,8 +124,8 @@ REST_FRAMEWORK = {
 }
 
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
-    'REFRESH_TOKEN_LIFETIME': timedelta(days=30),
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=180),
     'ROTATE_REFRESH_TOKENS': True,
     'BLACKLIST_AFTER_ROTATION': True,
     'AUTH_HEADER_TYPES': ('Bearer',),
@@ -142,6 +142,12 @@ SESSION_COOKIE_SECURE = False
 SECURE_SSL_REDIRECT = False
 
 WSGI_APPLICATION = 'winimarket_app.wsgi.application'
+
+# Keep session alive for 6 months
+SESSION_COOKIE_AGE = 60 * 60 * 24 * 180  # 6 months
+
+SESSION_SAVE_EVERY_REQUEST = True  # refresh session expiry on activity
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 
 # Database

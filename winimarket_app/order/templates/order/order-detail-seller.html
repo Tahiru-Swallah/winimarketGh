@@ -20,9 +20,9 @@
   <div class="info-grid">
     <div class="info-card">
       <h4>Buyer</h4>
-      <p id="buyer-name"></p><br>
-      <p id="buyer-phone"></p><br>
-      <a id="call-buyer" class="call-btn">Call Buyer</a>
+      <p id="buyer-name"></p>
+      <a id="call-buyer" class="call-btn">☎️Call Buyer</a>
+      <p><strong>Paid At: </strong> <span id="paid_at"></span></p>
     </div>
 
     <div class="info-card">
@@ -93,10 +93,15 @@
           hour: '2-digit', minute: '2-digit', hour12: true
         }) : "N/A";
 
+        console.log(order)
+
         // Buyer info
         document.getElementById('buyer-name').textContent = order.buyer.full_name || order.buyer.user_email
-        document.getElementById('buyer-phone').textContent = order.shipping_address.phonenumber
         document.getElementById('call-buyer').href =`tel:${order.shipping_address.phonenumber}`
+        document.getElementById('paid_at').textContent = order.paid_at ? new Date(order.paid_at).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        }) : "N/A";
 
         document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.campus_area}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`
 

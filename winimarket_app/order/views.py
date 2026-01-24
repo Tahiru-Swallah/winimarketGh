@@ -132,7 +132,7 @@ def checkout(request):
                 status=OrderStatus.PENDING,
                 defaults = {
                     "shipping_address": address,
-                    "track_status": OrderTrackingStatus.PROCESSING
+                    "track_status": OrderTrackingStatus.PENDING
                 }
             )
 
@@ -194,7 +194,7 @@ def order_detail(request, order_id):
 @permission_classes([IsAuthenticated])
 def seller_orders(request):
     seller = request.user.profile.seller_profile
-    orders = (Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
+    orders = (Order.objects.filter(seller=seller, status=OrderStatus.PAID).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
 
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
@@ -291,6 +291,19 @@ def confirm_delivery(request, order_id):
 
     serializer = OrderSerializer(order, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_order(request, order_id):
+    buyer = request.user.profile
+
+    try:
+        order = Order.objects.get(id=order_id, buyer=buyer, status=OrderStatus.PENDING)
+    except Order.DoesNotExist:
+        return Response({'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
+    
+    order.delete()
+    return Response({'message': 'Order deleted successfully.'}, status=status.HTTP_200_OK)
 
 # ---------------------------
 # SHIPPING ADDRESS VIEWS

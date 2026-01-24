@@ -29,7 +29,7 @@ from products.models import Product
 # Template Views
 # -----------------------------
 
-# views.py
+""" # views.py
 from django.core.mail import send_mail
 from django.http import JsonResponse
 
@@ -47,7 +47,7 @@ def test_email(request):
         return JsonResponse({"status": "sent"})
     except Exception as e:
         print("Error sending test email:", str(e))
-        return JsonResponse({"status": "error", "error": str(e)})
+        return JsonResponse({"status": "error", "error": str(e)}) """
     
 
 @login_required

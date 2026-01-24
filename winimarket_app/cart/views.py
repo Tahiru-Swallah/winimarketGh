@@ -39,47 +39,80 @@ def add_to_cart(request):
     choice_price = request.data.get('choice_price')
 
     if quantity <= 0:
-        return Response({"error": "Quantity must be greater than 0"}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"error": "Quantity must be greater than 0"},
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     try:
-        product = Product.objects.select_for_update().get(id=product_id)
+        with transaction.atomic():
+            # 🔒 Lock product row inside transaction
+            product = Product.objects.select_for_update().get(id=product_id)
+
+            if product.quantity < quantity:
+                return Response(
+                    {"error": "Not enough stock available"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Validate choice_price
+            try:
+                choice_price = Decimal(choice_price) if choice_price else product.price
+            except:
+                return Response(
+                    {"error": "Invalid choice price"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            if product.price != choice_price:
+                return Response(
+                    {"error": "Choice price out of allowed range"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            cart, _ = Cart.objects.get_or_create(
+                buyer=request.user.profile,
+                status='active'
+            )
+
+            cart_item, created = CartItem.objects.get_or_create(
+                cart=cart,
+                product=product,
+                defaults={
+                    'quantity': quantity,
+                    'choice_price': choice_price
+                }
+            )
+
+            if not created:
+                new_quantity = cart_item.quantity + quantity
+
+                if product.quantity < new_quantity:
+                    return Response(
+                        {"error": "Not enough stock available"},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+
+                cart_item.quantity = new_quantity
+                cart_item.choice_price = choice_price
+                cart_item.save()
+
+        serializer = CartItemSerializer(cart_item, context={'request': request})
+        return Response(
+            {
+                'items': serializer.data,
+                'is_in_cart': True,
+                'message': "Product added to cart successfully"
+            },
+            status=status.HTTP_201_CREATED if created else status.HTTP_200_OK
+        )
+
     except Product.DoesNotExist:
-        return Response({"error": "Product not found"}, status=status.HTTP_404_NOT_FOUND)
+        return Response(
+            {"error": "Product not found"},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
-    # Stock check (if applicable)
-    if product.quantity < quantity:
-        return Response({"error": "Not enough stock available"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # Validate choice_price
-    try:
-        choice_price = Decimal(choice_price) if choice_price else product.price
-    except:
-        return Response({"error": "Invalid choice price"}, status=status.HTTP_400_BAD_REQUEST)
-    
-    if not (product.price == choice_price):
-        return Response({"error": "Choice price out of allowed range"}, status=status.HTTP_400_BAD_REQUEST)
-
-    with transaction.atomic():
-        cart, _ = Cart.objects.get_or_create(buyer=request.user.profile, status='active')
-
-        cart_item, created = CartItem.objects.get_or_create(cart=cart, product=product, defaults={'quantity': quantity, 'choice_price': choice_price})
-
-        if not created:
-            new_quantity = cart_item.quantity + quantity
-
-            if product.quantity < new_quantity:
-                return Response({"error": "Not enough stock available"}, status=status.HTTP_400_BAD_REQUEST)
-            
-            cart_item.quantity = new_quantity
-            cart_item.choice_price = choice_price
-            cart_item.save()
-
-        serializers = CartItemSerializer(cart_item, context={'request': request})
-        return Response({
-            'items': serializers.data,
-            "is_in_cart": True,
-            'message': "Product added to cart successfully"
-        }, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
 
 
 @api_view(['PATCH'])
