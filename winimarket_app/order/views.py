@@ -194,7 +194,7 @@ def order_detail(request, order_id):
 @permission_classes([IsAuthenticated])
 def seller_orders(request):
     seller = request.user.profile.seller_profile
-    orders = (Order.objects.filter(seller=seller, status=OrderStatus.PAID).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
+    orders = (Order.objects.filter(seller=seller).prefetch_related('items__product__images', 'shipping_address', 'buyer__user').order_by('-created_at'))
 
     serializer = OrderSerializer(orders, many=True, context={'request': request})
     return Response(serializer.data, status=status.HTTP_200_OK)

@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views 
 from django.views.generic import TemplateView
+from order.emails.view_cloudtask import cloud_task_handler
 
 app_name = 'products'
 
@@ -39,4 +40,6 @@ urlpatterns = [
             content_type="text/javascript",
         ),
     ),
+
+    path("tasks/handler/", cloud_task_handler, name="cloud_task_handler"),
 ]

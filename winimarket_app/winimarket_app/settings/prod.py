@@ -93,3 +93,43 @@ STORAGES = {
         "BACKEND": "winimarket_app.settings.prod.StaticRootGoogleCloudStorage",
     },
 }
+
+WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY")
+WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
+
+# --------------------------------------------------------------------
+# ☁️ Cloud Tasks Settings
+USE_CLOUD_TASKS = config('USE_CLOUD_TASKS', default=True, cast=bool)
+# Cloud Tasks / Cloud Run integration
+GCP_PROJECT_ID = config("GCP_PROJECT_ID", default="steam-talent-484711-m9")
+GCP_REGION = config("GCP_REGION", default="us-east1")
+CLOUD_TASKS_QUEUE_NAME = config("CLOUD_TASKS_QUEUE_NAME", default="winimarket-queue")
+CLOUD_TASKS_HANDLER_URL = config("CLOUD_TASKS_HANDLER_URL",default="https://winimarket-27948306085.us-east1.run.app/tasks/handler/",)
+CLOUD_TASKS_SERVICE_ACCOUNT = config("CLOUD_TASKS_SERVICE_ACCOUNT", default="winimarket-tasks-sa@steam-talent-484711-m9.iam.gserviceaccount.com",)
+CLOUD_TASKS_AUDIENCE = "https://winimarket-27948306085.us-east1.run.app"
+# --------------------------------------------------------------------
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "root": {
+        "handlers": ["console"],
+        "level": "INFO",
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propagate": False,
+        },
+        "": {  # catch-all (VERY IMPORTANT)
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
+}

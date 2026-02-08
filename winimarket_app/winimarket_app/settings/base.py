@@ -73,6 +73,7 @@ WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY')
 
 SECURE_COOKIE = config('SECURE_COOKIE', default=False, cast=bool)
+USE_CLOUD_TASKS=config('USE_CLOUD_TASKS', default=False, cast=bool)
 
 SITE_URL = "http://127.0.0.1:8000"
 

@@ -1,5 +1,4 @@
 import logging
-from celery import shared_task
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import render_to_string
 from django.utils import timezone
@@ -11,62 +10,84 @@ from order.models import Order, OrderEmailLog, PushSubscription
 from pywebpush import webpush, WebPushException
 
 from celery.utils.log import get_task_logger
-logger = get_task_logger(__name__)
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
+try:
+    from celery import shared_task
+except ImportError:
+    shared_task = None  # Celery not installed or not used in prod
 
-@shared_task(bind=True, max_retries=3)
-def send_email_task(self, *, email_log_id, to_email, subject, template, context):
+def _send_email_task(*, email_log_id, to_email, subject, template, context):
     logger.warning("Sending email for log %s", email_log_id)
+
+    logger.info(f"📧 email_log_id: {email_log_id}")
+    logger.info(f"🔹 Subject: {subject}")
+    logger.info(f"🔹 To email: {to_email}")
+    logger.info(f"🔹 template: {template}")
+    logger.info(f"🔹 context: {context}")
 
     email_log = OrderEmailLog.objects.select_related("order").get(id=email_log_id)
 
     if email_log.status == "sent":
         return
 
+    order = ( Order.objects.select_related("buyer", "buyer__user").prefetch_related("items", "items__product", "items__product__images",).get(id=context["order_id"]))
+
+    user = None
+    if context.get("user_id"):
+        user = User.objects.get(id=context["user_id"])
+
+    email_context = {
+        "order": order,
+        "user": user,
+        "cta_url": context["cta_url"],
+        "site_url": settings.SITE_URL,
+        "event": context["event"],
+    }
+
+    logger.info("Sending email to %s with context %s", to_email, email_context)
+
+    html_content = render_to_string(template, email_context)
+
+    logger.info("🧩 Rendered HTML length: %s", len(html_content))
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body="",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[to_email],
+    )
+    msg.attach_alternative(html_content, "text/html")
+
     try:
-        order = Order.objects.get(id=context["order_id"])
-
-        user = None
-        if context.get("user_id"):
-            user = User.objects.get(id=context["user_id"])
-
-        email_context = {
-            "order": order,
-            "user": user,
-            "cta_url": context["cta_url"],
-            "site_url": settings.SITE_URL,
-            "event": context["event"],
-        }
-
-        logger.info("Sending email to %s with context %s", to_email, email_context)
-
-        html_content = render_to_string(template, email_context)
-
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body="",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email],
-        )
-        msg.attach_alternative(html_content, "text/html")
-
-        sent = msg.send()
+        sent = msg.send(fail_silently=False)
         logger.info("Email sent count=%s", sent)
-
         email_log.mark_sent()
-        email_log.sent_at = timezone.now()
         email_log.save(update_fields=["status", "sent_at"])
 
-    except Exception as exc:
-        logger.exception("Email sending failed")
+    except Exception as e:
+        logger.exception(f"❌ Email sending failed: {e}")
         email_log.mark_failed()
         email_log.save(update_fields=["status"])
-        raise self.retry(exc=exc, countdown=30)
+        return
+    
+if shared_task:
+    @shared_task(bind=True, max_retries=3)
+    def send_email_task(self, **kwargs):
+        try:
+            return _send_email_task(**kwargs)
+        except Exception as exc:
+            logger.exception("Email failed")
+            raise self.retry(exc=exc, countdown=30)
+else:
+    def send_email_task(**kwargs):
+        return _send_email_task(**kwargs)
 
-@shared_task(bind=True, max_retries=3)
-def send_push_task(self, *, user_id, payload):
+
+def _send_push_task(*, user_id, payload):
     """
     Sends a web push notification to all subscriptions for a given user.
     
@@ -112,11 +133,20 @@ def send_push_task(self, *, user_id, payload):
                 logger.info("Deleted invalid/expired subscription %s", sub.endpoint)
                 continue  # Continue to other subscriptions
 
-            # Retry only for temporary server/network errors
+if shared_task:
+    @shared_task(bind=True, max_retries=3)
+    def send_push_task(self, **kwargs):
+        try:
+            return _send_push_task(**kwargs)
+        except Exception as exc:
+            logger.exception("Push notification failed")
             raise self.retry(exc=exc, countdown=30)
+else:
+    def send_push_task(**kwargs):
+        return _send_push_task(**kwargs)
 
-@shared_task(bind=True, max_retries=3)
-def send_seller_email_task(self, *, notification_log_id, to_email, subject, template, context):
+
+def _send_seller_email_task(*, notification_log_id, to_email, subject, template, context):
     logger.warning("Sending seller email for log %s", notification_log_id)
 
     from registration.models import SellerNotificationLog, SellerProfile
@@ -128,35 +158,48 @@ def send_seller_email_task(self, *, notification_log_id, to_email, subject, temp
     if log.status == "sent":
         return
 
+
+    seller = SellerProfile.objects.get(id=context["seller_id"])
+    user = None
+
+    if context.get("user_id"):
+        user = User.objects.get(id=context["user_id"])
+
+    email_context = {
+        "seller": seller,
+        "user": user,
+        "cta_url": context["cta_url"],
+        "site_url": settings.SITE_URL,
+        "event": context["event"],
+    }
+
+    html_content = render_to_string(template, email_context)
+
+    msg = EmailMultiAlternatives(
+        subject=subject,
+        body="",
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[to_email],
+    )
+    msg.attach_alternative(html_content, "text/html")
+
     try:
-        seller = SellerProfile.objects.get(id=context["seller_id"])
-        user = None
-
-        if context.get("user_id"):
-            user = User.objects.get(id=context["user_id"])
-
-        email_context = {
-            "seller": seller,
-            "user": user,
-            "cta_url": context["cta_url"],
-            "site_url": settings.SITE_URL,
-            "event": context["event"],
-        }
-
-        html_content = render_to_string(template, email_context)
-
-        msg = EmailMultiAlternatives(
-            subject=subject,
-            body="",
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[to_email],
-        )
-        msg.attach_alternative(html_content, "text/html")
         msg.send()
-
+        logger.info("Seller email sent to %s", to_email)
         log.mark_sent()
-
-    except Exception as exc:
-        logger.exception("Seller email sending failed")
+    except Exception as e:
+        logger.exception("❌ Seller email sending failed: %s", e)
         log.mark_failed()
-        raise self.retry(exc=exc, countdown=30)
+        raise
+
+if shared_task:
+    @shared_task(bind=True, max_retries=3)
+    def send_seller_email_task(self, **kwargs):
+        try:
+            return _send_seller_email_task(**kwargs)
+        except Exception as exc:
+            logger.exception("Seller email failed: %s", exc)
+            raise self.retry(exc=exc, countdown=30)
+else:
+    def send_seller_email_task(**kwargs):
+        return _send_seller_email_task(**kwargs)

@@ -24,7 +24,7 @@
     <meta property="og:title" content="{% block og_title %}WinimarketGh – Buy & Sell Safely on Campus{% endblock %}">
     <meta property="og:description" content="{% block og_description %}A trusted student marketplace with escrow-secured payments and verified sellers.{% endblock %}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    <meta property="og:image" content="{% static 'images/seo-banner.jpg' %}">
+    <meta property="og:image" content="{% static 'images/seo-banner.png' %}">
     <meta property="og:image:alt" content="WinimarketGh campus marketplace">
 
     <!-- ========================= -->
@@ -357,7 +357,7 @@
 
             if (isIos && !isInStandaloneMode) {
                 // iOS → Show the custom banner
-                iosInstallBanner.classList.add("show");
+                iosInstallBanner.classList.add("visible");
             } else if (deferredPrompt) {
                 // Android → Show native install prompt
                 deferredPrompt.prompt();
@@ -372,15 +372,12 @@
             }
         });
 
+        iosInstallBanner.addEventListener("click", e => e.stopPropagation());
+
         // Handle iOS banner close button
         iosBannerClose.addEventListener("click", () => {
-            iosInstallBanner.classList.add("hide");
+            iosInstallBanner.classList.remove("visible");
         });
-
-        // Optional: auto-hide iOS banner after 12 seconds
-        setTimeout(() => {
-            iosInstallBanner.classList.add("hide");
-        }, 12000);
 
         //CHANGE PASSOWRD FUNCTIONS
         const changePasswordOverlay = document.getElementById('changePasswordOverlay');
@@ -744,24 +741,28 @@
         })
 
         //ACCOUNT FUNCTIONS
-        const accountModal = document.getElementById("accountModal");
+        const accountModalOverlay = document.getElementById("accountModal");
+        const accountModal = accountModalOverlay.querySelector(".account-modal");
         const accountBtn = document.querySelectorAll("#accountBtn");
 
         accountBtn.forEach(btn => {
             btn.addEventListener("click", () => {
-                accountModal.style.display = "flex";
+                accountModalOverlay.classList.add("open");
+                accountModal.classList.add("open");
             });
         })
 
-        accountModal.addEventListener("click", (e) => {
-            if (e.target === accountModal) {
-                accountModal.style.display = "none";
+        accountModalOverlay.addEventListener("click", (e) => {
+            if (e.target === accountModalOverlay) {
+                accountModalOverlay.classList.remove("open");
+                accountModal.classList.remove("open");
             }
         });
 
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
-                accountModal.style.display = "none";
+                accountModalOverlay.classList.remove("open");
+                accountModal.classList.remove("open");
             }
         });
 

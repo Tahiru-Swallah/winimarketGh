@@ -1,10 +1,12 @@
 from .routings import ORDER_EMAIL_ROUTING, ORDER_PUSH_ROUTING, SELLER_NOTIFICATION_ROUTING
 from .recipients import resolve_recipient
-from .tasks import send_email_task, send_push_task, send_seller_email_task
+from .tasks import send_push_task, send_seller_email_task
 from order.models import OrderEmailLog
 from django.conf import settings
 from registration.models import SellerNotificationLog, SellerProfile
 from django.contrib.auth import get_user_model
+from .utils import queue_email_task, queue_push_task, queue_seller_email_task
+from django.db import transaction
 
 class OrderEmailDispatcher:
 
@@ -23,19 +25,12 @@ class OrderEmailDispatcher:
             recipients = resolve_recipient(order, role)
 
             for recipient in recipients:
-                OrderEmailDispatcher._send_email(
-                    order=order,
-                    event=event,
-                    role=role,
-                    recipient=recipient,
-                    config=config
+                transaction.on_commit (
+                    lambda order=order, event=event, role=role, recipient=recipient, config=config: OrderEmailDispatcher._send_email(order=order, event=event, role=role, recipient=recipient, config=config)
                 )
 
-                OrderEmailDispatcher._send_push(
-                    order=order,
-                    event=event,
-                    role=role,
-                    recipient=recipient
+                transaction.on_commit (
+                    lambda order=order, event=event, role=role, recipient=recipient: OrderEmailDispatcher._send_push(order=order, event=event, role=role, recipient=recipient)
                 )
 
     @staticmethod
@@ -55,21 +50,28 @@ class OrderEmailDispatcher:
             subject=config["subject"],
         )
 
+        user_id = recipient.get("user_id")
+
+        if not user_id:
+            return 
+
         context = {
-            "order_id": order.id,
-            "user_id": recipient.get("user_id"),
+            "order_id": str(order.id),
+            "user_id": str(user_id),
             "cta_url": config["cta"].format(order_id=order.id),
             "site_url": settings.SITE_URL,
             "event": event,
         }
 
-        send_email_task.delay(
-            email_log_id=email_log.id,
-            to_email=recipient["email"],
-            subject=config["subject"],
-            template=config["template"],
-            context=context
-        )
+        payload = {
+            "email_log_id": str(email_log.id),
+            "to_email": recipient["email"],
+            "subject": config["subject"],
+            "template": config["template"],
+            "context": context
+        }
+
+        queue_email_task(**payload)
 
     @staticmethod
     def _send_push(*, order, event, role, recipient):
@@ -87,16 +89,16 @@ class OrderEmailDispatcher:
             return
         
         payload = {
-            "title": config["title"],
-            "body": config["body"],
-            "url": config["url"],
-            "order_id": str(order.id),
+            "user_id": str(user_id),
+            "payload":{
+                "title": config["title"],
+                "body": config["body"],
+                "url": config["url"],
+                "order_id": str(order.id),
+            }
         }
 
-        send_push_task.delay(
-            user_id=user_id,
-            payload=payload
-        )
+        queue_push_task(**payload)
 
 User = get_user_model()
 class SellerNotificationDispatcher:
@@ -130,20 +132,22 @@ class SellerNotificationDispatcher:
             )
 
             context = {
-                "seller_id": seller.id,
-                "user_id": user.id,
+                "seller_id": str(seller.id),
+                "user_id": str(user.id),
                 "event": event,
                 "cta_url": email_cfg["cta"],
                 "site_url": settings.SITE_URL,
             }
 
-            send_seller_email_task.delay(
-                notification_log_id=log.id,
-                to_email=user.email,
-                subject=email_cfg["subject"],
-                template=email_cfg["template"],
-                context=context
-            )
+            payload = {
+                "notification_log_id": str(log.id),
+                "to_email": user.email,
+                "subject": email_cfg["subject"],
+                "template": email_cfg["template"],
+                "context": context
+            }
+
+            queue_seller_email_task(**payload)
 
         push_cfg = routes.get('push')
         if push_cfg:
@@ -155,9 +159,11 @@ class SellerNotificationDispatcher:
                 payload=push_cfg
             )
 
-            send_push_task.delay(
-                user_id=user.id,
-                payload=push_cfg
-            )
+            payload = {
+                "user_id": str(user.id),
+                "payload": push_cfg
+            }
+
+            queue_push_task(**payload)
 
             log.mark_sent()

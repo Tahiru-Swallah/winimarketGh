@@ -8,8 +8,8 @@
             <div class="hero-text">
                 <h2>Buy and Sell with Confidence on Campus</h2>
                 <p>
-                    Winimarket connect verified student etrepreneurs with buyers accross campus and beyond.
-                    Discover quality products, pay securely with Mobile Money, and shop knowing every seller is verified.
+                    Winimarket connect verified student etrepreneurs with buyers across campus and beyond.
+                    Discover quality products, pay securely with Mobile Money, and shop knowing every seller is verified and Legit.
                 </p>
 
                 <div class="hero-CTA">
@@ -74,6 +74,16 @@
     <div class="bottom-loader"></div>
     
 <script type="module" src="{% static 'js_files/main/index.js'%}"></script>
+<script>
+    const isIos = /iphone|ipad|ipod/.test(window.navigator.userAgent.toLowerCase());
+    const isInStandaloneMode = window.navigator.standalone === true;
+
+    if (isIos && !isInStandaloneMode) {
+        if (installBtn) {
+            installBtn.style.display = "inline-block";
+        }
+    }
+</script>
 {% endblock %}
 </body>
 </html>
