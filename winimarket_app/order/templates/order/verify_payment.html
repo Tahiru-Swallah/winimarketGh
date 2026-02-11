@@ -11,6 +11,10 @@
             Please wait while we confirm your payment…
         </p>
 
+        <div class="email-confirm">
+            <p></p>
+        </div>
+
         <div id="verify-actions" style="display: none;">
             <button id="retry-btn" class="secondary-btn hidden">
                 Retry Payment
@@ -30,6 +34,7 @@
             const actions = document.getElementById('verify-actions');
             const retryBtn = document.getElementById('retry-btn');
             const viewOrderBtn = document.getElementById('viewBtn')
+            const email = document.querySelector('.email-confirm p');
 
             const reference = new URLSearchParams(window.location.search).get('reference');
             const orderIds = JSON.parse(localStorage.getItem('pending_order_ids') || '[]');
@@ -64,6 +69,7 @@
                 // SUCCESS
                 title.textContent = 'Payment Successful 🎉';
                 message.textContent = 'Your order has been confirmed and is now processing.';
+                email.textContent = '✅ Order placed successfully. 📩 Check your email for order details and delivery updates.';
                 document.querySelector('.spinner').remove();
 
                 localStorage.removeItem('pending_order_ids');

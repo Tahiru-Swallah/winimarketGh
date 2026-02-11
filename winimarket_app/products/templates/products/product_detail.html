@@ -1,7 +1,22 @@
 {% extends 'base.html' %}
 {% load static %}
 
-{% block title %}{{ product.name }} - WinimarketGh{% endblock %}
+{% block title %}
+{{ product.name }} – ₵{{ product.price }} | WinimarketGh
+{% endblock %}
+
+{% block meta_description %}
+Buy {{ product.name }} for ₵{{ product.price }} on WinimarketGh. Secure escrow payments and trusted campus sellers.
+{% endblock %}
+
+{% block og_title %}
+{{ product.name }} – Available on WinimarketGh
+{% endblock %}
+
+{% block og_description %}
+Order {{ product.name }} safely from verified campus sellers using escrow protection.
+{% endblock %}
+
 
 {% block content %}
 <div class="product-detail-section">
@@ -137,4 +152,32 @@
 
     getProductDetail();
 </script>
+
+<script type="application/ld+json">
+  {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    "name": "{{ product.name|escapejs }}",
+    "description": "{{ product.description|truncatewords:25|escapejs }}",
+    "image": [
+      "{{ request.scheme }}://{{ request.get_host }}{{ product.images.first.image.url }}"
+    ],
+    "sku": "{{ product.id }}",
+    "brand": {
+      "@type": "Brand",
+      "name": "WinimarketGh"
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": "{{ request.build_absolute_uri }}",
+      "priceCurrency": "GHS",
+      "price": "{{ product.price }}",
+      "seller": {
+        "@type": "Organization",
+        "name": "{{ product.seller.store_name|default:'Winimarket Seller' }}"
+      }
+    }
+  }
+</script>
+
 {% endblock %}

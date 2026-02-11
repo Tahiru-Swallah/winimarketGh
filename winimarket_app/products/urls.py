@@ -3,7 +3,14 @@ from . import views
 from django.views.generic import TemplateView
 from order.emails.view_cloudtask import cloud_task_handler
 
+from django.contrib.sitemaps.views import sitemap
+from .sitemap import ProductSiteMap
+
 app_name = 'products'
+
+sitemaps = {
+    'products': ProductSiteMap,
+}
 
 urlpatterns = [
     # Category API URLs
@@ -40,6 +47,11 @@ urlpatterns = [
             content_type="text/javascript",
         ),
     ),
+    path("robots.txt", TemplateView.as_view(template_name="robots.txt", content_type="text/plain")),
 
     path("tasks/handler/", cloud_task_handler, name="cloud_task_handler"),
+    path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
+
+    path('product/<uuid:pk>/reviews/', views.product_reviews, name='product_reviews'),
+    path('product/reviews/add/', views.create_review, name='add_product_review'),
 ]

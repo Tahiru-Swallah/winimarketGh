@@ -1440,6 +1440,20 @@ section{
   color: var(--primary-color);
 }
 
+.checkout-right p{
+  margin-top: 15px;
+  font-size: 12px;
+  color: #555;
+  font-style: italic;
+}
+
+.email-disclaimer p{
+  margin-top: 15px;
+  font-size: 12px;
+  color: #555;
+  font-style: italic;
+}
+
 /* ========== PAY BUTTON ========== */
 .primary-btn {
   width: 100%;

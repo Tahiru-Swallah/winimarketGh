@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
-from .models import Category, Product, ProductImage
+from .models import Category, Product, ProductImage, Review
 
 # ========== CATEGORY ADMIN ==========
 @admin.register(Category)
@@ -15,6 +15,12 @@ class CategoryAdmin(admin.ModelAdmin):
         return obj.products.count()
     product_count.short_description = "Products"
 
+# ========== INLINE PRODUCT REVIEW ==========
+class ReviewInline(admin.TabularInline):
+    model = Review
+    extra = 0
+    readonly_fields = ("reviewer", "ratings")
+    fields = ("reviewer", "ratings", "reviewed_text")
 
 # ========== INLINE PRODUCT IMAGE ==========
 class ProductImageInline(admin.TabularInline):
@@ -81,7 +87,7 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ("name", "description", "seller__store_name", "category__name")
     list_editable = ("is_active",)
     list_per_page = 20
-    inlines = [ProductImageInline]
+    inlines = [ProductImageInline, ReviewInline]
     prepopulated_fields = {"slug": ("name",)}
     ordering = ("-created_at",)
 
@@ -140,3 +146,8 @@ class ProductImageAdmin(admin.ModelAdmin):
         if obj.is_primary:
             ProductImage.objects.filter(product=obj.product, is_primary=True).exclude(pk=obj.pk).update(is_primary=False)
         super().save_model(request, obj, form, change)
+
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "reviewer", "ratings")
+    list_filter = ("ratings",)
+    search_fields = ("product__name", "reviewer__full_name")

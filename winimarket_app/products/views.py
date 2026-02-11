@@ -15,8 +15,8 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Product, Category
-from .serializers import (CategorySerializer, ProductSerializer)
+from .models import Product, Category, Review
+from .serializers import (CategorySerializer, ProductSerializer, ReviewSerializer)
 
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
@@ -228,20 +228,28 @@ def seller_dashboard_stats(request):
 
     return Response(stats, status=status.HTTP_200_OK)
 
+# -----------------------------
+# CREATE REVIEW
+# -----------------------------
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_review(request):
+    serializer = ReviewSerializer(data=request.data, context={'request': request})
 
+    if serializer.is_valid():
+        serializer.save()
+        return Response({"message": "Review submitted successfully."}, status=status.HTTP_201_CREATED)
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-
-
-
-
-
-
-
-
-
-
-
-
+# -----------------------------
+# LIST REVIEW
+# -----------------------------
+@api_view(['GET'])
+def product_reviews(request, product_id):
+    reviews = Review.objects.filter(product__id=product_id).select_related('reviewer__user')
+    serializer = ReviewSerializer(reviews, many=True)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 # -----------------------------
 # WISHLIST CREATE, LIST, DELETE 

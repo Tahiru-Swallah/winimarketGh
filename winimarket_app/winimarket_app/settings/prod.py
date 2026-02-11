@@ -121,15 +121,4 @@ LOGGING = {
         "handlers": ["console"],
         "level": "INFO",
     },
-    "loggers": {
-        "django": {
-            "handlers": ["console"],
-            "level": "INFO",
-            "propagate": False,
-        },
-        "": {  # catch-all (VERY IMPORTANT)
-            "handlers": ["console"],
-            "level": "INFO",
-        },
-    },
 }

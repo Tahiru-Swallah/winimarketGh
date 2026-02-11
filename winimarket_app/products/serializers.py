@@ -1,9 +1,11 @@
 from rest_framework import serializers
-from .models import Product, ProductImage, WishList, Category
+from .models import Product, ProductImage, WishList, Category, Review
 from django.utils.text import slugify
 from uuid import uuid4
 from registration.serializers import SellerProfileSerializer, ProfileSerializer
 from cart.models import CartItem
+
+from order.models import Order, OrderStatus
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -204,3 +206,34 @@ class WishListSerializer(serializers.ModelSerializer):
             data['products']['is_favorited'] = True
         
         return data
+    
+class ReviewSerializer(serializers.ModelSerializer):
+    reviewer_name = serializers.CharField(source="reviewer.full_name", read_only=True)
+    reviewer_email = serializers.EmailField(source="reviewer.user.email", read_only=True)
+
+    class Meta:
+        model = Review
+        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'ratings', 'review_text', 'created_at']
+        read_only_fields = ['id', 'reviewer_name', 'reviewer_email', 'created_at']
+
+    def validate(self, data):
+        request = self.context['request']
+        user_profile = request.user.profile
+        product = data.get('product')
+
+        # ✅ Ensure buyer completed order containing this product
+        has_completed_order = Order.objects.filter(
+            buyer=user_profile,
+            status=OrderStatus.COMPLETED,
+            items__product=product
+        ).exists()
+
+        if not has_completed_order:
+            raise serializers.ValidationError("You can only review products you have purchased.")
+        
+        return data
+    
+    def create(self, validated_data):
+        request = self.context['request']
+        validated_data['reviewer'] = request.user.profile
+        return super().create(validated_data)

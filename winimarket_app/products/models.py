@@ -7,6 +7,8 @@ from PIL import Image
 from io import BytesIO
 from django.core.files.base import ContentFile
 
+from django.core.validators import MinValueValidator, MaxValueValidator
+
 # -----------------------------
 # Category Model
 # -----------------------------
@@ -92,6 +94,13 @@ class Product(models.Model):
     def image_count(self):
         # Returns the number of images for this product
         return self.images.count()
+    
+    @property
+    def average_rating(self):
+        reviews = self.reviews.all()
+        if not reviews.exists():
+            return 0
+        return round(sum(r.ratings for r in reviews) / reviews.count(), 1)
 
     def __str__(self):
         return f"{self.name} - {self.category.name if self.category else 'Uncategorized'}"
@@ -185,3 +194,22 @@ class WishList(models.Model):
 
     def __str__(self):
         return f"{self.buyer.user.email} Wishlisted {self.products.name}"
+    
+# -----------------------------
+# Product Review Model  
+# -----------------------------
+class Review(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    product = models.ForeignKey(Product, related_name='reviews', on_delete=models.CASCADE)
+    reviewer = models.ForeignKey(Profile, related_name='reviews', on_delete=models.CASCADE)
+    ratings = models.PositiveIntegerField(validators=[MinValueValidator(1), MaxValueValidator(5)], help_text="Rating must be between 1 and 5")
+    reviewed_text = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('product', 'reviewer')  # Ensure one review per user per product
+        ordering = ['-created_at']  # Newest reviews first
+        indexes = [models.Index(fields=['-created_at'])]  # Index for faster queries
+
+    def __str__(self):
+        return f"Review by {self.reviewer.user.email} for {self.product.name}"
