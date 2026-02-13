@@ -80,6 +80,7 @@ class ProductSerializer(serializers.ModelSerializer):
     is_available = serializers.BooleanField( read_only=True)
     is_seller = serializers.BooleanField(read_only=True)
     image_count = serializers.IntegerField(read_only=True)
+    average_rating = serializers.FloatField(read_only=True)
 
     is_in_cart = serializers.SerializerMethodField()
 
@@ -89,10 +90,10 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'seller', 'name', 'slug', 'description', 'price',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count', 'is_in_cart'
+            'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', 'is_in_cart'
         ]
 
-        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating']
 
     def get_is_in_cart(self, obj):
         request = self.context.get('request')
@@ -213,7 +214,7 @@ class ReviewSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Review
-        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'ratings', 'review_text', 'created_at']
+        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'ratings', 'reviewed_text', 'created_at']
         read_only_fields = ['id', 'reviewer_name', 'reviewer_email', 'created_at']
 
     def validate(self, data):

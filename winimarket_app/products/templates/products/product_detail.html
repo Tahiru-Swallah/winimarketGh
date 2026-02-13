@@ -99,6 +99,42 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
       </button>
 
       <span class="cart-feedback hidden"></span>
+
+      <!-- REVIEW SECTION -->
+      <div class="review-section">
+
+        <h3>Customer Reviews</h3>
+
+        <!-- Average Rating -->
+        <div class="review-summary">
+            <span id="avg-rating">0</span>
+            <div class="stars" id="avg-stars"></div>
+            <small id="review-count">0 reviews</small>
+        </div>
+
+        <!-- REVIEW FORM -->
+        <div id="review-form-container" class="review-form {% if can_review %}''{% else %}hidden{% endif %}">
+            <h4>Write a Review</h4>
+
+            <!-- STAR SELECTOR -->
+            <div class="star-selector" id="star-selector">
+                <span data-value="1">★</span>
+                <span data-value="2">★</span>
+                <span data-value="3">★</span>
+                <span data-value="4">★</span>
+                <span data-value="5">★</span>
+            </div>
+
+            <textarea id="review-text" placeholder="Share your experience..." rows="4"></textarea>
+
+            <button id="submit-review" class="primary-btn">Submit Review</button>
+        </div>
+
+        <!-- REVIEWS LIST -->
+        <div id="review-list"></div>
+
+      </div>
+
     </div>
 
   </div>
@@ -151,6 +187,108 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
     }
 
     getProductDetail();
+
+    let selectedRating = 0;
+    const productId = addToCartBtn.dataset.productId;
+
+    /* ---------------- STAR SELECTOR ---------------- */
+    document.querySelectorAll('#star-selector span').forEach(star => {
+        star.addEventListener('click', () => {
+            selectedRating = star.dataset.value;
+            document.querySelectorAll('#star-selector span').forEach(s => {
+                s.classList.toggle('active', s.dataset.value <= selectedRating);
+            });
+        });
+    });
+
+    /* ---------------- LOAD REVIEWS ---------------- */
+    async function loadReviews(){
+      const res = await fetch(`/api/product/${productId}/reviews/`);
+      const reviews = await res.json();
+
+      const list = document.getElementById('review-list');
+      list.innerHTML = '';
+
+      if (reviews.length === 0) {
+        list.innerHTML = '<p>No reviews yet. Be the first to review!</p>';
+        return;
+      }
+
+      let total = 0;
+
+      reviews.forEach(r => {
+        total += r.ratings;
+        const date = new Date(r.created_at).toLocaleString('en-US', {
+          month: 'short', day: 'numeric', year: 'numeric',
+          hour: '2-digit', minute: '2-digit', hour12: true
+        });
+
+        list.innerHTML += `
+          <div class="review-card">
+              <div class="name">${r.reviewer_name || r.reviewer_email}</div>
+              <div class="stars">
+                  ${renderStars(r.ratings)}
+              </div>
+              <p>${r.reviewed_text || ''}</p>
+              <div class="date">${date}</div>
+          </div>
+        `
+      })
+
+      const avg = (total / reviews.length).toFixed(1);
+      document.getElementById('avg-rating').textContent = avg;
+      document.getElementById('avg-stars').innerHTML = renderStars(Math.round(avg));
+      document.getElementById('review-count').textContent = `${reviews.length} review${reviews.length > 1 ? 's' : ''}`;
+    }
+
+    function renderStars(count){
+      let stars = ''
+
+      for (let i = 1; i <=5; i++){
+        stars += `<span class="${i <= count ? 'active' : ''}">★</span>`;
+      }
+
+      return stars;
+    }
+
+    /* ---------------- SUBMIT REVIEW ---------------- */
+    document.getElementById('submit-review').addEventListener('click', async () => {
+
+        if(selectedRating == 0){
+            showToast("Please select rating", "error");
+            return;
+        }
+
+        const text = document.getElementById('review-text').value;
+
+        const res = await fetch('/api/product/reviews/add/', {
+            method:'POST',
+            headers:{
+                'Content-Type':'application/json',
+                'X-CSRFToken': getCSRFToken()
+            },
+            body: JSON.stringify({
+                product: productId,
+                ratings: selectedRating,
+                reviewed_text: text
+            })
+        });
+
+        const data = await res.json();
+
+        if(res.ok){
+            showToast("Review submitted", "success");
+            document.getElementById('review-text').value = '';
+            selectedRating = 0;
+            document.querySelectorAll('#star-selector span').forEach(s=>s.classList.remove('active'));
+            loadReviews();
+        }else{
+            showToast(data.detail || data.non_field_errors?.[0] || "Unable to submit review", "error");
+        }
+    });
+
+    /* ---------------- INIT ---------------- */
+    document.addEventListener('DOMContentLoaded', loadReviews);
 </script>
 
 <script type="application/ld+json">

@@ -174,6 +174,10 @@ class ProductImage(models.Model):
 
             except Exception as e:
                 raise ValidationError(f"Error processing image: {e}")
+            
+    class Meta:
+        ordering = ['-uploaded_at']  # Newest images first
+        indexes = [models.Index(fields=['-uploaded_at'])]  # Index for faster queries
 
     def __str__(self):
         return f"Images for {self.product.name}"

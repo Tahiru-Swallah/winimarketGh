@@ -52,6 +52,6 @@ urlpatterns = [
     path("tasks/handler/", cloud_task_handler, name="cloud_task_handler"),
     path("sitemap.xml", sitemap, {"sitemaps": sitemaps}, name="sitemap"),
 
-    path('product/<uuid:pk>/reviews/', views.product_reviews, name='product_reviews'),
-    path('product/reviews/add/', views.create_review, name='add_product_review'),
+    path('api/product/<uuid:product_id>/reviews/', views.product_reviews, name='product_reviews'),
+    path('api/product/reviews/add/', views.create_review, name='add_product_review'),
 ]

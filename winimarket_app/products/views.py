@@ -43,8 +43,9 @@ def product_upload_view(request):
 
 def product_detail_view(request, pk, slug):
     product = get_object_or_404(Product.objects.select_related('seller', 'seller__profile', 'category').prefetch_related("images"), pk=pk, slug=slug, is_active=True)
+    can_review = Order.objects.filter(buyer=request.user.profile, status=OrderStatus.COMPLETED, items__product=product).exists()
 
-    return render(request, 'products/product_detail.html', {'product': product})
+    return render(request, 'products/product_detail.html', {'product': product, "can_review": can_review})
 
 
 # -----------------------------

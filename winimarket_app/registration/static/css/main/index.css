@@ -1007,6 +1007,75 @@ section{
   background: rgba(40, 167, 69, 0.25);
 }
 
+.review-section{
+  margin-top:40px;
+}
+
+.review-summary{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:20px;
+}
+
+.review-summary #avg-rating{
+  font-size:22px;
+  font-weight:700;
+}
+
+.stars span{
+  color:#ddd;
+  font-size:20px;
+}
+
+.stars span.active{
+  color:#f59e0b;
+}
+
+.review-form{
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+  margin-bottom:20px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.05);
+}
+
+.star-selector span{
+  font-size:26px;
+  cursor:pointer;
+  color:#ddd;
+}
+
+.star-selector span.active{
+  color:#f59e0b;
+}
+
+#review-text{
+  width:100%;
+  margin-top:10px;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #ddd;
+}
+
+.review-card{
+  border-bottom:1px solid #eee;
+  padding:12px 0;
+}
+
+.review-card .name{
+  font-weight:600;
+}
+
+.review-card .date{
+  font-size:12px;
+  color:#888;
+}
+
+.review-card .stars span{
+  font-size:16px;
+}
+
 #toast-container {
   position: fixed;
   top: 20px;
