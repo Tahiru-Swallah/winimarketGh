@@ -210,12 +210,11 @@
         }
 
         orders.forEach(order => {
-            console.log(order)
             container.innerHTML += `
                 <div class="order-row">
                     <div>
                         <strong>#${order.id.slice(0, 8)}</strong>
-                        <p>${ order.buyer.full_name||order.buyer.user_email }</p>
+                        <p>${ order.buyer.full_name || order.buyer.seller_name ||order.buyer.user_email }</p>
                     </div>
 
                     <span class="status ${order.status}">

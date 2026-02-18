@@ -113,7 +113,7 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
         </div>
 
         <!-- REVIEW FORM -->
-        <div id="review-form-container" class="review-form {% if can_review %}''{% else %}hidden{% endif %}">
+        <div id="review-form-container" class="review-form hidden">
             <h4>Write a Review</h4>
 
             <!-- STAR SELECTOR -->
@@ -139,6 +139,18 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
 
   </div>
 
+</div>
+
+<!-- FULL IMAGE VIEWER MODAL -->
+<div id="imageLightbox" class="image-lightbox hidden">
+  <span class="close-lightbox">&times;</span>
+
+  <img id="lightboxImage" src="" alt="Full Product Image"/>
+
+  <div class="lightbox-nav">
+    <button id="prevImage">&#10094;</button>
+    <button id="nextImage">&#10095;</button>
+  </div>
 </div>
 
 <script type="module">
@@ -177,6 +189,10 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
         if (data.is_in_cart) {
             addToCartBtn.textContent = "In Cart ✓";
             addToCartBtn.classList.add("in-cart");
+        }
+
+        if (data.can_review) {
+            document.getElementById('review-form-container').classList.remove('hidden');
         }
 
         return data;
@@ -225,7 +241,7 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
 
         list.innerHTML += `
           <div class="review-card">
-              <div class="name">${r.reviewer_name || r.reviewer_email}</div>
+              <div class="name">${r.reviewer_name || r.reviewer_seller_name || r.reviewer_email}</div>
               <div class="stars">
                   ${renderStars(r.ratings)}
               </div>
@@ -289,6 +305,70 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
 
     /* ---------------- INIT ---------------- */
     document.addEventListener('DOMContentLoaded', loadReviews);
+
+    document.addEventListener("DOMContentLoaded", function() {
+
+      const lightbox = document.getElementById("imageLightbox");
+      const lightboxImg = document.getElementById("lightboxImage");
+      const closeBtn = document.querySelector(".close-lightbox");
+      const thumbnails = document.querySelectorAll(".thumbnail");
+      const mainImage = document.getElementById("mainProductImage");
+      const prevBtn = document.getElementById("prevImage");
+      const nextBtn = document.getElementById("nextImage");
+
+      let images = [];
+      let currentIndex = 0;
+
+      // Collect all images
+      thumbnails.forEach((thumb, index) => {
+        images.push(thumb.dataset.full);
+
+        thumb.addEventListener("click", () => {
+          mainImage.src = thumb.dataset.full;
+          currentIndex = index;
+        });
+      });
+
+      // OPEN LIGHTBOX when main image clicked
+      mainImage.addEventListener("click", () => {
+        lightbox.classList.remove("hidden");
+        lightboxImg.src = images[currentIndex];
+        document.body.style.overflow = "hidden";
+      });
+
+      // CLOSE LIGHTBOX
+      closeBtn.addEventListener("click", closeLightbox);
+      lightbox.addEventListener("click", (e) => {
+        if (e.target === lightbox) closeLightbox();
+      });
+
+      function closeLightbox() {
+        lightbox.classList.add("hidden");
+        document.body.style.overflow = "auto";
+      }
+
+      // NEXT IMAGE
+      nextBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex + 1) % images.length;
+        lightboxImg.src = images[currentIndex];
+      });
+
+      // PREVIOUS IMAGE
+      prevBtn.addEventListener("click", () => {
+        currentIndex = (currentIndex - 1 + images.length) % images.length;
+        lightboxImg.src = images[currentIndex];
+      });
+
+      // KEYBOARD SUPPORT
+      document.addEventListener("keydown", (e) => {
+        if (lightbox.classList.contains("hidden")) return;
+
+        if (e.key === "Escape") closeLightbox();
+        if (e.key === "ArrowRight") nextBtn.click();
+        if (e.key === "ArrowLeft") prevBtn.click();
+      });
+
+    })
 </script>
 
 <script type="application/ld+json">

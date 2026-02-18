@@ -83,6 +83,7 @@ class ProductSerializer(serializers.ModelSerializer):
     average_rating = serializers.FloatField(read_only=True)
 
     is_in_cart = serializers.SerializerMethodField()
+    can_review = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
@@ -90,10 +91,10 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'seller', 'name', 'slug', 'description', 'price',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', 'is_in_cart'
+            'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', 'is_in_cart', "can_review"
         ]
 
-        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating']
+        read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', "can_review"]
 
     def get_is_in_cart(self, obj):
         request = self.context.get('request')
@@ -105,6 +106,18 @@ class ProductSerializer(serializers.ModelSerializer):
             cart__buyer=request.user.profile,
             cart__status='active',
             product=obj
+        ).exists()
+    
+    def get_can_review(self, obj):
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        return Order.objects.filter(
+            buyer=request.user.profile,
+            status=OrderStatus.COMPLETED,
+            items__product=obj
         ).exists()
 
     def validate_category_id(self, value):
@@ -211,11 +224,12 @@ class WishListSerializer(serializers.ModelSerializer):
 class ReviewSerializer(serializers.ModelSerializer):
     reviewer_name = serializers.CharField(source="reviewer.full_name", read_only=True)
     reviewer_email = serializers.EmailField(source="reviewer.user.email", read_only=True)
+    reviewer_seller_name = serializers.CharField(source="reviewer.seller_profile.store_name", read_only=True)
 
     class Meta:
         model = Review
-        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'ratings', 'reviewed_text', 'created_at']
-        read_only_fields = ['id', 'reviewer_name', 'reviewer_email', 'created_at']
+        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'reviewer_seller_name', 'ratings', 'reviewed_text', 'created_at']
+        read_only_fields = ['id', 'reviewer_name', 'reviewer_email', 'reviewer_seller_name', 'created_at']
 
     def validate(self, data):
         request = self.context['request']

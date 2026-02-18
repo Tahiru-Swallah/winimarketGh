@@ -199,7 +199,7 @@
                 <span class="material-icons-outlined">person</span>
             </div>
             <div class="user-info">
-                <h4>Hello, {{ user.first_name|default:"User" }}</h4>
+                <h4>Hello, {% if user.profile.role == "seller" %} {{ user.profile.seller_profile.store_name|default:"User" }} {% else %} {{ user.profile.full_name|default:"User" }} {% endif %} </h4>
                 <p>{{ user.email }}</p>
             </div>
             </div>
@@ -501,7 +501,7 @@
 
                 const data = await response.json()
                 cartTotalEl.textContent = `₡${Number(data.total_price).toFixed(2)}`;
-                console.log("Cart data:", data);
+                
 
                 renderCartItems(data.items);
 

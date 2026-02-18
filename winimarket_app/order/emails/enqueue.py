@@ -83,8 +83,8 @@ def enqueue_push_notification(**payload):
         "task": "send_push_task",
         "payload": payload
     }).encode()
-
-    task_id = f"order-push-{payload.get('user_id')}"
+    
+    task_id = f"order-push-{payload.get('user_id')}-{uuid.uuid4()}"
 
     task = {
         "name": client.task_path(

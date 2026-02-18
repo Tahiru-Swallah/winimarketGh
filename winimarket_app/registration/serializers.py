@@ -92,9 +92,10 @@ class RegisterSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)
     user_email = serializers.EmailField(source='user.email', read_only=True)
+    seller_name = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Profile
-        fields = ('id', 'user', 'role', "role_confirmed", 'full_name', "user_email", 'profile_picture', 'created_at')
+        fields = ('id', 'user', 'role', "role_confirmed", 'full_name', "user_email", 'profile_picture', 'seller_name', 'created_at')
         read_only_fields = ('id', 'user', 'role', 'created_at')
 
     def validate_profile_picture(self, value):
@@ -109,6 +110,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         validated_data['user'] = user
         return super().create(validated_data)
+    
+    def get_seller_name(self, obj):
+        if hasattr(obj, 'seller_profile'):
+            return obj.seller_profile.store_name
+        return None
     
 class SellerAddressSerializer(serializers.ModelSerializer):
     class Meta:

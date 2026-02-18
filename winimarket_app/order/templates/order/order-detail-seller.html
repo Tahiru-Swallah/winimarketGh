@@ -93,10 +93,8 @@
           hour: '2-digit', minute: '2-digit', hour12: true
         }) : "N/A";
 
-        console.log(order)
-
         // Buyer info
-        document.getElementById('buyer-name').textContent = order.buyer.full_name || order.buyer.user_email
+        document.getElementById('buyer-name').textContent = order.buyer.full_name || order.buyer.seller_name || order.buyer.user_email 
         document.getElementById('call-buyer').href =`tel:${order.shipping_address.phonenumber}`
         document.getElementById('paid_at').textContent = order.paid_at ? new Date(order.paid_at).toLocaleString('en-US', {
           month: 'short', day: 'numeric', year: 'numeric',
@@ -105,6 +103,7 @@
 
         document.getElementById('shipping-address').textContent = `${order.shipping_address.campus}, ${order.shipping_address.campus_area}, ${order.shipping_address.hall_or_hostel}, ${order.shipping_address.phonenumber}`
 
+        console.log('Order items:', order)
         // Order status
         statusSelect.textContent = order.track_status
 
@@ -189,8 +188,6 @@
 
                 const updatedOrder = await res.json();
                 currentOrder = updatedOrder;
-
-                console.log(currentOrder)
 
                 showToast('Order status updated ✅', 'success');
 

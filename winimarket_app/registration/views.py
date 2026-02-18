@@ -265,18 +265,31 @@ def set_role(request):
     if role not in ['buyer', 'seller']:
         return Response({'error': 'Invalid role, choose buyer or seller.'}, status=status.HTTP_400_BAD_REQUEST)
     
-    # Prevent changing role after confirmation
-    if profile.role_confirmed:
-        return Response(
-            {'error': 'Role has already been set and cannot be changed.'},
-            status=status.HTTP_400_BAD_REQUEST
-        )
-    
-    profile.role = role
-    profile.role_confirmed = True
-    profile.save()
+    # ✅ Allow Buyer → Seller upgrade
+    if profile.role == 'buyer' and role == 'seller':
+        profile.role = 'seller'
+        profile.role_confirmed = True
+        profile.save()
 
-    return Response({'message': f'Role updated to {profile.role} successfully.'}, status=status.HTTP_200_OK)
+        return Response({'message': 'Role updated to seller successfully.'}, status=status.HTTP_200_OK)
+    
+    # ❌ Prevent Seller → Buyer downgrade (optional safety)
+    if profile.role == 'seller' and role == 'buyer':
+        return Response({
+            'error': 'Seller accounts cannot switch back to Buyer.'
+        }, status=status.HTTP_400_BAD_REQUEST)
+    
+    # First-time role set (original behavior)
+    if not profile.role_confirmed:
+        profile.role = role
+        profile.role_confirmed = True
+        profile.save()
+
+        return Response({
+            'message': f'Role set to {profile.role}',
+        }, status=status.HTTP_200_OK)
+
+    return Response({'error': 'Role already set.'}, status=status.HTTP_400_BAD_REQUEST)
 
 # -----------------------
 # Seller onboarding

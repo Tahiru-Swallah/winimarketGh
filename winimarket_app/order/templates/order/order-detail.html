@@ -15,6 +15,8 @@
     <span class="order-status-badge" id="order-status"></span>
   </div>
 
+  <p class="email-disclaimer" id="email-disclaimer"></p>
+
   <!-- TRACKING -->
   <div class="tracking-card">
     <h3>Order Tracking</h3>
@@ -83,7 +85,7 @@
             document.getElementById('seller-name').textContent = order.seller
             document.getElementById('paidAt').textContent = order.paid_at ? new Date(order.paid_at).toLocaleString('en-US', {month: 'short', day: 'numeric', year: 'numeric',hour: '2-digit', minute: '2-digit', hour12: true}) : 'Not Paid Yet'
 
-            console.log(order)
+            document.getElementById('email-disclaimer').textContent = `📧 Order updates will be sent to ${order.buyer.user_email}. Please check your inbox (and spam folder).`
 
             // Status badge
             const statusBadge = document.getElementById('order-status');
