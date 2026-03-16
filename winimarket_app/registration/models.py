@@ -150,6 +150,7 @@ class SellerPayment(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
     seller = models.OneToOneField(SellerProfile, on_delete=models.CASCADE, related_name='payment')
 
+    service_provider = models.CharField(max_length=20, help_text="MTN Mobile Money / Vodafone Cash / AirtelTigo Money", default="MTN Mobile Money")
     momo_name = models.CharField(max_length=255)
     momo_number = models.CharField(max_length=20)
 

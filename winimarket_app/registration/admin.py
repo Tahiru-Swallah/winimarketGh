@@ -255,6 +255,7 @@ class SellerVerificationAdmin(admin.ModelAdmin):
 class SellerPaymentAdmin(admin.ModelAdmin):
     list_display = (
         'seller',
+        'service_provider',
         'momo_name',
         'masked_momo_number',
         'bank_name',
@@ -292,4 +293,4 @@ class SellerAuditLogAdmin(admin.ModelAdmin):
         return False
 
     def has_delete_permission(self, request, obj=None):
-        return False
+        return True

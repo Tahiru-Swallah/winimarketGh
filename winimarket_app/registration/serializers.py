@@ -132,13 +132,17 @@ class SellerAddressSerializer(serializers.ModelSerializer):
 class SellerPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerPayment
-        fields = ("id", "bank_name", "bank_account", "momo_name", "momo_number",)
+        fields = ("id", "bank_name", "bank_account", 'service_provider', "momo_name", "momo_number",)
         read_only_fields = ('id',)
 
     def validate(self, attrs):
         momo = attrs.get('momo_number') or getattr(self.instance, 'momo_number', None)
         bank = attrs.get('bank_account') or getattr(self.instance, 'bank_account', None)
+        service_provider = attrs.get('service_provider') or getattr(self.instance, 'service_provider', None)
 
+        if not service_provider:
+            raise serializers.ValidationError("Service provider is required.")
+        
         if not momo and not bank:
             raise serializers.ValidationError("At least one payout method (MoMo or Bank) is required.")
         return attrs
@@ -153,16 +157,16 @@ class SellerVerificationSerializer(serializers.ModelSerializer):
 
     def validate_id_card_image(self, value):
         if value:
-            if value.size > 5 * 1024 * 1024:
-                raise serializers.ValidationError("ID image must be less than 5MB")
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("ID image must be less than 10MB")
             if not getattr(value, "content_type", "").startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")
         return value
 
     def validate_selfie_with_id(self, value):
         if value:
-            if value.size > 5 * 1024 * 1024:
-                raise serializers.ValidationError("Selfie must be less than 5MB")
+            if value.size > 10 * 1024 * 1024:
+                raise serializers.ValidationError("Selfie must be less than 10MB")
             if not getattr(value, "content_type", "").startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")
         return value

@@ -7,14 +7,14 @@ __pycache__/
 *.log
 
 # Django
-*.sqlite3
+winimarket_app/db.sqlite3
 /static/
 media/
 
 # Environment and secrets
-.env
-.env.*
-!.env.example
+winimarket_app/.env
+winimarket_app/.env.*
+winimarket_app/!.env.example
 
 # Virtual environments
 venv/

@@ -167,13 +167,19 @@ async function submitAddressInfo() {
 }
 
 async function submitPaymentInfo() {
+    const serviceProvider = document.getElementById('serviceProvider').value;
     const momoNumber = document.getElementById('momoNumber').value.trim();
+
+    if (!serviceProvider) {
+        throw { detail: "Mobile Money service provider is required." };
+    }
 
     if (!momoNumber) {
         throw { detail: "MoMo number is required." };
     }
 
     const data = new FormData();
+    data.append('service_provider', serviceProvider);
     data.append('momo_name', document.getElementById('momoName').value.trim());
     data.append('momo_number', momoNumber);
     data.append('bank_name', document.getElementById('bankName').value.trim());
