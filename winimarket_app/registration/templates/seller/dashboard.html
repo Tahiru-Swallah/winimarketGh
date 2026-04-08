@@ -28,7 +28,7 @@
       <h3 id="total-products">0</h3>
       <p>Products</p>
     </div>
-    <div class="stat-card">
+    <!-- <div class="stat-card">
       <h3 id="pending-orders">0</h3>
       <p>Pending Orders</p>
     </div>
@@ -39,7 +39,7 @@
     <div class="stat-card">
       <h3 id="completed-orders">0</h3>
       <p>Complete Orders</p>
-    </div>
+    </div> -->
   </div>
 
   <!-- SELLER ADDRESS -->
@@ -55,15 +55,15 @@
     </section>
 
   <!-- ORDERS -->
-  <section class="seller-section">
+  <!-- <section class="seller-section">
     <div class="section-header">
       <h3>Recent Orders</h3>
     </div>
 
     <div id="seller-orders" class="orders-list">
-      <!-- Orders via AJAX -->
+      Orders via AJAX 
     </div>
-  </section>
+  </section> -->
 
   <!-- PRODUCTS -->
   <section class="seller-section">
@@ -141,7 +141,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', async ()=> {
         await fetchSellerStats()
-        await fetchSellerOrders()
+        //await fetchSellerOrders()
         await fetchSellerProducts()
         await fetchSellerAddress()
     })
@@ -168,9 +168,9 @@
 
     function renderStats(data) {
         document.getElementById('total-products').textContent = data.total_products
-        document.getElementById('pending-orders').textContent = data.pending_orders
+        /* document.getElementById('pending-orders').textContent = data.pending_orders
         document.getElementById('paid-orders').textContent = data.paid_orders
-        document.getElementById('completed-orders').textContent = data.complete_orders
+        document.getElementById('completed-orders').textContent = data.complete_orders */
 
         // Store name & verification
         document.querySelector('.store-name').textContent = data.store_name
@@ -185,7 +185,7 @@
         }
     }
 
-    async function fetchSellerOrders() {
+    /* async function fetchSellerOrders() {
         try {
             const res = await fetch('/order/api/orders/seller/')
 
@@ -229,7 +229,7 @@
                 </div>
             `
         })
-    }
+    } */
 
     async function fetchSellerProducts() {
         try {

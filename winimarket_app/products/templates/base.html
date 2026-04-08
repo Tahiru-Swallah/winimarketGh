@@ -62,7 +62,9 @@
 <body>
     <header>
         <div class="logo">
-            <h1>WinimarketGh</h1>
+            <a href="/">
+                <h1>WinimarketGh</h1>
+            </a>
         </div>
         
         <div class="search-bar">
@@ -83,8 +85,8 @@
         <div class="navbar">
             <ul>
                 <li><a href="/"><span class="material-icons-outlined {% if request.path == '/'%} active {%endif%}" title="home">home</span></a></li>
-                <li><a><span class="material-icons-outlined" id="cart" title="cart">shopping_cart</span></a></li>
-                <li><a href="/order/my-orders/"><span class="material-icons-outlined {% if '/order' in request.path %}active{%endif%}" title="orders">local_shipping</span></a></li>
+                <!-- <li><a><span class="material-icons-outlined" id="cart" title="cart">shopping_cart</span></a></li>
+                <li><a href="/order/my-orders/"><span class="material-icons-outlined {% if '/order' in request.path %}active{%endif%}" title="orders">local_shipping</span></a></li> -->
                 {% if user.profile.role == 'seller' %}
                     <li><a href="{% url 'registration:seller_dashboard' %}" title="seller dashboard"><span class="material-icons-outlined {% if '/dashboard' in request.path %}active{% endif %}">dashboard</span></a></li>
 
@@ -111,10 +113,10 @@
             <small>Home</small>
         </a>
 
-        <a id="cart" class="nav-item">
+        <!-- <a id="cart" class="nav-item">
             <span class="material-icons-outlined">shopping_cart</span>
             <small>Cart</small>
-        </a>
+        </a> -->
 
         {% if user.profile.role == 'seller' %}
             <a href="{% url 'products:product_upload' %}" class="nav-item {% if '/product/seller/edit' in request.path %} active {% endif %}">
@@ -123,10 +125,10 @@
             </a>
         {% endif %}
 
-        <a href="/order/my-orders/" class="nav-item {% if '/order' in request.path %} active {% endif %}">
+        <!-- <a href="/order/my-orders/" class="nav-item {% if '/order' in request.path %} active {% endif %}">
             <span class="material-icons-outlined">local_shipping</span>
             <small>Orders</small>
-        </a>
+        </a> -->
 
         {% if user.profile.role == 'seller' %}
             <a href="{% url 'registration:seller_dashboard' %}" class="nav-item {% if '/dashboard' in request.path %} active {% endif %}">
@@ -220,12 +222,12 @@
                 </a>
             </li>
             {% endif %}
-            <li>
+            <!-- <li>
                 <a href="/order/my-orders/">
                 <span class="material-icons-outlined">local_shipping</span>
                 My Orders
                 </a>
-            </li>
+            </li> -->
             </ul>
 
             <div class="account-divider"></div>

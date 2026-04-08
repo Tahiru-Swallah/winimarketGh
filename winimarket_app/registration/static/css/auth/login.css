@@ -63,6 +63,10 @@ header {
     position: relative;
 }
 
+header a{
+    text-decoration: none;
+}
+
 header .head-title{
     font-weight: 600;
     font-family: var(--font-secondary);
