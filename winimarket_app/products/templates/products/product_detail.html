@@ -94,9 +94,30 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
       </div>
 
       <!-- CTA -->
-      <button class="add-to-cart-btn" data-product-id="{{ product.id }}">
+      <button class="add-to-cart-btn hidden" data-product-id="{{ product.id }}">
         Add to Cart
       </button>
+
+      {% if user.is_authenticated %}
+        <!-- Contacts -->
+        <div class="contacts">
+          <div class="phone">
+            <a href="tel:{{ product.seller.profile.user.phonenumber }}">
+              📞 {{ product.seller.profile.user.phonenumber }}
+            </a>
+          </div>
+
+          <div class="whatsApp">
+            <a href="https://wa.me/{{ product.seller.profile.user.phonenumber }}?text=Hello%20{{ product.seller.store_name|urlencode }},%20I%20am%20interested%20in%20your%20product%20{{ product.name|urlencode }}.%20Is%20it%20still%20available?">
+              💬 WhatsApp
+            </a>
+          </div>
+        </div>
+       {% else %}
+        <div class="login-to-contact">
+          <a href="{% url 'registration:login' %}?next={{ request.path }}">Sign In to contact seller</a>
+        </div>
+       {% endif %}
 
       <span class="cart-feedback hidden"></span>
 
@@ -113,7 +134,7 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
         </div>
 
         <!-- REVIEW FORM -->
-        <div id="review-form-container" class="review-form hidden">
+        <div id="review-form-container" class="review-form">
             <h4>Write a Review</h4>
 
             <!-- STAR SELECTOR -->
@@ -191,9 +212,9 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
             addToCartBtn.classList.add("in-cart");
         }
 
-        if (data.can_review) {
+        /* if (data.can_review) {
             document.getElementById('review-form-container').classList.remove('hidden');
-        }
+        } */
 
         return data;
 

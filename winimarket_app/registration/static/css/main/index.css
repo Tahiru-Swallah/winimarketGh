@@ -977,6 +977,32 @@ section{
   background: rgba(220, 53, 69, 0.95);
 }
 
+.login-to-contact{
+  margin-top: 24px;
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+  text-align: center;
+
+  background: var(--primary-color);
+  color: #fff;
+
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.login-to-contact a{
+  color: #fff;
+  text-decoration: none;
+}
+
+.login-to-contact:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
 .add-to-cart-btn {
   margin-top: 24px;
   padding: 14px;
@@ -993,6 +1019,42 @@ section{
 }
 
 .add-to-cart-btn:hover {
+  background: var(--primary-hover);
+  transform: translateY(-2px);
+}
+
+.contacts{
+  margin-top: 24px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+}
+
+.contacts .phone, .whatsApp{
+  padding: 14px;
+  font-size: 15px;
+  font-weight: 700;
+  border-radius: var(--border-radius);
+  border: none;
+  cursor: pointer;
+
+  background: var(--primary-color);
+  color: #fff;
+
+  transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.whatsApp{
+  background: rgba(40, 167, 69, 0.95);;
+}
+
+.phone a, .whatsApp a{
+  color: #fff;
+  text-decoration: none;
+}
+
+.contacts .phone:hover{
   background: var(--primary-hover);
   transform: translateY(-2px);
 }

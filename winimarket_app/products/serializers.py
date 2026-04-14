@@ -236,7 +236,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         user_profile = request.user.profile
         product = data.get('product')
 
-        # ✅ Ensure buyer completed order containing this product
+        """ # ✅ Ensure buyer completed order containing this product
         has_completed_order = Order.objects.filter(
             buyer=user_profile,
             status=OrderStatus.COMPLETED,
@@ -244,7 +244,7 @@ class ReviewSerializer(serializers.ModelSerializer):
         ).exists()
 
         if not has_completed_order:
-            raise serializers.ValidationError("You can only review products you have purchased.")
+            raise serializers.ValidationError("You can only review products you have purchased.") """
         
         return data
     
