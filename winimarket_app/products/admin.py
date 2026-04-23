@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
-from .models import Category, Product, ProductImage, Review
+from .models import Category, Product, ProductImage, Review, ContactClick
 
 # ========== CATEGORY ADMIN ==========
 @admin.register(Category)
@@ -21,6 +21,13 @@ class ReviewInline(admin.TabularInline):
     extra = 0
     readonly_fields = ("reviewer", "ratings")
     fields = ("reviewer", "ratings", "reviewed_text")
+@admin.register(ContactClick)
+class ContactClickAdmin(admin.ModelAdmin):
+    list_display = ("product", "seller", "buyer", "contact_type", "clicked_at", "ip_address")
+    list_filter = ("clicked_at", "contact_type")
+    search_fields = ("product__name", "seller__store_name", "buyer__user__email")
+    readonly_fields = ("product", "clicked_at", "ip_address")
+    ordering = ("-clicked_at",)
 
 # ========== INLINE PRODUCT IMAGE ==========
 class ProductImageInline(admin.TabularInline):

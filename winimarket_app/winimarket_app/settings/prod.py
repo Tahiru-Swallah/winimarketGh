@@ -17,7 +17,7 @@ DATABASES = {
         'NAME': config('POSTGRES_DB', default='').strip(),
         'USER': config('POSTGRES_USER', default='').strip(),
         'PASSWORD': config('POSTGRES_PASSWORD', default='').strip(),
-        'HOST': config('DB_HOST', default='/cloudsql/steam-talent-484711-m9:us-east1:winimarket-db'),  # db for local compose
+        'HOST': config('DB_HOST', default='/cloudsql/winimarket2:us-central1:winimarket-db'),  # db for local compose
         'PORT': config('DB_PORT', default=5432, cast=int),
     }
 }
@@ -55,7 +55,7 @@ SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 INSTALLED_APPS += ['storages']
 
 # GCS bucket name (fallback to kasuwa-static)
-GS_BUCKET_NAME = config('GS_BUCKET_NAME', default='winimarket-media')
+GS_BUCKET_NAME = config('GS_BUCKET_NAME', default='winimarket-media-two')
 GS_CREDENTIALS = None
 
 # Django Storages settings for static files
@@ -94,8 +94,8 @@ STORAGES = {
     },
 }
 
-WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY")
-WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY")
+WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY", default="")
+WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY", default="")
 
 # --------------------------------------------------------------------
 # ☁️ Cloud Tasks Settings

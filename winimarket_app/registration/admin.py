@@ -199,11 +199,11 @@ class SellerVerificationAdmin(admin.ModelAdmin):
             seller.is_verified = True
             seller.save()
 
-            SellerNotificationDispatcher.dispatch(
+            """ SellerNotificationDispatcher.dispatch(
                 seller_id=seller.id,
                 event=SellerNotificationEvent.SELLER_VERIFIED
-            )
-
+            ) """
+    
             SellerAuditLog.objects.create(
                 seller=seller,
                 admin_user=request.user,
@@ -229,10 +229,10 @@ class SellerVerificationAdmin(admin.ModelAdmin):
             seller.is_verified = False
             seller.save()
 
-            SellerNotificationDispatcher.dispatch(
+            """ SellerNotificationDispatcher.dispatch(
                 seller_id=seller.id,
                 event=SellerNotificationEvent.SELLER_VERIFICATION_REJECTED
-            )
+            ) """
 
             SellerAuditLog.objects.create(
                 seller=seller,
@@ -277,7 +277,7 @@ class SellerPaymentAdmin(admin.ModelAdmin):
 
 @admin.register(SellerAddress)
 class SellerAddressAdmin(admin.ModelAdmin):
-    list_display = ('seller', 'country', 'region', 'city', 'campus', 'campus_area', 'hall_or_hostel', 'landmark')
+    list_display = ('seller', 'country', 'region', 'city', 'institution', 'campus', 'building', 'landmark')
     search_fields = ('seller__store_name', 'city', 'region')
     list_filter = ('country', 'region')
 

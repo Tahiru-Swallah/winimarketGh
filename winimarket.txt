@@ -5,7 +5,7 @@ gcloud run deploy winimarket --image gcr.io/steam-talent-484711-m9/winimarket:la
 
 ---------------- RUN JOBS FOR WINIMARKET-MIGRATE ----------------------------------------------------
 
-gcloud run jobs create winimarket-migrate --image gcr.io/steam-talent-484711-m9/winimarket:latest --region us-east1 --service-account winimarket-run-sa@steam-talent-484711-m9.iam.gserviceaccount.com --set-cloudsql-instances steam-talent-484711-m9:us-east1:winimarket-db --vpc-connector=projects/steam-talent-484711-m9/locations/us-east1/connectors/winimarket-connector --vpc-egress=private-ranges-only --set-env-vars DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/steam-talent-484711-m9:us-east1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest --command python --args winimarket_app/manage.py --args migrate
+gcloud run jobs create winimarket-migrate --image gcr.io/steam-talent-484711-m9/winimarket:latest --region us-east1 --service-account winimarket-run-sa@steam-talent-484711-m9.iam.gserviceaccount.com --set-cloudsql-instances steam-talent-484711-m9:us-east1:winimarket-db --vpc-connector=projects/steam-talent-484711-m9/locations/us-east1/connectors/winimarket-connector --vpc-egress=private-ranges-only --set-env-vars DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/steam-talent-484711-m9:us-east1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest --command python --args="winimarket_app/manage.py","migrate","--no-input"
 
 -------------- EXCECUTE JOBS FOR WINIMARKET-MIGRATE --------------------
 

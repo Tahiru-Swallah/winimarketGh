@@ -101,23 +101,53 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
       {% if user.is_authenticated %}
         <!-- Contacts -->
         <div class="contacts">
-          <div class="phone">
-            <a href="tel:{{ product.seller.profile.user.phonenumber }}">
-              📞 {{ product.seller.profile.user.phonenumber }}
-            </a>
-          </div>
+          <a href="tel:{{ product.seller.profile.user.phonenumber }}" id="contact-triggered" data-type="phone" data-product="{{ product.id }}">
+            <div class="phone">
+              <p>📞 {{ product.seller.profile.user.phonenumber }}</p>
+            </div>
+          </a>
 
-          <div class="whatsApp">
-            <a href="https://wa.me/{{ product.seller.profile.user.phonenumber }}?text=Hello%20{{ product.seller.store_name|urlencode }},%20I%20am%20interested%20in%20your%20product%20{{ product.name|urlencode }}.%20Is%20it%20still%20available?">
-              💬 WhatsApp
-            </a>
-          </div>
+          <a href="https://wa.me/{{ product.seller.profile.user.phonenumber }}?text=Hi%20{{ product.seller.store_name|urlencode }},%20I%20saw%20your%20product%20{{ product.name|urlencode }}%20on%20WinimarketGh.%20Is%20it%20still%20available?" data-product="{{ product.id }}" id="contact-triggered" data-type="whatsapp">
+            <div class="whatsApp">
+              <p>💬 WhatsApp</p>
+            </div>
+          </a>
+          
         </div>
        {% else %}
-        <div class="login-to-contact">
-          <a href="{% url 'registration:login' %}?next={{ request.path }}">Sign In to contact seller</a>
-        </div>
+        <a href="{% url 'registration:login' %}?next={{ request.path }}">
+          <div class="login-to-contact">
+            Sign In to contact seller
+          </div>
+        </a>
        {% endif %}
+
+       <div id="safetyModal" class="modalSafety">
+        <div class="modal-content-safety">
+          <span class="close-btn">&times;</span>
+
+          <div class="modal-header-safety">
+            <div class="safety-icon">🛡️</div>
+            <h3>Stay Safe</h3>
+          </div>
+          <p>
+            Always inspect the product and confirm details with the seller before making any payment.
+          </p>
+          <p>
+            <strong>Avoid sending money in advance</strong> unless you fully trust the seller.
+          </p>
+          <p class="winimarket-note">
+            Winimarket does not handle payments at this stage. All transactions are between buyer and seller.
+          </p>
+
+          <label class="confirm-box">
+            <input type="checkbox" id="confirmSafety">
+            I understand and will verify the product before payment
+          </label>
+
+          <button id="continueBtn" disabled>Continue to Contact</button>
+        </div>
+       </div>
 
       <span class="cart-feedback hidden"></span>
 
@@ -390,6 +420,96 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
       });
 
     })
+
+    // TRACK CONTACT CLICKS FUNCTION
+    async function trackContactClick(productId, contactType){
+      try{
+        const resp = await fetch('/api/product/contact_click/', {
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': getCSRFToken()
+          },
+          body: JSON.stringify({
+            product_id: productId,
+            contact_type: contactType
+          })
+        });
+
+        if (!resp.ok) {
+          throw new Error(`HTTP error! status: ${resp.status}`);
+        }
+
+      }catch(error){
+        console.error("Error tracking contact click:", error);
+      }
+    }
+
+    // SAFETY MODAL
+    document.addEventListener('DOMContentLoaded', function() {
+      const safetyModal = document.getElementById("safetyModal");
+      const contactTriggers = document.querySelectorAll("#contact-triggered");
+      const closeSafetyBtn = safetyModal.querySelector(".close-btn");
+      const confirmCheckbox = document.getElementById("confirmSafety");
+      const continueBtn = document.getElementById("continueBtn");
+
+      let triggeredLink = null; //store the clicked contact link
+
+      //intercept contact clicks
+      contactTriggers.forEach(link => {
+        link.addEventListener('click', (e) => {
+          const safetyAccepted = parseInt(localStorage.getItem('safetyAccepted'), 10);
+          const isValid = safetyAccepted && (Date.now() - safetyAccepted) < 24 * 60 * 60 * 1000;
+
+          trackContactClick(link.dataset.product, link.dataset.type); //track the click
+
+          if (isValid) {
+            return; // allow navigation
+          }
+
+          e.preventDefault();
+          triggeredLink = link.href; //store the intended URL
+          //console.log("Tracking contact click for product:", link.dataset.product, "type:", link.dataset.type);
+          safetyModal.style.display = "block";
+        })
+      })
+
+      //Enable continue button only when checkbox is checked
+      confirmCheckbox.addEventListener('change', function(){
+        document.getElementById("continueBtn").disabled = !this.checked;  
+      })
+
+      // Continue to actual link
+      continueBtn.addEventListener('click', function(){
+        if (!confirmCheckbox.checked) return;
+
+        if(triggeredLink){
+          localStorage.setItem('safetyAccepted', Date.now().toString()); //store acceptance in localStorage
+          window.location.href = triggeredLink;
+        }
+      })
+
+      // Close modal
+      closeSafetyBtn.addEventListener('click', function(){
+        safetyModal.style.display = "none";
+        resetModal();
+      })
+
+      //closing modal when clicking outside content
+      window.addEventListener('click', function(e){
+        if (e.target == safetyModal){
+          safetyModal.style.display = "none";
+          resetModal()
+        }
+      })
+
+      function resetModal(){
+        confirmCheckbox.checked = false;
+        continueBtn.disabled = true;
+        triggeredLink = null;
+      }
+    })
+        
 </script>
 
 <script type="application/ld+json">

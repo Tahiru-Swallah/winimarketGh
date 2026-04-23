@@ -48,7 +48,7 @@ storeLogoInput.addEventListener('change', () => {
     handleFileInput(storeLogoInput, 'storeLogoPreview');
 });
 
-const idCardInput = document.getElementById('idCardImage');
+/* const idCardInput = document.getElementById('idCardImage');
 idCardInput.addEventListener('change', () => {
     handleFileInput(idCardInput, 'idCardPreview');
 });
@@ -56,13 +56,13 @@ idCardInput.addEventListener('change', () => {
 const selfieInput = document.getElementById('selfieWithId');
 selfieInput.addEventListener('change', () => {
     handleFileInput(selfieInput, 'selfiePreview');
-});
+}); */
 
 /* ===============================
    GLOBAL STATE
 ================================ */
 let currentStep = 1;
-const totalSteps = 4;
+const totalSteps = 2;
 
 const steps = document.querySelectorAll('.step');
 const progressFill = document.getElementById('progressFill');
@@ -138,9 +138,9 @@ async function submitStoreInfo() {
 async function submitAddressInfo() {
     const region = document.getElementById('region').value.trim();
     const city = document.getElementById('city').value.trim();
-    const campus = document.getElementById('campus').value.trim()
-    const campus_area = document.getElementById('campusArea').value
-    const hall_or_hostel = document.getElementById('hallOrHostel').value.trim()
+    const campus = document.getElementById('institution').value.trim()
+    const campus_area = document.getElementById('campus').value
+    const hall_or_hostel = document.getElementById('building').value.trim()
     const landmark = document.getElementById('landmark').value.trim()
 
     if (!region || !city) {
@@ -151,9 +151,9 @@ async function submitAddressInfo() {
         country: 'Ghana',
         region: region,
         city: city,
-        campus: campus,
-        campus_area: campus_area,
-        hall_or_hostel: hall_or_hostel,
+        institution: campus,
+        campus: campus_area,
+        building: hall_or_hostel,
         landmark: landmark,
     }
 
@@ -248,12 +248,6 @@ async function handleNext() {
         } 
         else if (currentStep === 2) {
             await submitAddressInfo();
-        } 
-        else if (currentStep === 3) {
-            await submitPaymentInfo();
-        } 
-        else if (currentStep === 4) {
-            await submitVerification();
             showSuccessState();
             return;
         }
@@ -262,7 +256,7 @@ async function handleNext() {
         showStep(currentStep);
 
     } catch (error) {
-        showError(error.detail || 'Please check your input.');
+        showError(error.detail || 'Seller with this name already exists.');
     } finally {
         nextBtn.disabled = false;
     }
@@ -284,7 +278,7 @@ backBtn.addEventListener('click', handleBack);
 
 showStep(currentStep);
 
-const idTypeSelect = document.getElementById('idType');
+/* const idTypeSelect = document.getElementById('idType');
 const idNumberInput = document.getElementById('idNumber');
 const idNumberTooltip = document.getElementById('idNumberTooltip');
 
@@ -331,4 +325,4 @@ function setupImagePreview(inputId, previewId) {
 
 // Setup previews
 setupImagePreview('idCardImage', 'idCardPreview');
-setupImagePreview('selfieWithId', 'selfiePreview');
+setupImagePreview('selfieWithId', 'selfiePreview'); */

@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Product, ProductImage, WishList, Category, Review
+from .models import Product, ProductImage, WishList, Category, Review, ContactClick
 from django.utils.text import slugify
 from uuid import uuid4
 from registration.serializers import SellerProfileSerializer, ProfileSerializer
@@ -35,8 +35,8 @@ class ProductImageBulkUploadSerializer(serializers.Serializer):
     )
 
     def validate_images(self, images):
-        if len(images) > 3:
-            raise serializers.ValidationError("A maximum of 3 images can be uploaded.")
+        if len(images) > 4:
+            raise serializers.ValidationError("A maximum of 4 images can be uploaded.")
 
         for image in images:
             if image.size > 5 * 1024 * 1024:  # Limit each image size to 5MB
@@ -51,8 +51,8 @@ class ProductImageBulkUploadSerializer(serializers.Serializer):
         product = self.context['product']
         images = validated_data['images']
 
-        if product.images.count() + len(images) > 3:
-            raise serializers.ValidationError("Total images for a product cannot exceed 3.")
+        if product.images.count() + len(images) > 4:
+            raise serializers.ValidationError("Total images for a product cannot exceed 4.")
 
         created_images = []
 
@@ -129,8 +129,8 @@ class ProductSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         images = request.FILES.getlist('images') if request else []
 
-        if len(images) > 3:
-            raise serializers.ValidationError("A maximum of 3 images can be uploaded.")
+        if len(images) > 4:
+            raise serializers.ValidationError("A maximum of 4 images can be uploaded.")
         
         category_id = validated_data.pop('category_id', None)
         if category_id:
@@ -164,8 +164,8 @@ class ProductSerializer(serializers.ModelSerializer):
         instance.save()
 
         for index, image in enumerate(images):
-            if len(images) > 3:
-                return serializers.ValidationError("A maximum of 3 images are allowed per product.")
+            if len(images) > 4:
+                return serializers.ValidationError("A maximum of 4 images are allowed per product.")
             
             instance.images.all().delete()
 
@@ -251,4 +251,19 @@ class ReviewSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         request = self.context['request']
         validated_data['reviewer'] = request.user.profile
+        return super().create(validated_data)
+    
+class ContactClickSerializer(serializers.ModelSerializer):
+    product_name = serializers.CharField(source="product.name", read_only=True)
+    seller_name = serializers.CharField(source="seller.store_name", read_only=True)
+    buyer_email = serializers.EmailField(source="buyer.user.email", read_only=True)
+
+    class Meta:
+        model = ContactClick
+        fields = ['id', 'product', 'seller', 'buyer', 'contact_type', 'clicked_at', 'ip_address', 'product_name', 'seller_name', 'buyer_email']
+        read_only_fields = ['id', 'clicked_at', 'ip_address', 'product_name', 'seller_name', 'buyer_email']
+
+    def create(self, validated_data):
+        request = self.context['request']
+        validated_data['ip_address'] = self.get_client_ip(request)
         return super().create(validated_data)

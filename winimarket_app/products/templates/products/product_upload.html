@@ -56,13 +56,13 @@
 
     <!-- IMAGE UPLOAD -->
     <div class="form-group">
-      <label>Product Images (Max 3)</label>
+      <label>Product Images (Max 4)</label>
 
       <input type="file" id="images" accept="image/*" multiple hidden>
 
       <div class="image-upload-box" id="upload-box">
         <span>+ Add Images</span>
-        <small>PNG, JPG • Max 3 images</small>
+        <small>PNG, JPG • Max 4 images</small>
       </div>
 
       <div class="image-preview-grid" id="image-preview"></div>
@@ -153,7 +153,6 @@
             previewGrid.innerHTML = '';
 
             product.images.forEach(imgUrl => {
-                console.log(imgUrl)
                 const div = document.createElement('div');
                 div.className = 'preview-card';
                 div.innerHTML = `<img src="${imgUrl.image}" data-existing="true">
@@ -181,7 +180,7 @@
     fileInput.addEventListener('change', () => {
         const files = Array.from(fileInput.files);
         files.forEach(file => {
-            if (selectedImages.length >= 3) return;
+            if (selectedImages.length >= 4) return;
 
             selectedImages.push(file);
 
@@ -201,7 +200,7 @@
             reader.readAsDataURL(file);
         });
 
-        if (selectedImages.length >= 3) {
+        if (selectedImages.length >= 4) {
             uploadBox.style.display = 'none';
         }
 
@@ -225,7 +224,7 @@
         formData.append('condition', document.getElementById('condition').value);
 
         // New images
-        selectedImages.slice(0, 3).forEach(img => formData.append('images', img));
+        selectedImages.slice(0, 4).forEach(img => formData.append('images', img));
 
         // Send removed existing images to backend if updating
         if (removedExistingImages.length > 0) {

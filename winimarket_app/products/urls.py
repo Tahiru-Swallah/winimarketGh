@@ -54,4 +54,5 @@ urlpatterns = [
 
     path('api/product/<uuid:product_id>/reviews/', views.product_reviews, name='product_reviews'),
     path('api/product/reviews/add/', views.create_review, name='add_product_review'),
+    path('api/product/contact_click/', views.track_contact_click, name='track_contact_click'),
 ]

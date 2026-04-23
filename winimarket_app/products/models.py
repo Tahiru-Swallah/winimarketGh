@@ -129,8 +129,8 @@ class ProductImage(models.Model):
         # Enforce maximum 3 images per product
         if self._state.adding:  # Only check for new images
             existing_count = ProductImage.objects.filter(product=self.product).count()
-            if existing_count >= 3:
-                raise ValidationError("You can upload a maximum of 3 images per product.")
+            if existing_count >= 4:
+                raise ValidationError("You can upload a maximum of 4 images per product.")
 
     def save(self, *args, **kwargs):
         first_save = self._state.adding
@@ -217,3 +217,22 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review by {self.reviewer.user.email} for {self.product.name}"
+
+
+class ContactClick(models.Model):
+    CONTACT_TYPE_CHOICES = [
+        ('phone', 'Phone'),
+        ('whatsapp', 'WhatsApp'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    product = models.ForeignKey(Product, related_name='contact_clicks', on_delete=models.CASCADE)
+    seller = models.ForeignKey('registration.SellerProfile', related_name='contact_clicks', on_delete=models.CASCADE)
+    buyer = models.ForeignKey(Profile, related_name='contact_clicks', on_delete=models.SET_NULL, null=True, blank=True)
+    contact_type = models.CharField(max_length=20, choices=CONTACT_TYPE_CHOICES)
+    clicked_at = models.DateTimeField(auto_now_add=True)
+
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.contact_type.capitalize()} click for {self.product.name} by {self.buyer.user.email if self.buyer else 'Anonymous'}"

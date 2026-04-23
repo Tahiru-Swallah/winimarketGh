@@ -1059,6 +1059,123 @@ section{
   transform: translateY(-2px);
 }
 
+.modalSafety {
+  display: none;
+  position: fixed;
+  z-index: 1000;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.6); /* softer dark overlay */
+  backdrop-filter: blur(4px); /* modern glass feel */
+}
+
+.modal-content-safety {
+  background: #ffffff;
+  margin: 10% auto;
+  padding: 24px 20px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 420px;
+  text-align: left;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  animation: fadeInUp 0.3s ease;
+}
+
+.modal-header-safety {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.safety-icon {
+  font-size: 24px;
+}
+
+.modal-header-safety h3 {
+  margin: 0;
+  font-size: 18px;
+  color: #dc2626;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.close-btn {
+  float: right;
+  font-size: 22px;
+  cursor: pointer;
+  color: #64748b;
+}
+
+.close-btn:hover {
+  color: #000;
+}
+
+/* Title */
+.modal-content-safety h3 {
+  margin-top: 0;
+  font-size: 20px;
+  color: #dc2626; /* softer red */
+}
+
+/* Text */
+.modal-content-safety p {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+/* Highlight warning */
+.modal-content-safety strong {
+  color: #b91c1c;
+}
+
+/* Checkbox section */
+.confirm-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin: 18px 0;
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.confirm-box input {
+  margin-top: 3px;
+}
+
+/* Button */
+#continueBtn {
+  width: 100%;
+  background: #22c55e;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+#continueBtn:hover {
+  background: #16a34a;
+}
+
+#continueBtn:disabled {
+  background: #cbd5f5;
+  cursor: not-allowed;
+}
+
 .add-to-cart-btn.in-cart {
   background: rgba(40, 167, 69, 0.15);
   color: var(--success-color);
@@ -3273,6 +3390,10 @@ select.input-field {
   .support-a4 {
     padding: 30px 25px;
     min-height: auto;
+  }
+
+  .modal-content-safety{
+    margin: 50% auto;
   }
 }
 

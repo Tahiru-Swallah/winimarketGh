@@ -15,7 +15,9 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.pagination import PageNumberPagination
 
-from .models import Product, Category, Review
+from django.utils import timezone
+
+from .models import Product, Category, Review, ContactClick
 from .serializers import (CategorySerializer, ProductSerializer, ReviewSerializer)
 
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
@@ -249,6 +251,60 @@ def product_reviews(request, product_id):
     reviews = Review.objects.filter(product__id=product_id).select_related('reviewer__user')
     serializer = ReviewSerializer(reviews, many=True)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+def get_client_ip(request):
+    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+    if x_forwarded_for:
+        ip = x_forwarded_for.split(',')[0]
+    else:
+        ip = request.META.get('REMOTE_ADDR')
+    return ip
+
+@api_view(['POST'])
+def track_contact_click(request):
+    product_id = request.data.get('product_id')
+    contact_type = request.data.get('contact_type')
+
+    if not product_id or not contact_type:
+        return Response({'error': 'Product ID and contact type are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response({'error': 'Product not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    buyer = request.user.profile if request.user.is_authenticated else None
+    ip = get_client_ip(request)
+
+    # Prevent Duplicate within 24 Hours
+    time_threshold = timezone.now() - timezone.timedelta(hours=24)
+
+    already_clicked = ContactClick.objects.filter(
+        product=product,
+        seller=product.seller,
+        contact_type=contact_type,
+        clicked_at__gte=time_threshold
+    )
+
+    if buyer:
+        already_clicked = already_clicked.filter(buyer=buyer)
+    else:
+        already_clicked = already_clicked.filter(ip_address=ip)
+
+    if already_clicked.exists():
+        return Response({'message': 'Contact click already tracked within the last 24 hours.'}, status=status.HTTP_200_OK)
+
+    ContactClick.objects.create(
+        product=product,
+        seller=product.seller,
+        buyer=buyer,
+        contact_type=contact_type,
+        ip_address=ip
+    )
+
+    return Response({'message': 'Contact click tracked successfully.'}, status=status.HTTP_201_CREATED)
+
+
 
 # -----------------------------
 # WISHLIST CREATE, LIST, DELETE 

@@ -31,7 +31,7 @@
         <div class="progress-bar">
             <div class="progress-fill" id="progressFill"></div>
         </div>
-        <span class="progress-text" id="progressText">Step 1 of 4</span>
+        <span class="progress-text" id="progressText">Step 1 of 2</span>
     </div>
 
     <div class="error-card" id="errorCard" hidden>
@@ -61,32 +61,21 @@
 
             <input type="text" id="country" class="input-field" value="Ghana" disabled>
 
-            <input type="text" id="region" class="input-field" placeholder="Region (e.g. Central Region)">
+            <input type="text" id="region" class="input-field" placeholder="Region (e.g. Ashanti Region)">
 
             <input type="text" id="city" class="input-field" placeholder="City / Town">
 
-            <input type="text" id="campus" class="input-field" value="UEW - Winneba" placeholder="Campus">
+            <input type="text" id="institution" class="input-field" placeholder="E.g. UEW, University of Ghana, KNUST, etc.">
 
-            <select id="campusArea" class="input-field">
-                <option value="">Select Campus Area</option>
-                <option value="North Campus">North Campus</option>
-                <option value="South Campus">South Campus</option>
-                <option value="Central Campus">Central Campus</option>
-            </select>
+            <input type="text" id="campus" class="input-field" placeholder="E.g. North Campus, Main Campus, etc.">
 
-            <input type="text"
-                id="hallOrHostel"
-                class="input-field"
-                placeholder="Hall or Hostel (optional)">
+            <input type="text" id="building" class="input-field" placeholder="Hall/Hostel/Shop">
 
-            <input type="text"
-                id="landmark"
-                class="input-field"
-                placeholder="Nearby Landmark (optional)">
+            <input type="text" id="landmark" class="input-field" placeholder="E.g. SRC, Opposite Library, etc.">
         </div>
 
         <!-- STEP 3: Payment -->
-        <div class="step" data-step="3">
+        <!-- <div class="step" data-step="3">
             <h2>Payment Information</h2>
 
             <select id="serviceProvider" class="input-field">
@@ -103,10 +92,10 @@
 
             <input type="text" id="bankName" class="input-field" placeholder="Bank Name (optional)">
             <input type="text" id="bankAccount" class="input-field" placeholder="Bank Account Number (optional)">
-        </div>
+        </div> -->
 
         <!-- STEP 4: Verification -->
-        <div class="step" data-step="4">
+        <!-- <div class="step" data-step="4">
             <h2>Identity Verification</h2>
 
             <select id="idType" class="input-field">
@@ -116,7 +105,7 @@
             </select>
 
             <input type="text" id="idNumber" class="input-field" placeholder="Enter ID Number">
-            <small id="idNumberTooltip" class="tooltip-text"></small> <!-- Tooltip -->
+            <small id="idNumberTooltip" class="tooltip-text"></small> 
 
             <div class="file-input">
                 <label>ID Card Image</label>
@@ -137,7 +126,7 @@
                     Your documents are stored securely and are only used for verification purposes.
                 </p>
             </div>
-        </div>
+        </div> -->
     </section>
 
     <!-- SUCCESS STATE -->

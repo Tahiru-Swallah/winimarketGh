@@ -101,22 +101,18 @@
       </div>
 
       <div class="form-group">
-        <label>Campus</label>
+        <label>Institution</label>
         <input type="text" id="editCampus" placeholder="UEW - Winneba">
       </div>
 
       <div class="form-group">
-        <label>Campus Area</label>
-        <select id="editCampusArea">
-          <option value="North Campus">North Campus</option>
-          <option value="South Campus">South Campus</option>
-          <option value="Central Campus">Central Campus</option>
-        </select>
+        <label>Campus</label>
+        <input type="text" id="editCampusArea" placeholder="North Campus, South Campus, etc.">
       </div>
 
       <div class="form-group">
-        <label>Hall / Hostel</label>
-        <input type="text" id="editHall">
+        <label>building</label>
+        <input type="text" id="editHall" placeholder="Hall/Hostel/Shop">
       </div>
 
       <div class="form-group">
@@ -374,13 +370,13 @@
 
             <div class="address-row">
                 <span>🏫</span>
-                ${address.campus} – ${address.campus_area}
+                ${address.institution} – ${address.campus}
             </div>
 
-            ${address.hall_or_hostel ? `
+            ${address.building ? `
             <div class="address-row">
                 <span>🏠</span>
-                ${address.hall_or_hostel}
+                ${address.building}
             </div>` : ''}
 
             ${address.landmark ? `
@@ -412,9 +408,9 @@
 
         document.getElementById('editRegion').value = a.region || '';
         document.getElementById('editCity').value = a.city || '';
-        document.getElementById('editCampus').value = a.campus || '';
-        document.getElementById('editCampusArea').value = a.campus_area || 'North Campus';
-        document.getElementById('editHall').value = a.hall_or_hostel || '';
+        document.getElementById('editCampus').value = a.institution || '';
+        document.getElementById('editCampusArea').value = a.campus || '';
+        document.getElementById('editHall').value = a.building || '';
         document.getElementById('editLandmark').value = a.landmark || '';
     }
 
@@ -425,9 +421,9 @@
             country: 'Ghana',
             region: editRegion.value.trim(),
             city: editCity.value.trim(),
-            campus: editCampus.value.trim(),
-            campus_area: editCampusArea.value,
-            hall_or_hostel: editHall.value.trim(),
+            institution: editCampus.value.trim(),
+            campus: editCampusArea.value,
+            building: editHall.value.trim(),
             landmark: editLandmark.value.trim(),
         };
 
@@ -441,7 +437,7 @@
                 body: JSON.stringify(payload)
             });
 
-            if (!res.ok) throw await res.json();
+            if (!res.ok) {throw new Error(await res.json())};
 
             showToast('Address updated successfully ✅', 'success');
             editAddressModal.classList.add('hidden');

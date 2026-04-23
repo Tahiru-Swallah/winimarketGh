@@ -119,33 +119,15 @@ class ProfileSerializer(serializers.ModelSerializer):
 class SellerAddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerAddress
-        fields = ("id", "region", "city", "country", "campus", "campus_area", "hall_or_hostel", "landmark")
+        fields = ("id", "region", "city", "country", "institution", "campus", "building", "landmark")
         read_only_fields = ('id',)
 
-    def validate(self, attrs):
-        # Basic validation
-        if not attrs.get('campus'):
-            raise serializers.ValidationError({"campus": "Campus is required."})
-        if not attrs.get('campus_area'):
-            raise serializers.ValidationError({"campus_area": "Campus area is required."})
-        return attrs
 class SellerPaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = SellerPayment
         fields = ("id", "bank_name", "bank_account", 'service_provider', "momo_name", "momo_number",)
         read_only_fields = ('id',)
 
-    def validate(self, attrs):
-        momo = attrs.get('momo_number') or getattr(self.instance, 'momo_number', None)
-        bank = attrs.get('bank_account') or getattr(self.instance, 'bank_account', None)
-        service_provider = attrs.get('service_provider') or getattr(self.instance, 'service_provider', None)
-
-        if not service_provider:
-            raise serializers.ValidationError("Service provider is required.")
-        
-        if not momo and not bank:
-            raise serializers.ValidationError("At least one payout method (MoMo or Bank) is required.")
-        return attrs
 
 class SellerVerificationSerializer(serializers.ModelSerializer):
     id_card_image = serializers.ImageField(required=True)
@@ -189,6 +171,14 @@ class SellerProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Store logo must be less than 5MB")
             if not value.content_type.startswith('image/'):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
+        return value
+    
+    def validate_store_name(self, value):
+        user = self.context['request'].user
+        profile = user.profile
+
+        if SellerProfile.objects.filter(store_name__iexact=value).exclude(profile=profile).exists():
+            raise serializers.ValidationError("A store with this name already exists. Please choose a different name.")
         return value
     
     def create(self, validated_data):

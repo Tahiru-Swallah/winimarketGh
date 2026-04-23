@@ -176,22 +176,20 @@ class SellerAddress(models.Model):
     region = models.CharField(max_length=100, blank=True, null=True)
     
     # Campus-specific fields (VERY IMPORTANT)
+    institution = models.CharField(
+        max_length=100, default='') #e.g UEW, University of Ghana, KNUST  etc.
+
     campus = models.CharField(
         max_length=100,
-        default="UEW - Winneba"
-    )
+        blank=True,
+        null=True,
+    ) #e.g Legon, Main Campus, North Campus etc. 
 
-    campus_area = models.CharField(
-        max_length=100,
-        help_text="North Campus / South Campus / Central Campus",
-        default='North Campus'
-    )
-
-    hall_or_hostel = models.CharField(
+    building = models.CharField(
         max_length=100,
         blank=True,
         null=True
-    )
+    ) # e.g Faculty of Arts, Faculty of Science, etc.
 
     # Optional but useful
     landmark = models.CharField(
@@ -202,7 +200,7 @@ class SellerAddress(models.Model):
     )
 
     def __str__(self):
-        return f"{self.city} - {self.seller.store_name}"
+        return f"{self.institution} - {self.seller.store_name}"
 
 class SellerAuditLog(models.Model):
     ACTION_CHOICES = (
