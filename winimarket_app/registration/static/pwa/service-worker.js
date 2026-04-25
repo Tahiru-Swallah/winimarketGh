@@ -3,9 +3,9 @@ const CACHE_NAME = "winimarket-static-v1"
 const STATIC_ASSET = [
     "/",
     "/offline/",
-    "/static/css/main/index.css",
+    /* "/static/css/main/index.css",
     "/static/css/js_files/index.js",
-    "/static/pwa/manifest.json"
+    "/static/pwa/manifest.json" */
 ]
 
 //INSTALL

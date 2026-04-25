@@ -178,17 +178,48 @@
     <!-- iOS Install Banner -->
     <div id="iosInstallBanner" class="ios-install-banner">
         <div class="ios-banner-content">
-            <div>
-                <span class="material-icons-outlined">ios_share</span>
+
+            <!-- Close -->
+            <button id="iosBannerClose" class="ios-close">&times;</button>
+
+            <!-- Header -->
+            <div class="ios-header">
+            <h3>Install Winimarket 🚀</h3>
+            <p>Get faster access • Works like an app</p>
             </div>
-            <div class="ios-banner-text">
-            <h3>Install Winimarket</h3>
-            <p>
-                Tap the <strong>Share</strong> button in Safari<br>
-                then select <strong>Add to Home Screen</strong>
-            </p>
+
+            <!-- Steps -->
+            <div class="ios-steps">
+
+            <!-- Step 1 -->
+            <div class="step">
+                <div class="step-image">
+                <img src="{% static 'images/step1-share.png' %}" alt="Tap Share">
+                <!-- <span class="highlight share"></span> -->
+                </div>
+                <p><strong>Step 1:</strong> Tap the Share button</p>
             </div>
-            <button id="iosBannerClose" class="ios-banner-close">&times;</button>
+
+            <!-- Step 2 -->
+            <div class="step">
+                <div class="step-image">
+                <img src="{% static 'images/step2-add.png' %}" alt="Add to Home Screen">
+                <!-- <span class="highlight add"></span> -->
+                </div>
+                <p><strong>Step 2:</strong> Scroll and Tap “Add to Home Screen”</p>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="step">
+                <div class="step-image">
+                <img src="{% static 'images/step3-installed.png' %}" alt="Open app">
+                <!-- <span class="highlight open"></span> -->
+                </div>
+                <p><strong>Step 3:</strong> Open from your home screen</p>
+            </div>
+
+            </div>
+
         </div>
     </div>
 
@@ -360,7 +391,7 @@
 
             if (isIos && !isInStandaloneMode) {
                 // iOS → Show the custom banner
-                iosInstallBanner.classList.add("visible");
+                iosInstallBanner.style.display="block";
             } else if (deferredPrompt) {
                 // Android → Show native install prompt
                 deferredPrompt.prompt();
@@ -379,7 +410,7 @@
 
         // Handle iOS banner close button
         iosBannerClose.addEventListener("click", () => {
-            iosInstallBanner.classList.remove("visible");
+            iosInstallBanner.style.display="none";
         });
 
         //CHANGE PASSOWRD FUNCTIONS

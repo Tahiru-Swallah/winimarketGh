@@ -7,9 +7,17 @@ from rest_framework_simplejwt.views import TokenRefreshView
 app_name = 'registration'
 
 urlpatterns = [
+    path(
+        "manifest.json/",
+        TemplateView.as_view(
+            template_name="manifest.json",
+            content_type="application/json",
+        ), name="manifest"
+    ),
+
     #HOME PAGE
     path('', views.home, name='home'),
-
+    
     # urls.py
     #path("test-email/", views.test_email),
 

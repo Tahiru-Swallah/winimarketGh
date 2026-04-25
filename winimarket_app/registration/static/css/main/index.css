@@ -3101,71 +3101,97 @@ select.input-field {
 /* Banner container */
 .ios-install-banner {
   position: fixed;
-  bottom: 20px;
-  left: 20px;
-  right: 20px;
-  background: var(--primary-color);
-  color: white;
-  border-radius: var(--border-radius);
-  padding: 16px;
-  font-family: var(--font-primary);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  bottom: 40px;
+  width: 100%;
+  background: #fff;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
+  border-radius: 16px 16px 0 0;
   z-index: 9999;
+  padding: 16px;
+  max-height: 80vh;
+  overflow-y: auto;
+  display: none;
+}
 
-  transform: translateY(100%);
-  opacity: 0;
-  transition: transform 0.5s ease, opacity 0.5s ease;
+.ios-banner-content {
+  position: relative;
+}
+
+.ios-close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  border: none;
+  background: none;
+  font-size: 22px;
+  cursor: pointer;
+}
+
+.ios-header h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.ios-header p {
+  margin: 4px 0 12px;
+  color: #666;
+  font-size: 14px;
+}
+
+.ios-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.step-image {
+  position: relative;
+}
+
+.step img {
+  width: 100%;
+  border-radius: 12px;
+}
+
+.step p {
+  font-size: 14px;
+  margin: 0;
+}
+
+.highlight {
+  position: absolute;
+  border: 3px solid #007bff;
+  border-radius: 50%;
   pointer-events: none;
 }
 
-.ios-install-banner.visible {
-  transform: translateY(0);
-  opacity: 1;
-  pointer-events: auto;
+/* Highlight positions (adjust based on your screenshots) */
+.highlight.share {
+  width: 50px;
+  height: 50px;
+  bottom: 10px;
+  left: 45%;
 }
 
-/* Banner content */
-.ios-banner-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  gap: 12px;
+.highlight.add {
+  width: 80%;
+  height: 40px;
+  top: 60%;
+  left: 10%;
+  border-radius: 10px;
 }
 
-/* Share icon */
-.ios-share-icon {
-  width: 32px;
-  height: 32px;
-  flex-shrink: 0;
-}
-
-/* Text styling */
-.ios-banner-text h3 {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.ios-banner-text p {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.2;
-}
-
-/* Close button */
-.ios-banner-close {
-  background: none;
-  border: none;
-  color: white;
-  font-size: 1.2rem;
-  cursor: pointer;
-  padding: 4px;
-  flex-shrink: 0;
+.highlight.open {
+  width: 60px;
+  height: 60px;
+  top: 20%;
+  left: 30%;
 }
 
 .account-modal-overlay {

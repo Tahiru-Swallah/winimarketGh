@@ -48,7 +48,36 @@ def test_email(request):
     except Exception as e:
         print("Error sending test email:", str(e))
         return JsonResponse({"status": "error", "error": str(e)}) """
-    
+
+from django.http import JsonResponse
+
+def manifest(request):
+    return JsonResponse({
+        "name": "Winimarket",
+        "short_name": "Winimarket",
+        "start_url": "/",
+        "display": "standalone",
+        "background_color": "#ffffff",
+        "theme_color": "#0f172a",
+        "orientation": "portrait",
+        "icons": [
+            {
+                "src": f"{settings.STATIC_URL}pwa/icons/android-chrome-192x192.png",
+                "sizes": "192x192",
+                "type": "image/png"
+            },
+            {
+                "src": f"{settings.STATIC_URL}pwa/icons/android-chrome-512x512.png",
+                "sizes": "512x512",
+                "type": "image/png"
+            },
+            {
+                "src": f"{settings.STATIC_URL}pwa/icons/apple-touch-icon.png",
+                "sizes": "180x180",
+                "type": "image/png"
+            }
+        ]
+    })
 
 @login_required
 def home(request):
