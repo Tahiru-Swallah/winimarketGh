@@ -8,17 +8,17 @@
   "orientation": "portrait",
   "icons": [
     {
-      "src": "{{ STATIC_URL }}pwa/icons/android-chrome-192x192.png",
+      "src": "https://storage.googleapis.com/winimarket-media-two/static/pwa/icons/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "{{ STATIC_URL }}pwa/icons/android-chrome-512x512.png",
+      "src": "https://storage.googleapis.com/winimarket-media-two/static/pwa/icons/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-        "src": "{{ STATIC_URL }}pwa/icons/apple-touch-icon.png",
+        "src": "https://storage.googleapis.com/winimarket-media-two/static/pwa/icons/apple-touch-icon.png",
         "sizes": "180x180",
         "type": "image/png"
     }

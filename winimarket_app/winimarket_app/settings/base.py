@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-oa_bed5^che@uld&l)npkb0m-pb*urzc$j2v==u$6%eo@wek-b
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-ALLOWED_HOSTS = ['127.0.0.1', 'www.winimarketgh.com', 'winimarketgh.com', "winimarket-27948306085.us-east1.run.app", ".run.app"]
+ALLOWED_HOSTS = ['127.0.0.1', 'www.winimarketgh.shop', 'winimarketgh.shop', "winimarket-628170763833.us-central1.run.app", ".run.app"]
 
 AUTH_USER_MODEL = 'registration.CustomUser'
 # Application definition
