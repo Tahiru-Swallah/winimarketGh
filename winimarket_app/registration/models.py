@@ -97,7 +97,7 @@ class SellerProfile(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid4, editable=False)  # Unique identifier for each seller profile
     profile = models.OneToOneField(Profile, on_delete=models.CASCADE, related_name='seller_profile')  # Link to Profile
 
-    store_name = models.CharField(max_length=255, unique=True)              # Store name (unique)
+    store_name = models.CharField(max_length=255, blank=True, null=True)              # Store name 
     store_description = models.TextField(blank=True, null=True)             # Store description
     store_logo = models.ImageField(upload_to='store_logos/', blank=True, null=True)  # Store logo
 

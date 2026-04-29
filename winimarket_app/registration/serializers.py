@@ -173,14 +173,6 @@ class SellerProfileSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError("Uploaded file is not an image.")        
         return value
     
-    def validate_store_name(self, value):
-        user = self.context['request'].user
-        profile = user.profile
-
-        if SellerProfile.objects.filter(store_name__iexact=value).exclude(profile=profile).exists():
-            raise serializers.ValidationError("A store with this name already exists. Please choose a different name.")
-        return value
-    
     def create(self, validated_data):
         profile = self.context['request'].user.profile
         validated_data['profile'] = profile
