@@ -16,3 +16,6 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 
 SECURE_COOKIE = config('SECURE_COOKIE', default=False, cast=bool)
+
+
+FRONTEND_URL = "http://127.0.0.1:8000/account"

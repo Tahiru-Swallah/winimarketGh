@@ -50,6 +50,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
+    'django.contrib.sites',
+    'django.contrib.sitemaps',
     'django.contrib.staticfiles',
 
     #Third party 
@@ -69,6 +71,7 @@ DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default="")
 WEBPUSH_PUBLIC_KEY = config("WEBPUSH_PUBLIC_KEY", default="")
 WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY", default="")
 
+SITE_ID = 1
 
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY', default="")
 

@@ -163,6 +163,7 @@ async function submitAddressInfo() {
         body: JSON.stringify(addressData) 
     });
 
+
     if (!res.ok) throw await res.json();
 }
 
@@ -256,7 +257,7 @@ async function handleNext() {
         showStep(currentStep);
 
     } catch (error) {
-        showError(error.detail || 'Seller with this name already exists.');
+        showError(error.detail || "Provide your school name. e.g. UEW, KNUST");
     } finally {
         nextBtn.disabled = false;
     }

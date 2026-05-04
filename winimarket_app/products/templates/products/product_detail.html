@@ -65,7 +65,7 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
 
       <!-- Description -->
       <p class="product-description">
-        {{ product.description }}
+        {{ product.description|linebreaks|urlize }}
       </p>
 
       <!-- Seller info -->

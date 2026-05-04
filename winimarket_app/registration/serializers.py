@@ -4,6 +4,11 @@ from django.contrib.auth.password_validation import validate_password
 from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification
 from django.utils import timezone
 from django.db import IntegrityError, transaction
+from django.contrib.auth.tokens import PasswordResetTokenGenerator
+from django.utils.encoding import force_bytes, force_str
+from django.core.mail import send_mail
+from django.conf import settings
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
@@ -88,6 +93,59 @@ class RegisterSerializer(serializers.ModelSerializer):
             
         except IntegrityError as e:
             raise serializers.ValidationError({'detail' : 'A user with this email or phone number already exists.'}) from e
+
+class PasswordResetSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+    def validate(self, attrs):
+        email = attrs.get("email")
+
+        try:
+            user = CustomUser.objects.get(email=email)
+        except CustomUser.DoesNotExist:
+            raise serializers.ValidationError({"email": "If an account exists, a reset link has been sent."})
+        
+        uid = urlsafe_base64_encode(force_bytes(user.pk))
+        token = PasswordResetTokenGenerator().make_token(user)
+
+        reset_link = f"{settings.FRONTEND_URL}/reset-password/{uid}/{token}/"
+
+        send_mail(
+            subject="Reset Your Winimarket Password",
+            message=f"Hi {user.email},\n\nYou requested a password reset for your Winimarket account. Click the link below to reset your password:\n\n{reset_link}\n\nIf you didn't request this, please ignore this email.\n\nBest,\nThe Winimarket Team",
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            #fail_silently=False,
+        )
+
+        return {"detail": "Password reset link has been sent to your email."}
+    
+class PasswordResetConfirmSerializer(serializers.Serializer):
+        uid = serializers.CharField()
+        token = serializers.CharField()
+        new_password = serializers.CharField(write_only=True, required=True, validators=[validate_password])
+
+        def validate(self, attrs):
+            try:
+                uid = force_str(urlsafe_base64_decode(attrs.get("uid")))
+                user = CustomUser.objects.get(pk=uid)
+
+            except Exception:
+                raise serializers.ValidationError({"detail": "Invalid reset link."})
+            
+            if not PasswordResetTokenGenerator().check_token(user, attrs.get("token")):
+                raise serializers.ValidationError({"detail": "Invalid or expired reset link."})
+            
+            try:
+                validate_password(attrs.get("new_password"), user=user)
+            except Exception as e:
+                raise serializers.ValidationError({"new_password": list(e.messages)})
+            
+            user.set_password(attrs.get("new_password"))
+            user.save()
+
+            return {"detail": "Password has been reset successfully."}
+
     
 class ProfileSerializer(serializers.ModelSerializer):
     profile_picture = serializers.ImageField(required=False, allow_null=True)

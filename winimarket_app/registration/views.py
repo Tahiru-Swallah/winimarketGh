@@ -17,7 +17,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .models import CustomUser, Profile, SellerProfile, SellerAddress, SellerPayment, SellerVerification, EmailVerification
-from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, ProfileSerializer, SellerProfileSerializer, SellerVerificationSerializer, SellerAddressSerializer, SellerPaymentSerializer
+from .serializers import CustomTokenObtainPairSerializer, RegisterSerializer, PasswordResetSerializer, PasswordResetConfirmSerializer, ProfileSerializer, SellerProfileSerializer, SellerVerificationSerializer, SellerAddressSerializer, SellerPaymentSerializer
 from rest_framework_simplejwt.token_blacklist.models import BlacklistedToken, OutstandingToken
 from django.utils import timezone
 from .utils import generate_verification_token, regenerate_verification_token
@@ -225,6 +225,20 @@ class ChangePasswordView(APIView):
         response.delete_cookie('refresh_token')
 
         return response
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_request(request):
+    serializer  = PasswordResetSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return Response(serializer.validated_data, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def password_reset_confirm(request):
+    serializer = PasswordResetConfirmSerializer(data=request.data)
+    serializer.is_valid(raise_exception=True)
+    return Response({"detail": "Password has been reset successfully."}, status=status.HTTP_200_OK)
 
 # -----------------------------
 # Profile API Views
