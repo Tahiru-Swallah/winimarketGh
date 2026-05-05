@@ -341,6 +341,11 @@ def seller_store_view(request):
     
         if serializer.is_valid():
             serializer.save()
+
+            phone = request.data.get('phone_number')
+            if phone:
+                user.phonenumber = phone
+                user.save()
             return Response(serializer.data, status=status.HTTP_200_OK if request.method == 'PUT' else status.HTTP_201_CREATED)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

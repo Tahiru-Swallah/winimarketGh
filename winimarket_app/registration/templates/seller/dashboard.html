@@ -10,7 +10,8 @@
   <div class="seller-header">
     <div>
       <h2>Seller Dashboard</h2>
-      <p class="store-name"></p>
+      <p class="store-name"></p> <br>
+      <a href="#" id="openStoreModal" class="btn btn-primary">Edit Store Info</a>
     </div>
     <span class="badge verified"></span>
   </div>
@@ -80,6 +81,44 @@
 
 <!-- Floating Button (Mobile) -->
 <a href="/product/upload/" class="fab">+</a>
+
+<div id="editStoreModal" class="modal hidden">
+  <div class="modal-overlay-address" id="closeStoreModal"></div>
+
+  <div class="modal-content">
+    <h3>Edit Store Info</h3>
+
+    <form id="editStoreForm">
+
+      <div class="form-group">
+        <label>Store Name</label>
+        <input type="text" id="editStoreName" required>
+      </div>
+
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="editStoreDescription"></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Phone Number</label>
+        <input type="text" id="editPhone" placeholder="e.g. 024XXXXXXX">
+      </div>
+
+      <!-- <div class="form-group">
+        <label>Store Logo</label>
+        <input type="file" id="editStoreLogo" accept="image/*">
+        <div id="storeLogoPreview"></div>
+      </div> -->
+
+      <div class="modal-actions">
+        <button type="button" class="secondary-btn" id="cancelStoreEdit">Cancel</button>
+        <button type="submit" class="primary-btn">Save Changes</button>
+      </div>
+
+    </form>
+  </div>
+</div>
 
 <!-- EDIT ADDRESS MODAL -->
 <div id="editAddressModal" class="modal hidden">
@@ -448,6 +487,91 @@
             showToast(err.detail || 'Failed to update address', 'error');
         }
     });
+
+    async function loadStoreInfoIntoForm() {
+        try {
+            const res = await fetch('/account/api/seller-profile/', {
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                }
+            });
+
+            if (!res.ok) throw new Error('Failed to load store info');
+
+            const data = await res.json();
+            document.getElementById('editStoreName').value = data.store_name || '';
+            document.getElementById('editStoreDescription').value = data.store_description || '';
+            document.getElementById('editPhone').value = data.phonenumber || '';
+        } catch (err) {
+            console.error(err);
+            showToast('Unable to load store info', 'error');
+        }
+    }
+
+    const editStoreModal = document.getElementById('editStoreModal');
+
+    document.getElementById('openStoreModal').addEventListener('click', async (e) => {
+        e.preventDefault();
+        await loadStoreInfoIntoForm();
+        editStoreModal.classList.remove('hidden');
+    });
+
+    document.getElementById('closeStoreModal').onclick =
+    document.getElementById('cancelStoreEdit').onclick = () => {
+        editStoreModal.classList.add('hidden');
+    };
+
+    function formatPhoneNumber(phone) {
+        let cleaned = phone.replace(/\s+/g, ''); // remove spaces
+
+        // If already in international format
+        if (cleaned.startsWith('+233')) {
+            return cleaned;
+        }
+
+        // If starts with 0 (local number)
+        if (cleaned.startsWith('0')) {
+            cleaned = cleaned.substring(1);
+        }
+
+        // Default: prepend Ghana country code
+        return '+233' + cleaned;
+    }
+
+    async function updateSellerInfo(e){
+        e.preventDefault();
+
+        const formData = new FormData();
+
+        const phoneInput = document.getElementById('editPhone').value.trim();
+
+        formData.append('store_name', document.getElementById('editStoreName').value.trim());
+        formData.append('store_description', document.getElementById('editStoreDescription').value
+        .trim());
+        formData.append('phone_number', formatPhoneNumber(phoneInput));
+        
+        try {
+            const res = await fetch('/account/api/seller-profile/', {
+                method: 'PUT',
+                headers: {
+                    'X-CSRFToken': getCSRFToken(),
+                },
+                body: formData
+            });
+
+            if (!res.ok) {throw new Error(await res.json())};
+
+            showToast('Store info updated successfully ✅', 'success');
+            editStoreModal.classList.add('hidden');
+            await fetchSellerStats(); // refresh header info
+
+        } catch (err) {
+            console.error(err);
+            showToast(err.detail || 'Failed to update store info', 'error');
+        }
+    }
+
+    document.getElementById('editStoreForm').addEventListener('submit', updateSellerInfo);
 
 </script>
 {% endblock %}

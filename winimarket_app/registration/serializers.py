@@ -214,13 +214,14 @@ class SellerVerificationSerializer(serializers.ModelSerializer):
 class SellerProfileSerializer(serializers.ModelSerializer):
     profile = ProfileSerializer(read_only=True)
     store_logo = serializers.ImageField(required=False, allow_null=True)
+    phonenumber = serializers.CharField(source='profile.user.phonenumber', read_only=True)
 
     address = SellerAddressSerializer(read_only=True)
     payment = SellerPaymentSerializer(read_only=True)
     verification = SellerVerificationSerializer(read_only=True)   
     class Meta:
         model = SellerProfile
-        fields = ('id', 'profile', 'store_name','store_logo','store_description', 'address', 'payment', 'verification', 'is_verified', 'is_blacklisted', 'created_at')
+        fields = ('id', 'profile', 'store_name','store_logo','store_description', 'phonenumber', 'address', 'payment', 'verification', 'is_verified', 'is_blacklisted', 'created_at')
         read_only_fields = ('id', 'profile', 'created_at')
 
     def validate_store_logo(self, value):
