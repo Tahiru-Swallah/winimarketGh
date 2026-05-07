@@ -4,24 +4,37 @@ from .models import ProductImage, Category
 from django.conf import settings
 import requests
 
-UNSPLASH_ACCESS_KEY = settings.UNSPLASH_ACCESS_KEY
+PEXEL_ACCESS_KEY = settings.PEXEL_ACCESS_KEY
 
 @receiver(post_save, sender=Category)
-def fetch_unsplash_image(sender, instance, created, **kwargs):
+def fetch_pexels_image(sender, instance, created, **kwargs):
     if created and not instance.image_url:
         try:
             query = instance.name
+
+            headers = {
+                "Authorization": PEXEL_ACCESS_KEY
+            }
+
             res = requests.get(
-                f"https://api.unsplash.com/search/photos",
-                params={"query": query, "per_page": 1, "client_id": UNSPLASH_ACCESS_KEY}
+                "https://api.pexels.com/v1/search",
+                params={"query": query, "per_page": 1},
+                headers=headers,
+                timeout=5  # Prevents long waits if Pexels is slow
             )
-            print(res.status_code)
-            data = res.json()
-            if data.get("results"):
-                instance.image_url = data["results"][0]["urls"]["small"]
-                instance.save()
+            
+            if res.status_code == 200:
+                data = res.json()
+                if data.get("photos") and len(data["photos"]) > 0:
+                    # Use the 'medium' or 'large' image directly from Pexels
+                    # Pexels optimizes these images automatically
+                    optimized_url = data["photos"][0]["src"]["medium"]
+                    
+                    # Update without invoking the post_save signal loop
+                    Category.objects.filter(pk=instance.pk).update(image_url=optimized_url)
+
         except Exception as e:
-            print(f"Unsplash fetch failed for {instance.name}: {e}")
+            print(f"Pexels fetch failed for {instance.name}: {e}")
 
 @receiver(post_delete, sender=ProductImage)
 def auto_assign_new_primary(sender, instance, **kwargs):

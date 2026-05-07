@@ -67,7 +67,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 window.location.href = data.next && data.next !== '/' ? data.next : '/';
             }, 1500);
 
-        } else if (data.email_or_phonenumber || data.password){
+        } else if (!response.ok){
             const loginMessage = document.querySelector('.login-message');
 
             if (isMobileDevice()){

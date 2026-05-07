@@ -94,7 +94,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
     def post(self, request, *args, **kwargs):
         next_url = request.GET.get('next', '/')
-        serializer = self.get_serializer(data=request.data)
+        serializer = self.get_serializer(data=request.data, context={'request': request})
         
         serializer.is_valid(raise_exception=True)
         data = serializer.validated_data
@@ -129,8 +129,6 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 def registration(request):
     next_url = request.GET.get('next', '/')
     serializer = RegisterSerializer(data=request.data)
-
-    print(request.data)
 
     if serializer.is_valid():
         user = serializer.save()

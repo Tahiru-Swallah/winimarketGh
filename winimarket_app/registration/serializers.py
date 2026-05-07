@@ -9,6 +9,8 @@ from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth import authenticate
+from rest_framework.exceptions import AuthenticationFailed
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     username_field = 'email_or_phonenumber'
@@ -16,45 +18,36 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     password = serializers.CharField(write_only = True)
 
     def validate(self, attrs):
+        request = self.context.get("request")
+        
         email_or_phonenumber = attrs.get('email_or_phonenumber')
         password = attrs.get('password')
 
-        user = None
+        credentials = {}
 
         if '@' in email_or_phonenumber:
-            try:
-                user = CustomUser.objects.get(email=email_or_phonenumber.lower())
-            except CustomUser.DoesNotExist:
-                raise serializers.ValidationError({
-                    'email_or_phonenumber': 'No account found with this email.'
-                })
+           credentials['email'] = email_or_phonenumber.lower()
         
         else: 
-            try:
-                user = CustomUser.objects.get(phonenumber=email_or_phonenumber)
-            except CustomUser.DoesNotExist:
-                raise serializers.ValidationError({
-                    'email_or_phonenumber': 'No account found with this phone number.'
-                })
+           credentials['phonenumber'] = email_or_phonenumber
         
-        if not user.check_password(password):
-            raise serializers.ValidationError({
-                'password': 'Invalid credentials. Please try again.'
-            })
-        
-        if not user.is_active:
-            raise serializers.ValidationError({
-                'account': 'This account is inactive. Please contact support.'
-            })
-        
-        user.last_login = timezone.now()
-        user.save(update_fields=['last_login'])
+        credentials['password'] = password
 
-        data = super().get_token(user)
+        # 🔥 THIS is what triggers django-axes
+        user = authenticate(request=request, **credentials)
+        
+        if user is None:
+            raise AuthenticationFailed("Invalid credentials or account locked.")
+
+        if not user.is_active:
+            raise AuthenticationFailed("This account is inactive.")
+
+        # Success → Axes resets attempts automatically if configured
+        refresh = self.get_token(user)
 
         return {
-            "refresh_token": str(data),
-            "access_token": str(data.access_token),
+            "refresh_token": str(refresh),
+            "access_token": str(refresh.access_token),
             "user": {
                 "id": str(user.id),
                 "email": user.email,

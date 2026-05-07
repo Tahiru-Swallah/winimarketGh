@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     #Third party 
     'rest_framework_simplejwt.token_blacklist',
     'django_extensions',
+    'axes',
 ]
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
@@ -74,6 +75,7 @@ WEBPUSH_PRIVATE_KEY = config("WEBPUSH_PRIVATE_KEY", default="")
 SITE_ID = 1
 
 UNSPLASH_ACCESS_KEY = config('UNSPLASH_ACCESS_KEY', default="")
+PEXEL_ACCESS_KEY = config('PEXEL_ACCESS_KEY', default="")
 
 SECURE_COOKIE = config('SECURE_COOKIE', default=False, cast=bool)
 USE_CLOUD_TASKS=config('USE_CLOUD_TASKS', default=False, cast=bool)
@@ -83,8 +85,27 @@ SITE_URL = "http://127.0.0.1:8000"
 PAYSTACK_TESTED_PUBLIC_API_KEY = config('PAYSTACK_TESTED_PUBLIC_API_KEY', default="")
 PAYSTACK_TESTED_SECRET_API_KEY = config('PAYSTACK_TESTED_SECRET_API_KEY', default="")
 
+# Lock after 4 failed attempts
+AXES_FAILURE_LIMIT = 4
+AXES_COOLOFF_TIME = timedelta(minutes=15)
+AXES_RESET_ON_SUCCESS = True
+AXES_LOCK_OUT_AT_FAILURE = True
+
+AXES_USERNAME_FORM_FIELD = "email_or_phonenumber"
+AXES_LOCKOUT_PARAMETERS = ["ip_address", "username"]
+
+def get_axes_username(request, credentials):
+    return (
+        credentials.get("email")
+        or credentials.get("phonenumber")
+        or "unknown"
+    )
+
+AXES_USERNAME_CALLABLE = get_axes_username
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'axes.middleware.AxesMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -95,6 +116,7 @@ MIDDLEWARE = [
 ]
 
 AUTHENTICATION_BACKENDS = [
+    'axes.backends.AxesBackend',
     'registration.authenticate.EmailOrPhoneNumberBackend',
     'django.contrib.auth.backends.ModelBackend',  
 ]

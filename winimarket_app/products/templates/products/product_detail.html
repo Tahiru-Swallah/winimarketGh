@@ -27,13 +27,13 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
     <div class="product-images">
         <!-- Main Image -->
         <div class="main-image-wrapper">
-            <img id="mainProductImage" src="{{ product.images.first.image.url }}" alt="{{ product.name }}"/>
+            <img id="mainProductImage" src="{{ product.images.first.image.url }}" alt="{{ product.name }}" fetchpriority="high"/>
         </div>
 
         <!-- Thumbnails -->
         <div class="thumbnail-strip">
             {% for image in product.images.all %}
-                <img src="{{ image.image.url|default:image.image.url }}" data-full="{{ image.image.url }}" class="thumbnail {% if forloop.first %}active{% endif %}" alt="{{ product.name }}"/>
+                <img src="{{ image.image.url|default:image.image.url }}" data-full="{{ image.image.url }}" class="thumbnail {% if forloop.first %}active{% endif %}" alt="{{ product.name }}" loading="lazy"/>
             {% endfor %}
         </div>
     </div>
@@ -73,7 +73,7 @@ Order {{ product.name }} safely from verified campus sellers using escrow protec
         <img
             src="{% if product.seller.store_logo %}{{ product.seller.store_logo.url }}{% else %}{% static 'images/profile1.jfif' %}{% endif %}"
             alt="{{ product.seller.store_name }}"
-            class="seller-avatar"
+            class="seller-avatar" loading="lazy"
         />
 
         <div class="seller-info">

@@ -30,19 +30,16 @@ self.addEventListener("activate", event=> {
 self.addEventListener("fetch", event => {
     const url = new URL(event.request.url)
 
-    if (event.request.method !== "GET" || (url.protocol !== "http" && url.protocol !== "https")){
+    if (event.request.method !== "GET" || !url.protocol.startsWith('http')){
         return;
     }
 
-    if (
-        url.pathname.startsWith("/products") ||
-        url.pathname.startsWith("/categories")
-    ) {
-        event.respondWith(networkFirst(event.request));
+    // Faster API Loading: Show cached data immediately, then update in background
+    if (url.pathname.includes("/api/")) {
+        event.respondWith(staleWhileRevalidate(event.request));
         return;
     }
 
-     // Static assets
     if (url.pathname.startsWith("/static/")) {
         event.respondWith(cacheFirst(event.request));
         return;
@@ -53,6 +50,24 @@ self.addEventListener("fetch", event => {
 })
 
 /* ---------- STRATEGIES ---------- */
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cachedResponse = await cache.match(request);
+  
+  const fetchPromise = fetch(request).then(networkResponse => {
+    // Only cache successful responses
+    if (networkResponse.ok) {
+      cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  }).catch(() => {
+    // If network fails AND nothing is cached, return the offline page
+    return cachedResponse || caches.match("/offline/");
+  });
+
+  return cachedResponse || fetchPromise;
+}
+
 
 async function networkFirst(request) {
   try {

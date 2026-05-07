@@ -133,7 +133,7 @@ export async function renderProducts(filters = {}, append = false) {
             productElement.innerHTML = `
             <a href="/product/detail/${product.id}/${product.slug}/" class="product-link">
                 <div class="product-img">
-                    <img src="${product.images[0]?.image}" alt="${product.name}">
+                    <img src="${product.images[0]?.image}" alt="${product.name}" loading="lazy"/>
                 </div>
                 <div class="product-info">
                     <h3 class="product-name">${product.name}</h3>
@@ -168,18 +168,19 @@ export async function renderCategorySlider() {
   }
 
    // Prepend a virtual "All Products" category
-  const allOption = { id: 'all', name: 'All Products', image: null}; 
+  const allOption = { id: 'all', name: 'All Products', image_url: "https://images.pexels.com/photos/33259869/pexels-photo-33259869.jpeg"}; 
   // You can use any default image you like (or leave null to fetch one)
   const updatedCategories = [allOption, ...categories];
 
   const categoryHTML = await Promise.all(
     updatedCategories.map(async (cat) => {
-      const imageUrl = cat.image_url || await getCachedCategoryImage(cat.name);
+
+      const imageUrl = cat.image_url;
 
       return `
         <div class="category-item" data-id="${cat.id}" data-name="${cat.name}">
           <div class="category-circle">
-            <img src="${imageUrl}" alt="${cat.name}">
+            <img src="${imageUrl}" alt="${cat.name}" loading="lazy">
           </div>
           <p class="category-name">${cat.name}</p>
         </div>
@@ -198,7 +199,6 @@ export async function renderCategorySlider() {
         resetPagination();
         productHeader.textContent = 'All Products';
         await renderProducts();
-        return;
       } else{
         const filters = { category_id: categoryId };
         resetPagination(filters);
@@ -209,20 +209,25 @@ export async function renderCategorySlider() {
   });
 }
 
-const UNSPLASH_ACCESS_KEY = "pbRRkrnw3NFbDfGTumTxMiQgPIzULt01ZaUI_Ka9EIU";
+/* const PEXEL_ACCESS_KEY = "nCPaxo4rvjmObcAZ8BVNQ0yfH7mEflHgwlyBjQpkomc7Dz1zCSpJaJxT";
 
 async function getCategoryImage(categoryName) {
   try {
     const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(categoryName)}&per_page=1&client_id=${UNSPLASH_ACCESS_KEY}`
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(categoryName)}&per_page=1`,
+      {
+        headers: {
+          "Authorization": PEXEL_ACCESS_KEY
+        }
+      }
     );
     const data = await response.json();
-    if (data.results && data.results.length > 0) {
-      return data.results[0].urls.small;
+    if (data.photos && data.photos.length > 0) {
+      return data.photos[0].src.small;
     }
     return "https://via.placeholder.com/150?text=" + categoryName; // fallback
   } catch (err) {
-    console.error("Unsplash error:", err);
+    console.error("Pexels error:", err);
     return "https://via.placeholder.com/150?text=" + categoryName;
   }
 }
@@ -237,3 +242,4 @@ async function getCachedCategoryImage(categoryName) {
   return url;
 }
 
+ */
