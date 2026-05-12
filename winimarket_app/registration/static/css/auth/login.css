@@ -487,6 +487,216 @@ div{
   background: var(--success-color);
 }
 
+.forgot-password-container{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f5f7fb;
+  padding:20px;
+}
+
+.forgot-password-card{
+  width:100%;
+  max-width:420px;
+  background:#fff;
+  border-radius:20px;
+  padding:30px 25px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+.forgot-header{
+  margin-bottom:25px;
+}
+
+.forgot-header h2{
+  margin:0;
+  font-size:28px;
+  color:#111827;
+}
+
+.forgot-header p{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.input-group{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:20px;
+}
+
+.input-group label{
+  margin-bottom:8px;
+  font-size:14px;
+  font-weight:600;
+  color:#374151;
+}
+
+.input-group input{
+  height:50px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  padding:0 15px;
+  font-size:15px;
+  outline:none;
+  transition:0.2s ease;
+}
+
+.input-group input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.reset-btn{
+  width:100%;
+  height:50px;
+  border:none;
+  border-radius:12px;
+  background:#2563eb;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+.reset-btn:hover{
+  opacity:0.92;
+}
+
+.reset-btn:disabled{
+  opacity:0.7;
+  cursor:not-allowed;
+}
+
+.forgot-message{
+  margin-top:18px;
+  font-size:14px;
+  text-align:center;
+}
+
+.forgot-message.success{
+  color:#16a34a;
+}
+
+.forgot-message.error{
+  color:#dc2626;
+}
+
+.back-login{
+  margin-top:20px;
+  text-align:center;
+}
+
+.back-login a{
+  color:#2563eb;
+  text-decoration:none;
+  font-size:14px;
+  font-weight:500;
+}
+
+.reset-password-container{
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  background:#f5f7fb;
+  padding:20px;
+}
+
+.reset-password-card{
+  width:100%;
+  max-width:420px;
+  background:#fff;
+  padding:30px 25px;
+  border-radius:20px;
+  box-shadow:0 5px 20px rgba(0,0,0,0.08);
+}
+
+.reset-header{
+  margin-bottom:25px;
+}
+
+.reset-header h2{
+  margin:0;
+  font-size:28px;
+  color:#111827;
+}
+
+.reset-header p{
+  margin-top:10px;
+  color:#6b7280;
+  font-size:14px;
+  line-height:1.5;
+}
+
+.input-group{
+  display:flex;
+  flex-direction:column;
+  margin-bottom:18px;
+}
+
+.input-group label{
+  margin-bottom:8px;
+  font-size:14px;
+  font-weight:600;
+  color:#374151;
+}
+
+.input-group input{
+  height:50px;
+  border:1px solid #d1d5db;
+  border-radius:12px;
+  padding:0 15px;
+  font-size:15px;
+  outline:none;
+  transition:0.2s ease;
+}
+
+.input-group input:focus{
+  border-color:#2563eb;
+  box-shadow:0 0 0 3px rgba(37,99,235,0.1);
+}
+
+.reset-btn{
+  width:100%;
+  height:50px;
+  border:none;
+  border-radius:12px;
+  background:#2563eb;
+  color:#fff;
+  font-size:15px;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s ease;
+}
+
+.reset-btn:hover{
+  opacity:0.92;
+}
+
+.reset-btn:disabled{
+  opacity:0.7;
+  cursor:not-allowed;
+}
+
+.reset-message{
+  margin-top:18px;
+  text-align:center;
+  font-size:14px;
+}
+
+.reset-message.success{
+  color:#16a34a;
+}
+
+.reset-message.error{
+  color:#dc2626;
+}
+
 @media screen and (max-width: 768px) {
     header {
         justify-content: center;

@@ -22,6 +22,8 @@ from .serializers import (CategorySerializer, ProductSerializer, ReviewSerialize
 
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
+from django.db.models.functions import Random
+
 def offline_view(request):
     return render(request, 'offline.html')
 
@@ -72,7 +74,7 @@ class ProductPagination(PageNumberPagination):
 @parser_classes([MultiPartParser, FormParser])
 def product_list_create(request):
     if request.method == 'GET':
-        products = Product.objects.select_related('category', 'seller').prefetch_related('images').all()
+        products = Product.objects.select_related('category', 'seller').prefetch_related('images').order_by(Random())
 
         # ----- FILTERING -----
         category_id = request.query_params.get('category_id')

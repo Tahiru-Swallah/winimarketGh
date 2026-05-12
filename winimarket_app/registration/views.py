@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.utils.decorators import method_decorator
+from django.contrib.admin.views.decorators import staff_member_required
 
 # REST FRAMEWORK LIBRARIES
 from rest_framework.views import APIView
@@ -25,6 +26,11 @@ from .emails import send_verification_email
 
 from order.models import OrderStatus, OrderItem, Order, OrderTrackingStatus
 from products.models import Product
+from django.http import HttpResponse
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
+from datetime import datetime, timedelta
+
 # -----------------------------
 # Template Views
 # -----------------------------
@@ -85,6 +91,46 @@ def set_profile_role(request):
 def buyer_profile(request):
     profile = request.user.profile
     return render(request, 'authentication/buyer_profile.html', context={'profile': profile})
+
+def reset_password_email(request):
+    return render(request, 'authentication/reset_password.html')
+
+def password_reset_page(request, uidb64, token):
+    return render(request, 'authentication/password_reset_page.html')
+
+@staff_member_required
+def export_sellers_to_excel(request):
+    sellers = SellerProfile.objects.select_related('profile__user').all()
+
+    workbook = Workbook()
+    sheet = workbook.active
+    sheet.title = "Sellers"
+
+    headers = ["Seller ID", "Store Name", "Email", "Phone Number", "Is Verified", "Created At"]
+    sheet.append(headers)
+
+    for cell in sheet[1]:
+        cell.font = Font(bold=True)
+        cell.alignment = Alignment(horizontal='center')
+
+    for seller in sellers:
+        row = [
+            str(seller.id),
+            seller.store_name if seller.store_name else "None",
+            seller.profile.user.email,
+            str(seller.profile.user.phonenumber),
+            "Yes" if seller.is_verified else "No",
+            seller.created_at.strftime("%Y-%m-%d %H:%M:%S"),
+        ]
+        sheet.append(row)
+
+    filename = f"winimarket_sellers_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+    response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename={filename}'
+    workbook.save(response)
+    return response
+
 
 # -----------------------------
 # API Views for Authentication
@@ -196,9 +242,6 @@ class ChangePasswordView(APIView):
         user = request.user
         current_password = request.data.get('current_password')
         new_password = request.data.get('new_password')
-
-        print("Current Password: ", current_password)
-        print("New Passowrd: ", new_password)
 
         if not user.check_password(current_password):
             return Response({

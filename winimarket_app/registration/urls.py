@@ -31,6 +31,14 @@ urlpatterns = [
     # CHANGE PASSWORD API
     path('api/change-password/', views.ChangePasswordView.as_view()),
 
+    path('api/password-reset/', views.password_reset_request, name='password_reset_request'),
+
+    path('api/password-reset/confirm/', views.password_reset_confirm, name='password_reset_confirm'),
+
+    path('reset-password/<uidb64>/<token>/', views.password_reset_page, name='password_reset_page'),
+
+    path('password-reset/', views.reset_password_email, name='password_reset_email'),
+
     #PROFILE API
     path('api/profile/', views.profile_view),
 
@@ -58,4 +66,6 @@ urlpatterns = [
     path('verify-email/<uuid:token>/', views.verify_email, name='verify_email'),
     
     path('resend-verification/', views.resend_verification_email, name='resend_verification_email'),
+
+    path('seller/export/', views.export_sellers_to_excel, name='export_sellers_to_excel'),
 ]

@@ -180,7 +180,7 @@ export async function renderCategorySlider() {
       return `
         <div class="category-item" data-id="${cat.id}" data-name="${cat.name}">
           <div class="category-circle">
-            <img src="${imageUrl}" alt="${cat.name}" loading="lazy">
+            <img src="${imageUrl}" alt="${cat.name}">
           </div>
           <p class="category-name">${cat.name}</p>
         </div>

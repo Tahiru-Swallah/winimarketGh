@@ -122,3 +122,5 @@ LOGGING = {
         "level": "INFO",
     },
 }
+
+FRONTEND_URL = "https://winimarketgh.shop/account"

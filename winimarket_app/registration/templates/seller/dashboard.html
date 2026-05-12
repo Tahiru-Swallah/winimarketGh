@@ -11,7 +11,11 @@
     <div>
       <h2>Seller Dashboard</h2>
       <p class="store-name"></p> <br>
-      <a href="#" id="openStoreModal" class="btn btn-primary">Edit Store Info</a>
+      <a href="#" id="openStoreModal" class="btn btn-primary">Edit Store Info</a> <br> <br>
+      {% if user.is_staff %}
+        <a href="{% url 'registration:export_sellers_to_excel' %}">Export Sellers to Excel</a>
+      {% endif %}
+
     </div>
     <span class="badge verified"></span>
   </div>
