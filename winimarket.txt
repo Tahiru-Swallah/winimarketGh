@@ -41,3 +41,24 @@ gcloud run jobs executions describe winimarket-collectstatic-5fvdd --region us-e
 
 --------- DELETE JOBS -------------------------
 gcloud run jobs delete winimarket-collectstatic --region us-east1
+
+
+
+
+
+
+
+
+
+
+
+gcloud run deploy winimarket --image gcr.io/winimarket2/winimarket:latest --region us-central1 --platform managed --service-account winimarket-run-sa@winimarket2.iam.gserviceaccount.com --allow-unauthenticated --port 8080 --min-instances=0 --max-instances=5 --concurrency=80 --cpu=1 --memory=512Mi --cpu-throttling --timeout=300s --no-cpu-boost --add-cloudsql-instances winimarket2:us-central1:winimarket-db --network=default --subnet=default --vpc-egress=private-ranges-only --clear-vpc-connector --set-env-vars GS_BUCKET_NAME=winimarket-media-two,DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/winimarket2:us-central1:winimarket-db,DB_PORT=5432,EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend,EMAIL_HOST=smtp.gmail.com,EMAIL_PORT=465,EMAIL_USE_SSL=True,DEFAULT_FROM_EMAIL="Winimarket <winimarketgh@gmail.com>" --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest,EMAIL_HOST_USER=EMAIL_HOST_USER:latest,EMAIL_HOST_PASSWORD=EMAIL_HOST_PASSWORD:latest,PEXEL_ACCESS_KEY=PEXEL_ACCESS_KEY:latest
+
+gcloud run jobs create winimarket-migrate --image gcr.io/winimarket2/winimarket:latest --region us-central1 --service-account winimarket-run-sa@winimarket2.iam.gserviceaccount.com --set-cloudsql-instances winimarket2:us-central1:winimarket-db --vpc-connector=projects/winimarket2/locations/us-central1/connectors/wini-conn --vpc-egress=private-ranges-only --set-env-vars DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/winimarket2:us-central1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest --command python --args winimarket_app/manage.py --args migrate
+
+
+gcloud run jobs create winimarket-createsuperuser --image gcr.io/winimarket2/winimarket:latest --region us-east1 --service-account winimarket-run-sa@winimarket2.iam.gserviceaccount.com --set-cloudsql-instances winimarket2:us-central1:winimarket-db --vpc-connector=projects/winimarket2/locations/us-central1/connectors/wini-conn --vpc-egress=private-ranges-only --set-env-vars DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/winimarket2:us-central1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest --command python --args winimarket_app/manage.py --args createsuperuser
+
+gcloud run jobs create winimarket-collectstatic --image gcr.io/winimarket2/winimarket:latest --region us-central1 --service-account winimarket-run-sa@winimarket2.iam.gserviceaccount.com --set-cloudsql-instances winimarket2:us-central1:winimarket-db --vpc-connector=projects/winimarket2/locations/us-central1/connectors/wini-conn --vpc-egress=private-ranges-only --set-env-vars GS_BUCKET_NAME=winimarket-media-two,DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/winimarket2:us-central1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest --command python --args "winimarket_app/manage.py,collectstatic,--noinput"
+
+gcloud run jobs create winimarket-pexel --image gcr.io/winimarket2/winimarket:latest --region us-east1 --service-account winimarket-run-sa@winimarket2.iam.gserviceaccount.com --set-cloudsql-instances winimarket2:us-central1:winimarket-db --vpc-connector=projects/winimarket2/locations/us-central1/connectors/wini-conn --vpc-egress=private-ranges-only --set-env-vars DJANGO_SETTINGS_MODULE=winimarket_app.settings.prod,DB_HOST=/cloudsql/winimarket2:us-central1:winimarket-db,DB_PORT=5432 --set-secrets POSTGRES_PASSWORD=POSTGRES_PASSWORD:latest,POSTGRES_USER=POSTGRES_USER:latest,POSTGRES_DB=POSTGRES_DB:latest,PEXEL_ACCESS_KEY=PEXEL_ACCESS_KEY:latest --command python --args winimarket_app/manage.py --args fill_image_cmd
