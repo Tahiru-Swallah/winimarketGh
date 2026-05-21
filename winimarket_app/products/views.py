@@ -126,8 +126,8 @@ def search_products(request):
 
     if search_query:
         products = products.filter(
-         Q(name__icontains = search_query) | Q(description__icontains = search_query)   
-        )
+         Q(name__icontains = search_query) | Q(description__icontains = search_query) | Q(seller__store_name__icontains=search_query)   
+        ).distinct()
 
     paginator = ProductPagination()
     page = paginator.paginate_queryset(products, request)
@@ -143,12 +143,13 @@ def search_suggestions(request):
         return Response([])
     
     products = Product.objects.filter(
-        Q(name__icontains = search_query) | Q(description__icontains=search_query)
-    ).values('id', 'name')[:8]
+        Q(name__icontains = search_query) | Q(description__icontains=search_query) | Q(seller__store_name__icontains=search_query)
+    ).values('id', 'name', 'seller__store_name')[:8]
 
     suggestions = [{
         'id': p['id'],
         'name': p['name'],
+        'store_name': p['seller__store_name']
     } for p in products]
     
     return Response(suggestions)

@@ -24,18 +24,48 @@ async function fetchSuggestion(query){
     }
 }
 
-function renderSuggestions(suggestions, searchSuggestions, runSearch){
+function renderSuggestions(suggestions, searchSuggestions, searchList, SearchGrid, runSearch){
     searchSuggestions.innerHTML = ''
+
+    if (suggestions.length === 0) {
+        searchSuggestions.innerHTML = `
+            <div class="search-suggestion-empty">
+                No suggestions found
+            </div>
+        `
+        return;
+    }
 
     suggestions.forEach(suggestion => {
         let item = document.createElement('div')
         item.classList.add('search-suggestion-item')
         item.innerHTML = `
             <span class="material-icons-outlined">search</span>
-            <span>${suggestion.name}</span>
+
+            <div class="suggestion-content">
+                <span class="suggestion-product">
+                    ${suggestion.name}
+                </span>
+
+                ${
+                    suggestion.store_name
+                    ? `<small class="suggestion-store">
+                        Store: ${suggestion.store_name}
+                    </small>`
+                    : ''
+                }
+            </div>
         `
         item.addEventListener('click', () => {
-            runSearch(suggestion.name)
+
+            const searchValue = suggestion.name || suggestion.store_name
+
+            runSearch(
+                searchValue,
+                searchSuggestions,
+                searchList,
+                SearchGrid
+            )
         })
         searchSuggestions.appendChild(item)
     })
@@ -203,7 +233,7 @@ export function initSearch(){
 
     const debouncedSuggestions = debounce(async (query) => {
     const suggestions = await fetchSuggestion(query);
-    renderSuggestions(suggestions, searchSuggestions, (q) => {
+    renderSuggestions(suggestions, searchSuggestions, searchList, searchGrid, (q) => {
         runSearch(q, searchSuggestions, searchList, searchGrid);
     });
 }, 300);
