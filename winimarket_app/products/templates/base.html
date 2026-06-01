@@ -24,7 +24,7 @@
     <meta property="og:title" content="{% block og_title %}WinimarketGh – Buy & Sell Safely on Campus{% endblock %}">
     <meta property="og:description" content="{% block og_description %}A trusted student marketplace with escrow-secured payments and verified sellers.{% endblock %}">
     <meta property="og:url" content="{{ request.build_absolute_uri }}">
-    <meta property="og:image" content="{% static 'images/seo-banner.png' %}">
+    <meta property="og:image" content="{% block og_image %}{{ request.scheme }}://{{ request.get_host }}{% static 'images/seo-banner.png' %}{% endblock %}">
     <meta property="og:image:alt" content="WinimarketGh campus marketplace">
 
     <!-- ========================= -->

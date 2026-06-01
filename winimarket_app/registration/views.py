@@ -77,7 +77,7 @@ def seller_dashboard(request):
 
 def seller_profile(request, seller_id):
     seller = get_object_or_404(SellerProfile, id=seller_id)
-    products = Product.objects.filter(seller=seller,is_active=True).select_related('category').order_by('-created_at')[:12]
+    products = Product.objects.filter(seller=seller,is_active=True).select_related('category').order_by('-created_at')[:18]
     total_products = products.count()
     completed_orders = Order.objects.filter(seller=seller, status=OrderStatus.COMPLETED).count()
 

@@ -6,7 +6,7 @@
 {% endblock %}
 
 {% block meta_description %}
-Buy {{ product.name }} for ₵{{ product.price }} on WinimarketGh. Secure escrow payments and trusted campus sellers.
+Buy {{ product.name }} for ₵{{ product.price }} on WinimarketGh. Secure and trusted campus sellers.
 {% endblock %}
 
 {% block og_title %}
@@ -14,7 +14,11 @@ Buy {{ product.name }} for ₵{{ product.price }} on WinimarketGh. Secure escrow
 {% endblock %}
 
 {% block og_description %}
-Order {{ product.name }} safely from verified campus sellers using escrow protection.
+Order {{ product.name }} safely from verified campus sellers.
+{% endblock %}
+
+{% block og_image %}
+{{ request.scheme }}://{{ request.get_host }}{{ product.images.first.image.url }}
 {% endblock %}
 
 
