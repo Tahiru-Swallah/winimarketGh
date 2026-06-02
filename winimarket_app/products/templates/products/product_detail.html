@@ -18,7 +18,7 @@ Order {{ product.name }} safely from verified campus sellers.
 {% endblock %}
 
 {% block og_image %}
-{{ request.scheme }}://{{ request.get_host }}{{ product.images.first.image.url }}
+{{ product.images.first.image.url }}
 {% endblock %}
 
 
