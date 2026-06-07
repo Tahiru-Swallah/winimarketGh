@@ -34,7 +34,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         credentials['password'] = password
 
         # 🔥 THIS is what triggers django-axes
-        user = authenticate(request=request, **credentials)
+        user = authenticate(request=request, username=email_or_phonenumber, password=password)
         
         if user is None:
             raise AuthenticationFailed("Invalid credentials or account locked.")
