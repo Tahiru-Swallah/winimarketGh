@@ -177,7 +177,7 @@
 </div>
 
 
-<script>
+<script type="module">
     document.addEventListener('DOMContentLoaded', async ()=> {
         await fetchSellerStats()
         //await fetchSellerOrders()
@@ -272,11 +272,17 @@
 
     async function fetchSellerProducts() {
         try {
-            const res = await fetch('/api/seller/products/')
+            const res = await fetch('/api/seller/products/', {
+                cache: 'no-cache',
+                headers: {
+                    'Cache-Control': 'no-cache'
+                }
+            });
 
             if (!res.ok) throw new Error('Failed to load products')
 
             const products = await res.json()
+            console.log("NEW PRODUCTS FROM API:", products);
             renderProducts(products)
 
         } catch (error) {

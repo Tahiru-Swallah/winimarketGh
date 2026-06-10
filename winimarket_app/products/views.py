@@ -23,6 +23,7 @@ from .serializers import (CategorySerializer, ProductSerializer, ReviewSerialize
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
 from django.db.models.functions import Random
+from django.views.decorators.cache import never_cache
 
 def offline_view(request):
     return render(request, 'offline.html')
@@ -169,6 +170,7 @@ def product_detail(request, pk):
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+@never_cache
 def seller_products(request):
     seller = request.user.profile.seller_profile
     products = Product.objects.filter(seller=seller)

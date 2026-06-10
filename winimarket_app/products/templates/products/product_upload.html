@@ -76,7 +76,7 @@
   </form>
 </div>
 
-<script>
+<script type="module">
     // ----------------------------
     // Product Form Module
     // ----------------------------
@@ -124,7 +124,7 @@
 
     if (editProductId) {
         productId = editProductId;
-        loadProduct(productId);
+        await loadProduct(productId);
 
         document.querySelector('.page-title').textContent = 'Edit Product';
         submitBtn.textContent = 'Update Product';
@@ -266,6 +266,6 @@
     // ----------------------------
     // Initialize
     // ----------------------------
-    loadCategories();
+    await loadCategories();
 </script>
 {% endblock %}

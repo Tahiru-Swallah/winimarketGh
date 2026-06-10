@@ -15,6 +15,11 @@ class CategoryAdmin(admin.ModelAdmin):
         return obj.products.count()
     product_count.short_description = "Products"
 
+@admin.register(Review)
+class ReviewAdmin(admin.ModelAdmin):
+    list_display = ("product", "reviewer", "ratings", "created_at")
+    search_fields = ("product", "reviewer")
+
 # ========== INLINE PRODUCT REVIEW ==========
 class ReviewInline(admin.TabularInline):
     model = Review

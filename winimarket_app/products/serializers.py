@@ -85,13 +85,15 @@ class ProductSerializer(serializers.ModelSerializer):
     is_in_cart = serializers.SerializerMethodField()
     can_review = serializers.SerializerMethodField()
 
+    user_has_reviewed = serializers.SerializerMethodField()
+
     class Meta:
         model = Product
         fields = [
             'id', 'seller', 'name', 'slug', 'description', 'price',
             'min_price', 'max_price', 'quantity', 'category', 'category_id', 'condition',
             'is_active', 'created_at', 'updated_at', 'images',
-            'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', 'is_in_cart', "can_review"
+            'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', 'is_in_cart', "can_review", "user_has_reviewed"
         ]
 
         read_only_fields = ['id', 'seller', 'slug', 'created_at', 'price_range', 'is_available', 'is_seller', 'image_count', 'average_rating', "can_review"]
@@ -106,6 +108,17 @@ class ProductSerializer(serializers.ModelSerializer):
             cart__buyer=request.user.profile,
             cart__status='active',
             product=obj
+        ).exists()
+    
+    def get_user_has_reviewed(self, obj):
+        request = self.context.get('request')
+
+        if not request or not request.user.is_authenticated:
+            return False
+        
+        return Review.objects.filter(
+            product=obj,
+            reviewer=request.user.profile
         ).exists()
     
     def get_can_review(self, obj):
@@ -225,16 +238,19 @@ class ReviewSerializer(serializers.ModelSerializer):
     reviewer_name = serializers.CharField(source="reviewer.full_name", read_only=True)
     reviewer_email = serializers.EmailField(source="reviewer.user.email", read_only=True)
     reviewer_seller_name = serializers.CharField(source="reviewer.seller_profile.store_name", read_only=True)
-
+    product_seller_email = serializers.EmailField(source="product.seller.profile.user", read_only=True)
     class Meta:
         model = Review
-        fields = ['id', 'product', 'reviewer_name', 'reviewer_email', 'reviewer_seller_name', 'ratings', 'reviewed_text', 'created_at']
+        fields = ['id', 'product', 'product_seller_email', 'reviewer_name', 'reviewer_email', 'reviewer_seller_name', 'ratings', 'reviewed_text', 'created_at']
         read_only_fields = ['id', 'reviewer_name', 'reviewer_email', 'reviewer_seller_name', 'created_at']
 
     def validate(self, data):
         request = self.context['request']
         user_profile = request.user.profile
         product = data.get('product')
+
+        if Review.objects.filter(product=product, reviewer=user_profile).exists():
+            raise serializers.ValidationError("You have already reviewed this product.")
 
         """ # ✅ Ensure buyer completed order containing this product
         has_completed_order = Order.objects.filter(

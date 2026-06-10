@@ -254,15 +254,12 @@ Order {{ product.name }} safely from verified campus sellers.
         /* if (data.can_review) {
             document.getElementById('review-form-container').classList.remove('hidden');
         } */
-
         return data;
 
       } catch(error){
         console.error("Error fetching product details:", error);
       }
     }
-
-    getProductDetail();
 
     let selectedRating = 0;
     const productId = addToCartBtn.dataset.productId;
@@ -279,18 +276,25 @@ Order {{ product.name }} safely from verified campus sellers.
 
     /* ---------------- LOAD REVIEWS ---------------- */
     async function loadReviews(){
-      const res = await fetch(`/api/product/${productId}/reviews/`);
+      const res = await fetch(`/api/product/${productId}/reviews/`, {
+          cache: 'no-store'
+        });
       const reviews = await res.json();
 
       const list = document.getElementById('review-list');
       list.innerHTML = '';
 
       if (reviews.length === 0) {
-        list.innerHTML = '<p>No reviews yet. Be the first to review!</p>';
+        list.innerHTML = '<p class="no-reviews">No reviews yet. Be the first to review!</p>';
         return;
       }
 
       let total = 0;
+
+      if (has_reviewed){
+        document.getElementById('submit-review').disabled = true;
+        document.getElementById('review-text').disabled = true;
+      }
 
       reviews.forEach(r => {
         total += r.ratings;
@@ -301,7 +305,7 @@ Order {{ product.name }} safely from verified campus sellers.
 
         list.innerHTML += `
           <div class="review-card">
-              <div class="name">${r.reviewer_name || r.reviewer_seller_name || r.reviewer_email}</div>
+              <div class="name">${r.product_seller_email === r.reviewer_email ? "You" : r.reviewer_name || r.reviewer_seller_name || r.reviewer_email}</div>
               <div class="stars">
                   ${renderStars(r.ratings)}
               </div>
@@ -327,8 +331,51 @@ Order {{ product.name }} safely from verified campus sellers.
       return stars;
     }
 
+    function prependReview(review){
+      const list = document.getElementById('review-list');
+
+      const date = new Date(review.created_at).toLocaleString('en-US', {
+        month: 'short', day: 'numeric', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', hour12: true
+      });
+
+      const html = `
+        <div class="review-card" id="${review.id}" style="opacity:0.6">
+            <div class="name">${review.reviewer_name || review.reviewer_seller_name || review.reviewer_email}</div>
+            <div class="stars">
+                ${renderStars(review.ratings)}
+            </div>
+            <p>${review.reviewed_text || ''}</p>
+            <div class="date">${date}</div>
+        </div>
+      `;
+
+      list.insertAdjacentHTML('afterbegin', html);
+    }
+
+    let has_reviewed = false;
+
+    async function init() {
+        const product = await getProductDetail();
+        has_reviewed = product.user_has_reviewed;
+    }
+
+    init();
+
     /* ---------------- SUBMIT REVIEW ---------------- */
     document.getElementById('submit-review').addEventListener('click', async () => {
+
+        if (has_reviewed){
+          showToast("You have already reviewed this product", "error");
+
+          // Reset UI
+          document.getElementById('review-text').value = '';
+          selectedRating = 0;
+          document.querySelectorAll('#star-selector span').forEach(s=>s.classList.remove('active'));
+          document.querySelector('.no-reviews')?.remove();
+
+          return;
+        }
 
         if(selectedRating == 0){
             showToast("Please select rating", "error");
@@ -337,29 +384,58 @@ Order {{ product.name }} safely from verified campus sellers.
 
         const text = document.getElementById('review-text').value;
 
-        const res = await fetch('/api/product/reviews/add/', {
-            method:'POST',
-            headers:{
-                'Content-Type':'application/json',
-                'X-CSRFToken': getCSRFToken()
-            },
-            body: JSON.stringify({
-                product: productId,
-                ratings: selectedRating,
-                reviewed_text: text
-            })
-        });
+        // UI OPTIMISTIC UPDATE - show review immediately while waiting for server response
+        const tempReview = {
+          id: 'temp-' + Date.now(),
+          reviewer_name: "You",
+          ratings: selectedRating,
+          reviewed_text: text,
+          created_at: new Date().toISOString()
+        }
 
-        const data = await res.json();
+        prependReview(tempReview);
 
-        if(res.ok){
-            showToast("Review submitted", "success");
-            document.getElementById('review-text').value = '';
-            selectedRating = 0;
-            document.querySelectorAll('#star-selector span').forEach(s=>s.classList.remove('active'));
-            loadReviews();
-        }else{
+        // Reset UI
+        document.getElementById('review-text').value = '';
+        selectedRating = 0;
+        document.querySelectorAll('#star-selector span').forEach(s=>s.classList.remove('active'));
+        document.querySelector('.no-reviews')?.remove();
+  
+        try{
+
+            const res = await fetch('/api/product/reviews/add/', {
+              method:'POST',
+              headers:{
+                  'Content-Type':'application/json',
+                  'X-CSRFToken': getCSRFToken()
+              },
+              body: JSON.stringify({
+                  product: productId,
+                  ratings: tempReview.ratings,
+                  reviewed_text: text
+              })
+          });
+
+          const data = await res.json()
+
+          if(!res.ok){
+            throw new Error(data.detail || data.non_field_errors?.[0])
             showToast(data.detail || data.non_field_errors?.[0] || "Unable to submit review", "error");
+          }
+
+          showToast("Review submitted", "success");
+          has_reviewed = true;
+
+          document.getElementById('submit-review').disabled = true;
+          document.getElementById('review-text').disabled = true;
+
+        } catch (error){
+          console.log(error)
+          showToast(error.message, error)
+
+          // ❌ rollback UI if failed
+          const tempEl = document.getElementById(tempReview.id);
+          if (tempEl) tempEl.remove();
         }
     });
 
