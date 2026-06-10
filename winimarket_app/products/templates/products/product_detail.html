@@ -276,10 +276,11 @@ Order {{ product.name }} safely from verified campus sellers.
 
     /* ---------------- LOAD REVIEWS ---------------- */
     async function loadReviews(){
-      const res = await fetch(`/api/product/${productId}/reviews/`, {
+      const res = await fetch(`/api/product/${productId}/reviews/?t=${Date.now()}`, {
           cache: 'no-store'
         });
       const reviews = await res.json();
+      console.log(reviews);
 
       const list = document.getElementById('review-list');
       list.innerHTML = '';
@@ -305,7 +306,7 @@ Order {{ product.name }} safely from verified campus sellers.
 
         list.innerHTML += `
           <div class="review-card">
-              <div class="name">${r.product_seller_email === r.reviewer_email ? "You" : r.reviewer_name || r.reviewer_seller_name || r.reviewer_email}</div>
+              <div class="name">${r.reviewer_name || r.reviewer_seller_name || r.reviewer_email}</div>
               <div class="stars">
                   ${renderStars(r.ratings)}
               </div>
@@ -419,8 +420,8 @@ Order {{ product.name }} safely from verified campus sellers.
           const data = await res.json()
 
           if(!res.ok){
-            throw new Error(data.detail || data.non_field_errors?.[0])
-            showToast(data.detail || data.non_field_errors?.[0] || "Unable to submit review", "error");
+            throw new Error(data.detail || data.non_field_errors?.[0], "Unable to submit review")
+            //showToast(data.detail || data.non_field_errors?.[0] || "Unable to submit review", "error");
           }
 
           showToast("Review submitted", "success");
@@ -428,6 +429,10 @@ Order {{ product.name }} safely from verified campus sellers.
 
           document.getElementById('submit-review').disabled = true;
           document.getElementById('review-text').disabled = true;
+
+          console.log("saved review");
+          // Replace optimistic UI with server data
+          await loadReviews();
 
         } catch (error){
           console.log(error)
@@ -440,7 +445,9 @@ Order {{ product.name }} safely from verified campus sellers.
     });
 
     /* ---------------- INIT ---------------- */
-    document.addEventListener('DOMContentLoaded', loadReviews);
+    document.addEventListener('DOMContentLoaded', 
+    
+    await loadReviews);
 
     document.addEventListener("DOMContentLoaded", function() {
 

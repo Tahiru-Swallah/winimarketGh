@@ -272,7 +272,7 @@
 
     async function fetchSellerProducts() {
         try {
-            const res = await fetch('/api/seller/products/', {
+            const res = await fetch(`/api/seller/products/?t=${Date.now()}`, {
                 cache: 'no-cache',
                 headers: {
                     'Cache-Control': 'no-cache'
@@ -282,7 +282,7 @@
             if (!res.ok) throw new Error('Failed to load products')
 
             const products = await res.json()
-            console.log("NEW PRODUCTS FROM API:", products);
+            //console.log("NEW PRODUCTS FROM API:", products);
             renderProducts(products)
 
         } catch (error) {

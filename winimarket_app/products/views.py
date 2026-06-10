@@ -252,6 +252,7 @@ def create_review(request):
 # LIST REVIEW
 # -----------------------------
 @api_view(['GET'])
+@never_cache
 def product_reviews(request, product_id):
     reviews = Review.objects.filter(product__id=product_id).select_related('reviewer__user')
     serializer = ReviewSerializer(reviews, many=True)
