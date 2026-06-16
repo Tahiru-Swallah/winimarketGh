@@ -546,6 +546,8 @@ Order {{ product.name }} safely from verified campus sellers.
       const continueBtn = document.getElementById("continueBtn");
 
       let triggeredLink = null; //store the clicked contact link
+      let triggeredProduct = null;
+      let triggeredType = null;
 
       //intercept contact clicks
       contactTriggers.forEach(link => {
@@ -553,15 +555,18 @@ Order {{ product.name }} safely from verified campus sellers.
           const safetyAccepted = parseInt(localStorage.getItem('safetyAccepted'), 10);
           const isValid = safetyAccepted && (Date.now() - safetyAccepted) < 24 * 60 * 60 * 1000;
 
-          trackContactClick(link.dataset.product, link.dataset.type); //track the click
-
           if (isValid) {
+            trackContactClick(link.dataset.product, link.dataset.type); //track the click
+
             return; // allow navigation
           }
 
           e.preventDefault();
+
           triggeredLink = link.href; //store the intended URL
-          //console.log("Tracking contact click for product:", link.dataset.product, "type:", link.dataset.type);
+          triggeredProduct = link.dataset.product;
+          triggeredType = link.dataset.type;
+
           safetyModal.style.display = "block";
         })
       })
@@ -572,13 +577,16 @@ Order {{ product.name }} safely from verified campus sellers.
       })
 
       // Continue to actual link
-      continueBtn.addEventListener('click', function(){
+      continueBtn.addEventListener('click', async function(){
         if (!confirmCheckbox.checked) return;
 
-        if(triggeredLink){
-          localStorage.setItem('safetyAccepted', Date.now().toString()); //store acceptance in localStorage
-          window.location.href = triggeredLink;
+        localStorage.setItem('safetyAccepted', Date.now().toString()); //store acceptance in localStorage
+
+        if(triggeredProduct && triggeredType){
+          await trackContactClick(triggeredProduct, triggeredType); //track the click
         }
+
+        window.location.href = triggeredLink;
       })
 
       // Close modal
