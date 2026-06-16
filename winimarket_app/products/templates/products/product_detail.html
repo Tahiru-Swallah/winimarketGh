@@ -110,13 +110,13 @@ Order {{ product.name }} safely from verified campus sellers.
       {% if user.is_authenticated %}
         <!-- Contacts -->
         <div class="contacts">
-          <a href="tel:{{ product.seller.profile.user.phonenumber }}" id="contact-triggered" data-type="phone" data-product="{{ product.id }}">
+          <a href="tel:{{ product.seller.profile.user.phonenumber }}" class="contact-triggered" data-type="phone" data-product="{{ product.id }}">
             <div class="phone">
               <p>📞 {{ product.seller.profile.user.phonenumber }}</p>
             </div>
           </a>
 
-          <a href="https://wa.me/{{ product.seller.profile.user.phonenumber }}?text=Hi%20{{ product.seller.store_name|urlencode }},%20I%20saw%20your%20product%20{{ product.name|urlencode }}%20on%20WinimarketGh.%20Is%20it%20still%20available?" data-product="{{ product.id }}" id="contact-triggered" data-type="whatsapp">
+          <a href="https://wa.me/{{ product.seller.profile.user.phonenumber }}?text=Hi%20{{ product.seller.store_name|urlencode }},%20I%20saw%20your%20product%20{{ product.name|urlencode }}%20on%20WinimarketGh.%20Is%20it%20still%20available?" data-product="{{ product.id }}" class="contact-triggered" data-type="whatsapp">
             <div class="whatsApp">
               <p>💬 WhatsApp</p>
             </div>
@@ -537,10 +537,17 @@ Order {{ product.name }} safely from verified campus sellers.
       }
     }
 
+    async function trackWithTimeout(productId, contactType) {
+      await Promise.race([
+        trackContactClick(productId, contactType),
+        new Promise(resolve => setTimeout(resolve, 1000))
+      ]);
+    }
+
     // SAFETY MODAL
     document.addEventListener('DOMContentLoaded', function() {
       const safetyModal = document.getElementById("safetyModal");
-      const contactTriggers = document.querySelectorAll("#contact-triggered");
+      const contactTriggers = document.querySelectorAll(".contact-triggered");
       const closeSafetyBtn = safetyModal.querySelector(".close-btn");
       const confirmCheckbox = document.getElementById("confirmSafety");
       const continueBtn = document.getElementById("continueBtn");
@@ -551,12 +558,22 @@ Order {{ product.name }} safely from verified campus sellers.
 
       //intercept contact clicks
       contactTriggers.forEach(link => {
-        link.addEventListener('click', (e) => {
+        link.addEventListener('click', async (e) => {
           const safetyAccepted = parseInt(localStorage.getItem('safetyAccepted'), 10);
           const isValid = safetyAccepted && (Date.now() - safetyAccepted) < 24 * 60 * 60 * 1000;
 
           if (isValid) {
-            trackContactClick(link.dataset.product, link.dataset.type); //track the click
+            e.preventDefault();
+
+            try{
+              await trackWithTimeout(
+                link.dataset.product, 
+                link.dataset.type
+              ); //track the click
+            } finally{
+              window.location.href = link.href
+            }
+            
 
             return; // allow navigation
           }
@@ -583,8 +600,11 @@ Order {{ product.name }} safely from verified campus sellers.
         localStorage.setItem('safetyAccepted', Date.now().toString()); //store acceptance in localStorage
 
         if(triggeredProduct && triggeredType){
-          await trackContactClick(triggeredProduct, triggeredType); //track the click
+          await trackWithTimeout(triggeredProduct, triggeredType); //track the click
         }
+
+        safetyModal.style.display = "none";
+        resetModal();
 
         window.location.href = triggeredLink;
       })
@@ -606,7 +626,10 @@ Order {{ product.name }} safely from verified campus sellers.
       function resetModal(){
         confirmCheckbox.checked = false;
         continueBtn.disabled = true;
+
         triggeredLink = null;
+        triggeredProduct = null;
+        triggeredType = null;
       }
     })
 
