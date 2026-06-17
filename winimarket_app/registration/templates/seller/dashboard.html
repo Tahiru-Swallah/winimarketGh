@@ -109,11 +109,11 @@
         <input type="text" id="editPhone" placeholder="e.g. 024XXXXXXX">
       </div>
 
-      <!-- <div class="form-group">
+      <div class="form-group">
         <label>Store Logo</label>
         <input type="file" id="editStoreLogo" accept="image/*">
         <div id="storeLogoPreview"></div>
-      </div> -->
+      </div>
 
       <div class="modal-actions">
         <button type="button" class="secondary-btn" id="cancelStoreEdit">Cancel</button>
@@ -450,7 +450,7 @@
     };
 
     async function loadAddressIntoForm() {
-        const res = await fetch('/account/api/get/seller-address/');
+        const res = await fetch(`/account/api/get/seller-address/?t=${Date.now()}`);
         if (!res.ok) return;
 
         const a = await res.json();
@@ -500,7 +500,7 @@
 
     async function loadStoreInfoIntoForm() {
         try {
-            const res = await fetch('/account/api/seller-profile/', {
+            const res = await fetch(`/account/api/seller-profile/?t=${Date.now()}`, {
                 headers: {
                     'X-CSRFToken': getCSRFToken(),
                 }
@@ -509,9 +509,27 @@
             if (!res.ok) throw new Error('Failed to load store info');
 
             const data = await res.json();
+
+            console.log("Store info for editing:", data);
+
             document.getElementById('editStoreName').value = data.store_name || '';
             document.getElementById('editStoreDescription').value = data.store_description || '';
             document.getElementById('editPhone').value = data.phonenumber || '';
+            const preView = document.getElementById('storeLogoPreview');
+            preView.innerHTML = '';
+
+            if(data.store_logo){
+                const img = document.createElement('img');
+                img.src = data.store_logo;
+                img.alt = 'Store Logo';
+                img.style.width = '100px';
+                img.style.height = '100px';
+                img.style.objectFit = 'cover';
+                img.style.borderRadius = '8px';
+                img.style.marginTop = '8px';
+                preView.appendChild(img);
+            }
+
         } catch (err) {
             console.error(err);
             showToast('Unable to load store info', 'error');
@@ -559,7 +577,7 @@
         formData.append('store_description', document.getElementById('editStoreDescription').value
         .trim());
         formData.append('phone_number', formatPhoneNumber(phoneInput));
-        
+        formData.append('store_logo', document.getElementById('editStoreLogo').files[0]);
         try {
             const res = await fetch('/account/api/seller-profile/', {
                 method: 'PUT',
