@@ -406,7 +406,7 @@ section{
   width: 100%;
   border-radius: var(--border-radius);
   object-fit: cover;
-  height: 350px;
+  height: 100%; /* 350px height for hero image */
 }
 
 .hero-text .hero-CTA{
@@ -3740,7 +3740,7 @@ select.input-field {
   }
 
   .hero-img img {
-    height: 300px;
+    height: 100%; /* 300px for mobile */
   }
 
   .product-detail-grid {
@@ -3877,7 +3877,7 @@ select.input-field {
   }
 
   .hero-img img{
-    height: 260px;
+    height: 100%; /* 260px for mobile */
   }
 
   .hero-text, .hero-CTA{
@@ -4003,7 +4003,7 @@ select.input-field {
   }
 
   .hero-img img {
-    height: 220px;
+    height: 100%; /* 220px for smaller mobile */
   }
 
   .hero-trust-card {
