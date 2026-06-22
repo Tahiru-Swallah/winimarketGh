@@ -572,12 +572,17 @@
         const formData = new FormData();
 
         const phoneInput = document.getElementById('editPhone').value.trim();
+        const logoInput = document.getElementById("editStoreLogo")
 
         formData.append('store_name', document.getElementById('editStoreName').value.trim());
         formData.append('store_description', document.getElementById('editStoreDescription').value
         .trim());
         formData.append('phone_number', formatPhoneNumber(phoneInput));
-        formData.append('store_logo', document.getElementById('editStoreLogo').files[0]);
+        
+        if(logoInput.files.length > 0){
+            formData.append('store_logo', logoInput.files[0]);
+        }
+        
         try {
             const res = await fetch('/account/api/seller-profile/', {
                 method: 'PUT',
