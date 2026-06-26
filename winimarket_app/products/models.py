@@ -49,6 +49,7 @@ class Product(models.Model):
         ('used', 'Used'),
         ('refurbished', 'Refurbished')
     ], default='new')                                                       # Product condition
+    views = models.PositiveIntegerField(default=0)                          # Product Views
     is_active = models.BooleanField(default=True)                           # Is the product available for sale?
     created_at = models.DateTimeField(auto_now_add=True)                    # Timestamp when product was created
     updated_at = models.DateTimeField(auto_now=True)                        # Timestamp when product was last updated
@@ -236,3 +237,24 @@ class ContactClick(models.Model):
 
     def __str__(self):
         return f"{self.contact_type.capitalize()} click for {self.product.name} by {self.buyer.user.email if self.buyer else 'Anonymous'}"
+
+class ProductView(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid4, editable=False)
+    product = models.ForeignKey(Product, related_name='view_logs', on_delete=models.CASCADE)
+    user = models.ForeignKey(Profile, related_name='product_views', on_delete=models.SET_NULL, null=True, blank=True)
+    session_key = models.CharField(max_length=255, null=True, blank=True)
+    ip_address = models.GenericIPAddressField(null=True, blank=True)
+    user_agent = models.TextField(null=True, blank=True)
+    viewed_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['-viewed_at']),
+            models.Index(fields=['product']),
+            models.Index(fields=['user']),
+            models.Index(fields=['session_key']),
+        ]
+        ordering = ['-viewed_at']  # Newest views first
+
+    def __str__(self):
+        return f"View of {self.product.name} by {self.user.user.email if self.user else 'Anonymous'- self.session_key}"

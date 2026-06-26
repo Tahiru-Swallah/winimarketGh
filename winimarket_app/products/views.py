@@ -17,13 +17,15 @@ from rest_framework.pagination import PageNumberPagination
 
 from django.utils import timezone
 
-from .models import Product, Category, Review, ContactClick
+from .models import Product, Category, Review, ContactClick, ProductView
 from .serializers import (CategorySerializer, ProductSerializer, ReviewSerializer)
 
 from order.models import Order, OrderItem, OrderStatus, OrderTrackingStatus
 
 from django.db.models.functions import Random
 from django.views.decorators.cache import never_cache
+
+from django.db.models import F
 
 def offline_view(request):
     return render(request, 'offline.html')
@@ -163,10 +165,41 @@ def search_suggestions(request):
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
 
-    # ------------------ GET ------------------
-    if request.method == 'GET':
-        serializer = ProductSerializer(product, context={'request': request})
-        return Response(serializer.data, status=status.HTTP_200_OK)
+    if not request.session.session_key:
+        request.session.create()
+
+    cutoff = timezone.now() - timezone.timedelta(minutes=30)
+
+    filters = {
+        'product': product,
+        'viewed_at__gte': cutoff
+    }
+
+    if request.user.is_authenticated:
+        filters['user'] = request.user.profile
+    else:
+        filters['session_key'] = request.session.session_key
+
+    already_viewed = ProductView.objects.filter(**filters).exists()
+
+    if not already_viewed:
+        ProductView.objects.create(
+            product=product,
+            user = request.user.profile if request.user.is_authenticated else None,
+            session_key=None if request.user.is_authenticated else request.session.session_key,
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", "")
+        )
+
+        Product.objects.filter(pk=product.pk).update(
+            views=F("views") + 1
+        )
+
+        # Optional: keep the in-memory object in sync
+        product.refresh_from_db(fields=["views"])
+    
+    serializer = ProductSerializer(product, context={'request': request})
+    return Response(serializer.data, status=status.HTTP_200_OK)
     
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
