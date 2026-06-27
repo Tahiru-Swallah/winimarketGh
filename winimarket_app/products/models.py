@@ -257,4 +257,4 @@ class ProductView(models.Model):
         ordering = ['-viewed_at']  # Newest views first
 
     def __str__(self):
-        return f"View of {self.product.name} by {self.user.user.email if self.user else 'Anonymous'- self.session_key}"
+        return f"View of {self.product.name} by {self.user.user.email if self.user else 'Anonymous' or self.session_key}"
