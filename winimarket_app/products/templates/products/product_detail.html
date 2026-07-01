@@ -603,10 +603,12 @@ Order {{ product.name }} safely from verified campus sellers.
           await trackWithTimeout(triggeredProduct, triggeredType); //track the click
         }
 
+        const link = triggeredLink;
+
         safetyModal.style.display = "none";
         resetModal();
-
-        window.location.href = triggeredLink;
+        
+        window.location.href = link; //navigate to the intended URL
       })
 
       // Close modal
