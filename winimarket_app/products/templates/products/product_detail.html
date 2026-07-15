@@ -280,7 +280,6 @@ Order {{ product.name }} safely from verified campus sellers.
           cache: 'no-store'
         });
       const reviews = await res.json();
-      console.log(reviews);
 
       const list = document.getElementById('review-list');
       list.innerHTML = '';
@@ -430,12 +429,11 @@ Order {{ product.name }} safely from verified campus sellers.
           document.getElementById('submit-review').disabled = true;
           document.getElementById('review-text').disabled = true;
 
-          console.log("saved review");
           // Replace optimistic UI with server data
           await loadReviews();
 
         } catch (error){
-          console.log(error)
+          console.error(error)
           showToast(error.message, error)
 
           // ❌ rollback UI if failed
@@ -607,7 +605,7 @@ Order {{ product.name }} safely from verified campus sellers.
 
         safetyModal.style.display = "none";
         resetModal();
-        
+
         window.location.href = link; //navigate to the intended URL
       })
 
